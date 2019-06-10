@@ -3,8 +3,6 @@
 #Switch for loops to safely(Purrr) and then a function afterwards ot check if it worked
 #Add an option to merge the file or put in seperate files, also add an option to gzip or not
 
-#For the genbank, can we use the raw JSON files to get the taxonomy, rather than requireing a second step with taxonomizr
-
 fetchtaxa <- function(x, database="bold",marker="COI-5P",quiet=FALSE,downto="family",cores=1){
   #Get downstream taxa
   taxon <- bind_rows(downstream(x, db = "ncbi", downto = downto))
@@ -46,11 +44,22 @@ fetchtaxa <- function(x, database="bold",marker="COI-5P",quiet=FALSE,downto="fam
         dplyr::filter(grepl(marker, markercode)) %>% #Remove all sequences for unwanted markers
         dplyr::filter(!grepl("sp.", species_name))
 
+      #if (output=="genbankid") {
+      # Do a entrezdb search for the species binomials then
+      # paste0 (boldid, "|", genbankid)
+      #} else if (output=="heirarchial") {
+      #Do as below
       #Turn into fasta
       bold_seqname <- subset(data, select=c("processid", "domain_name", "phylum_name", "class_name", "order_name", "family_name", "genus_name", "species_name"))
       bold_seqname <- apply(bold_seqname, 1, paste, collapse=";")
       bold_seqname <- str_replace_all(bold_seqname," ","_")
       data <- as.character(data$nucleotides)
+
+      #Else if (output=="binomial") {
+      #bold_seqname <- subset(data, select=c("processid", "genus_name", "species_name"))
+      #bold_seqname <- apply(bold_seqname, 1, paste, collapse=";")
+      #bold_seqname <- str_replace_all(bold_seqname," ","_")
+      #}
 
       cat(file=paste0("bold/",search,"_BOLD.fa")) # delete old file
       for (i in 1:length(data)){
@@ -72,16 +81,13 @@ fetchtaxa <- function(x, database="bold",marker="COI-5P",quiet=FALSE,downto="fam
     tryCatch(
       {
         searchQ <- paste("(",input, "[ORGN])", " AND (", paste(c(marker), collapse=" OR "), ") AND 1: 2000" ,"[Sequence Length]", sep="")
-        message(searchQ)
         search_results <- entrez_search(db   = "nuccore", term = searchQ, retmax=9999999, use_history=TRUE)
-        message(search_results$count)
-
 
         if(search_results$count!=0 & !is.na(search_results$count)){
-          message(paste0(search_results$count," Sequences to be downloaded for: ", input))
+          message(paste0(search_results$count," Sequences to be downloaded for: ", searchQ))
 
           destfile <- paste0("genbank/",input,"_gb.fa")
-          cat(file = destfile, sep="") # delete old file
+          if (file.exists(destfile)) {file.remove(destfile)}
 
           l <- 1
           start <- 0
@@ -91,29 +97,43 @@ fetchtaxa <- function(x, database="bold",marker="COI-5P",quiet=FALSE,downto="fam
 
           for(l in 1:chunks){
 
-            #dl <- entrez_fetch(db="nuccore", web_history= search_results$web_history, rettype="fasta", retmax=10000, retstart= start)
-            #cat(dl, file= destfile, sep=" ", append=T)
+            #ptm <- proc.time()
+            dl <- entrez_fetch(db="nuccore", web_history= search_results$web_history, rettype="gb", retmax=10000, retstart= start)
+            #proc.time() - ptm
 
-            dl <- entrez_fetch(db="nuccore", web_history= search_results$web_history, rettype="fasta", retmax=10000, retstart= start)
             gb <- gbRecord(rcd=textConnection(dl))
-            feat <- getFeatures(gb)
-            #Use entrez_fetch rettype ="gb"
-            #read as biofiles file using gbrecord(rcd=textConnection(dl))
+
+            seqs <- getSequence(gb)
+            cat_acctax <- function(x){
+              taxid <- map(x,dbxref, "taxon")
+              tax_chr <- map_chr(taxid, function(y){as.character(y[1,1])})
+              attributes(tax_chr) <- NULL
+              taxout <- paste0(attributes(taxid)$names,"|",tax_chr)
+              return(taxout)
+            }
+            #if (output=="genbankid") {
+            names(seqs) <- cat_acctax(gb)
+            #}
+            #else if (output=="heirarchial") {
+            # names(seqs) <- paste0(seqs$names,";",str_replace(getTaxonomy(gb),pattern=" ", replacement=""))
+            #else if (output=="binomial)
+            # names(seqs) <- paste0(seqs$names,";"getOrganism(gb))
+
+            writeXStringSet(seqs,destfile,seqtype="DNA",format="fasta",compress="gzip")
 
             message("Chunk", l, " of ",chunks, " downloaded\r")
             start <- start + 10000
             Sys.sleep(2.5)
 
-
-            if (l >= chunks){
+            #if (l >= chunks){
               #delete old zipped file
-              fn=paste0(destfile,".gz")
-              if (file.exists(fn))
-                #Delete file if it exists
-                file.remove(fn)
+              #fn=paste0(destfile,".gz")
+              #if (file.exists(fn))
+              #  #Delete file if it exists
+              #  file.remove(fn)
 
-              gzip(filename=destfile)
-            }
+              #gzip(filename=destfile)
+            #}
           }
         }}, error=function(e) NULL)
     return(NULL)}

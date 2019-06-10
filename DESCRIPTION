@@ -23,6 +23,8 @@ Imports:
     tibble,
     rentrez,
     aphid,
-    insect
+    insect,
+    biofiles,
+    stringr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
