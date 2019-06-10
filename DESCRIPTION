@@ -20,6 +20,9 @@ Language: en-US
 Imports: 
     dplyr,
     magrittr,
-    tibble
+    tibble,
+    rentrez,
+    aphid,
+    insect
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
