@@ -24,15 +24,118 @@ taxreturn is an R package for fetching DNA barcode sequences and associated taxo
 
 This package is still in development and not yet available on CRAN.  You can install development version from [GitHub](https://github.com/) with:
 
-``` r
+```{r}
 # install.packages("devtools")
-devtools::install_github("alexpiper/taxreturn")
+#devtools::install_github("alexpiper/taxreturn")
 ```
+
+#Current progress:
+
+## Database creation
+* get_database(options="bold, "genbank" etc) + some hmmer cleaning?
+* clean_database(ie automated filters)
+* clean_alignment(remove badly aligend sequences)
+* format_datbase(options="blast","RDP","q2","IDTAXA" etc))
+* add_sequences(add local db)
+* Trim_to_primer_regions - Using insect r package HMM's
+
+## Sample Sheet & Index switching
+* Samplesheet_new(options=Miseq, hiseq etc)
+* Samplesheet_allcombinations(expand out all combinations)
+* switchrate_allcomb(calculate switchrate from expected vs observed)
+* switchrate_control(calculate switchrate from control - allow selecting control)
+
+## Primer evaluation
+* evaluate_primerbind(use hmm similar to insect r package to locate bind site, then primer miner evaluation)
+* plot_primer - Plot the above output* 
+
+## Analysis
+Mostly handled by DADA2
+evaluate_bias and calibrate_bias - Imported from 
+
+## Plotting
+* Mostly hanadled by phyloseq
+* summarise_Taxa(samples=c()) - similar to current summarise taxa but allow subsettign to desired samples
+* Plot_expectedobserved(allow comparison of fit)
+
+## Summarising
+* output detection tables etc - reports
+* How many sequences were removed at each stage - Plot of this (Histogram of reductions)
+* How many sequences were dereplicated - Plot of dataset redundancy (Histogram of species had 1,2,3,4,5,6,7,8,9,10+ etc)
+
+
 ## Examples
 
 This is a basic example which shows you how to solve a common problem:
 
-```{r example}
+* Step 1 - Downlaod sequences for BOLD and genbank
+* Step 2 - Convert bold to have genbank accessions using taxizedb and merge fastas
+* Step 3 - clean sequences using a PHMM of COI - Include a RDS data file already trained on the midori set
+* Step 4 - cluster and Purge misannotated sequences using insect::Purge
+* Step 5 - Fetch heirarchial taxonomy using taxizedb
+* Step 6 - Trim to amplicon region using insect::VirtualPCR
+
+
+```{r example, eval=FALSE, include=FALSE}
+#install_github("alexpiper/taxreturn")
 library(taxreturn)
-## basic example code
+
+## Fetch sequences from GenBank - Might also be good having an output="all" option
+fetchSeqs("Insecta", database="genbank",downstream=TRUE,quiet=FALSE, downto="Family", marker="COI", output = "gb-binom",compress=FALSE, cores=3)
+
+## Fetch sequences from BOLD
+fetchSeqs("Insecta", database="bold",downstream=TRUE,quiet=FALSE, downto="Family", marker="COI-5P", output = "gb-binom",compress=FALSE, cores=3)
+
+#Might be worth having an append all option? - if append = true the output = FILE
+
+#read in fastas and merge
+gbseqs <-
+boldseqs <- 
+mergedseqs <- ape::join(gbseqs,boldseqs)
+#filter out duplicate sampleid's - this will remove those on both BOLD and GB
+
+#Filter sequences - needs to be later?
+filtseqs <- filter_taxa(mergedseqs,minlength=200,maxlength=1000,unique=TRUE,binomials=TRUE, removeterms=c("sp.","cf.","NA"))
+
+#Filter_phmm
+#calls aphid to filter with a prebuilt PHMM
+
+#Trim to primer region using virtualPCR from insect package
+amplicon <- virtualPCR(filtseqs, up = "ACWGGWTGRACWGTNTAYCC",down= "ARYATDGTRATDGCHCCDGC",cores=3, rcdown = TRUE, trimprimers = TRUE)
+writeFASTA(amplicon,"gb_trimmed.fa")
+
+
+#filter taxonomically mislabelled sequences using insect::purgeseqs
+#Get taxonomy database
+db <- taxonomy(db = "NCBI", synonyms = FALSE)
+
+#Cluster OTU's and flag mislabelled taxa - PROBLEM this does not currently work on heirarchy, maybe we should therefore retain taxid from JSON until after this
+cleaned <- purge(amplicon, db, level = "order", confidence = 0.8, cores = 20,
+  quiet = FALSE, threshold = 0.99, method = "farthest")
+
+#Fetch taxonomic names
+
+#Resolve taxonomic names using taxize
+#data source 4 = NCBI - To see more data sources use gnr_datasources()
+names_resolved <- gnr_resolve(names,best_match_only = TRUE, cannonical=TRUE,preferred_data_sources = "4")
+#also resolve synonyms using - See scotts code
+
+#replace with purrr
+for (i in 1:nrow(names_resolved)){
+  names(merged) <- names(merged) %>%
+    str_replace(pattern=names_resolved$user_supplied_name[i],replacement=names_resolved$matched_name[i])
+}
+
+#Merge in inhouse sequences
+merged <-  readFASTA("merged_cleaned.fa")
+inhouse <- readFASTA("inhouse/Inhouse_taxonomy_trimmed.fasta")
+
+merged2 <- join(merged, inhouse)
+writeFASTA(merged2,"merged_cleaned_inhouse.fa")
+
+#write out format for training
+
+#format_ref function
+
+
 ```

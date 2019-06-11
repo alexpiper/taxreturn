@@ -25,6 +25,9 @@ Imports:
     aphid,
     insect,
     biofiles,
-    stringr
+    Biostrings,
+    taxizedb,
+    stringr,
+    bold
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1

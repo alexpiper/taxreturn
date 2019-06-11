@@ -1,0 +1,2720 @@
+starting worker pid=9004 on localhost:11068 at 20:30:25.523
+starting worker pid=19372 on localhost:11068 at 20:30:25.827
+Loading required package: bold
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Loading required package: rentrez
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila zebrina Liu & Chen, 2018_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila riverata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila ventriobscurata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila riverata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5 Sequences to be downloaded for: (Scaptodrosophila ventriobscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila puncticeps_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila trivittata_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila puncticeps[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2 Sequences to be downloaded for: (Scaptodrosophila trivittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila nigrolimbata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila neozelandica_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila nigrolimbata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+1 Sequences to be downloaded for: (Scaptodrosophila neozelandica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila longispinata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila kirki_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila longispinata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2 Sequences to be downloaded for: (Scaptodrosophila kirki[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila helvpecta_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila dorsocentralis_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila helvpecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila fusciventricula_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila dorsocentralis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila coracina_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila fusciventricula[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila fuscilimba_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila lativittata_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila lativittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3 Sequences to be downloaded for: (Scaptodrosophila fuscilimba[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila subtilis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila paratriangulata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila rhina_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila stonei_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila rhina[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+1 Sequences to be downloaded for: (Scaptodrosophila stonei[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila protenipenis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila bryani_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila protenipenis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila finitima_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila pressobrunnea_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila pattersoni_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila pressobrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila obscurata_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila pattersoni[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila brooksae_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila obscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila hibisci_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila nigripecta_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigripecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila galloi_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila nigricostata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila rufifrons_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigricostata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila latifasciaeformis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila melanogaster_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila latifasciaeformis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5 Sequences to be downloaded for: (Scaptodrosophila melanogaster[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila deflexa_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila maculata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila lebanonensis_COI_gb.fa
+4 Sequences to be downloaded for: (Scaptodrosophila maculata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila parabrunnea_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila lebanonensis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+1 Sequences to be downloaded for: (Scaptodrosophila parabrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila scutellimargo_COI_gb.fa
+8 Sequences to be downloaded for: (Scaptodrosophila scutellimargo[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+starting worker pid=16532 on localhost:11068 at 20:37:06.286
+starting worker pid=4256 on localhost:11068 at 20:37:06.735
+Loading required package: bold
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila zebrina Liu & Chen, 2018_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila riverata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila ventriobscurata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila riverata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5 Sequences to be downloaded for: (Scaptodrosophila ventriobscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila puncticeps_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila trivittata_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila puncticeps[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2 Sequences to be downloaded for: (Scaptodrosophila trivittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila neozelandica_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila nigrolimbata_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila neozelandica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2 Sequences to be downloaded for: (Scaptodrosophila nigrolimbata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila kirki_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila kirki[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila longispinata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila dorsocentralis_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila longispinata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila helvpecta_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila dorsocentralis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila coracina_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila helvpecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila lativittata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila fusciventricula_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila fusciventricula[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila fuscilimba_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila lativittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3 Sequences to be downloaded for: (Scaptodrosophila fuscilimba[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila subtilis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila paratriangulata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila rhina_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila rhina[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila stonei_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila protenipenis_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila protenipenis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+1 Sequences to be downloaded for: (Scaptodrosophila stonei[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila pressobrunnea_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila pressobrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila bryani_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila obscurata_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila obscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila finitima_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila nigripecta_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila pattersoni_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigripecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila nigricostata_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila pattersoni[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3 Sequences to be downloaded for: (Scaptodrosophila nigricostata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila melanogaster_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila brooksae_COI_gb.fa
+5 Sequences to be downloaded for: (Scaptodrosophila melanogaster[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila maculata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila hibisci_COI_gb.fa
+4 Sequences to be downloaded for: (Scaptodrosophila maculata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila galloi_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila parabrunnea_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila rufifrons_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila parabrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila latifasciaeformis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila scutellimargo_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila latifasciaeformis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+8 Sequences to be downloaded for: (Scaptodrosophila scutellimargo[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila deflexa_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: genbank/Scaptodrosophila lebanonensis_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila lebanonensis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+starting worker pid=4116 on localhost:11068 at 20:38:13.893
+starting worker pid=10432 on localhost:11068 at 20:38:14.216
+Loading required package: bold
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila zebrina Liu & Chen, 2018_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila riverata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila ventriobscurata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila riverata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5 Sequences to be downloaded for: (Scaptodrosophila ventriobscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila puncticeps_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila puncticeps[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila trivittata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila trivittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila neozelandica_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigrolimbata_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila neozelandica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2 Sequences to be downloaded for: (Scaptodrosophila nigrolimbata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila kirki_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila longispinata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila kirki[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3 Sequences to be downloaded for: (Scaptodrosophila longispinata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila dorsocentralis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila helvpecta_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila dorsocentralis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+6 Sequences to be downloaded for: (Scaptodrosophila helvpecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila coracina_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila fusciventricula_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila lativittata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila fusciventricula[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+1 Sequences to be downloaded for: (Scaptodrosophila lativittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila fuscilimba_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila paratriangulata_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila fuscilimba[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila stonei_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila subtilis_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila stonei[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila bryani_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila finitima_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila rhina_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila pattersoni_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila rhina[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+1 Sequences to be downloaded for: (Scaptodrosophila pattersoni[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila brooksae_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila protenipenis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila hibisci_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila galloi_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila protenipenis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila rufifrons_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila latifasciaeformis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila pressobrunnea_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila latifasciaeformis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila deflexa_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila pressobrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila obscurata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila lebanonensis_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila obscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2 Sequences to be downloaded for: (Scaptodrosophila lebanonensis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigripecta_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigripecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigricostata_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigricostata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila melanogaster_COI_gb.fa
+5 Sequences to be downloaded for: (Scaptodrosophila melanogaster[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila maculata_COI_gb.fa
+4 Sequences to be downloaded for: (Scaptodrosophila maculata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila parabrunnea_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila parabrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila scutellimargo_COI_gb.fa
+8 Sequences to be downloaded for: (Scaptodrosophila scutellimargo[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+starting worker pid=12392 on localhost:11068 at 20:41:24.755
+starting worker pid=18568 on localhost:11068 at 20:41:25.028
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Loading required package: Biostrings
+Loading required package: BiocGenerics
+Loading required package: Biostrings
+Loading required package: parallel
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+Loading required package: XVector
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+Loading required package: XVector
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+Loading required package: Rcpp
+Loading required package: Rcpp
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following object is masked from 'package:stats':
+
+    filter
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following object is masked from 'package:stats':
+
+    filter
+
+Using default marker 'COI' 
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila zebrina Liu & Chen, 2018_COI_gb.fa
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila riverata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila ventriobscurata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila riverata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+5 Sequences to be downloaded for: (Scaptodrosophila ventriobscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila riverata Sequences from Genbank  in 5.2 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila puncticeps_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila puncticeps[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+6
+Chunk1 of 1 downloaded
+Downloaded 5 Scaptodrosophila ventriobscurata Sequences from Genbank  in 6.2 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila trivittata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila trivittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+Downloaded 6 Scaptodrosophila puncticeps Sequences from Genbank  in 4.3 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila neozelandica_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila neozelandica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila kirki_COI_gb.fa
+Downloaded 2 Scaptodrosophila trivittata Sequences from Genbank  in 4.1 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigrolimbata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila kirki[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+2 Sequences to be downloaded for: (Scaptodrosophila nigrolimbata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila kirki Sequences from Genbank  in 3.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila dorsocentralis_COI_gb.fa
+Downloaded 2 Scaptodrosophila nigrolimbata Sequences from Genbank  in 3.8 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila longispinata_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila dorsocentralis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3 Sequences to be downloaded for: (Scaptodrosophila longispinata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila coracina_COI_gb.fa
+3
+Chunk1 of 1 downloaded
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila lativittata_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila lativittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila paratriangulata_COI_gb.fa
+Downloaded 3 Scaptodrosophila longispinata Sequences from Genbank  in 3.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila helvpecta_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila stonei_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila helvpecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+1 Sequences to be downloaded for: (Scaptodrosophila stonei[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+6
+Chunk1 of 1 downloaded
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila bryani_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila finitima_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila pattersoni_COI_gb.fa
+Downloaded 6 Scaptodrosophila helvpecta Sequences from Genbank  in 4.3 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila fusciventricula_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila pattersoni[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2 Sequences to be downloaded for: (Scaptodrosophila fusciventricula[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila brooksae_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila hibisci_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila galloi_COI_gb.fa
+Downloaded 2 Scaptodrosophila fusciventricula Sequences from Genbank  in 3.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila fuscilimba_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila rufifrons_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila fuscilimba[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila latifasciaeformis_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila latifasciaeformis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+3
+Chunk1 of 1 downloaded
+Downloaded 3 Scaptodrosophila fuscilimba Sequences from Genbank  in 5 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila subtilis_COI_gb.fa
+Downloaded 3 Scaptodrosophila latifasciaeformis Sequences from Genbank  in 4.2 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila deflexa_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila rhina_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila lebanonensis_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila rhina[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+2 Sequences to be downloaded for: (Scaptodrosophila lebanonensis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila rhina Sequences from Genbank  in 3.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila protenipenis_COI_gb.fa
+Downloaded 2 Scaptodrosophila lebanonensis Sequences from Genbank  in 4.1 secs
+3 Sequences to be downloaded for: (Scaptodrosophila protenipenis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+Downloaded 3 Scaptodrosophila protenipenis Sequences from Genbank  in 4 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila pressobrunnea_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila pressobrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila pressobrunnea Sequences from Genbank  in 4 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila obscurata_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila obscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+6
+Chunk1 of 1 downloaded
+Downloaded 6 Scaptodrosophila obscurata Sequences from Genbank  in 4.3 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigripecta_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigripecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+Downloaded 3 Scaptodrosophila nigripecta Sequences from Genbank  in 4.1 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigricostata_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigricostata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+Downloaded 3 Scaptodrosophila nigricostata Sequences from Genbank  in 3.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila melanogaster_COI_gb.fa
+5 Sequences to be downloaded for: (Scaptodrosophila melanogaster[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5
+Chunk1 of 1 downloaded
+Downloaded 5 Scaptodrosophila melanogaster Sequences from Genbank  in 4.3 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila maculata_COI_gb.fa
+4 Sequences to be downloaded for: (Scaptodrosophila maculata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+4
+Chunk1 of 1 downloaded
+Downloaded 4 Scaptodrosophila maculata Sequences from Genbank  in 4 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila parabrunnea_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila parabrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila scutellimargo_COI_gb.fa
+8 Sequences to be downloaded for: (Scaptodrosophila scutellimargo[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+8
+Chunk1 of 1 downloaded
+Downloaded 8 Scaptodrosophila scutellimargo Sequences from Genbank  in 4.7 secs
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+starting worker pid=5284 on localhost:11068 at 20:42:51.063
+starting worker pid=4712 on localhost:11068 at 20:42:51.467
+Loading required package: bold
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Loading required package: Biostrings
+Loading required package: BiocGenerics
+Loading required package: Biostrings
+Loading required package: parallel
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+Loading required package: XVector
+Loading required package: XVector
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+Loading required package: Rcpp
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+Loading required package: Rcpp
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following object is masked from 'package:stats':
+
+    filter
+
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following object is masked from 'package:stats':
+
+    filter
+
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila riverata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila zebrina Liu & Chen, 2018_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila ventriobscurata_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila riverata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5 Sequences to be downloaded for: (Scaptodrosophila ventriobscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+5
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila riverata Sequences from Genbank  in 5.8 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila puncticeps_COI_gb.fa
+Downloaded 5 Scaptodrosophila ventriobscurata Sequences from Genbank  in 5.2 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila trivittata_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila puncticeps[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+6
+Chunk1 of 1 downloaded
+2 Sequences to be downloaded for: (Scaptodrosophila trivittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+Downloaded 6 Scaptodrosophila puncticeps Sequences from Genbank  in 4.3 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila neozelandica_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila neozelandica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Downloaded 2 Scaptodrosophila trivittata Sequences from Genbank  in 4.5 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigrolimbata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila kirki_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila kirki[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2 Sequences to be downloaded for: (Scaptodrosophila nigrolimbata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+2
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila kirki Sequences from Genbank  in 3.8 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila dorsocentralis_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila dorsocentralis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Downloaded 2 Scaptodrosophila nigrolimbata Sequences from Genbank  in 5.2 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila longispinata_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila coracina_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila longispinata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila lativittata_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila lativittata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila paratriangulata_COI_gb.fa
+3
+Chunk1 of 1 downloaded
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila stonei_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila stonei[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila bryani_COI_gb.fa
+Downloaded 3 Scaptodrosophila longispinata Sequences from Genbank  in 5.5 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila helvpecta_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila finitima_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila pattersoni_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila helvpecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+1 Sequences to be downloaded for: (Scaptodrosophila pattersoni[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+6
+Chunk1 of 1 downloaded
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila brooksae_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila hibisci_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila galloi_COI_gb.fa
+Downloaded 6 Scaptodrosophila helvpecta Sequences from Genbank  in 4.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila fusciventricula_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila rufifrons_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila fusciventricula[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila latifasciaeformis_COI_gb.fa
+2
+Chunk1 of 1 downloaded
+3 Sequences to be downloaded for: (Scaptodrosophila latifasciaeformis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila fusciventricula Sequences from Genbank  in 4.5 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila fuscilimba_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila fuscilimba[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+Downloaded 3 Scaptodrosophila latifasciaeformis Sequences from Genbank  in 4.5 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila deflexa_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila lebanonensis_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila lebanonensis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Downloaded 3 Scaptodrosophila fuscilimba Sequences from Genbank  in 3.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila subtilis_COI_gb.fa
+2
+Chunk1 of 1 downloaded
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila rhina_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila rhina[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila lebanonensis Sequences from Genbank  in 4.1 secs
+Downloaded 2 Scaptodrosophila rhina Sequences from Genbank  in 3.8 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila protenipenis_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila protenipenis[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+Downloaded 3 Scaptodrosophila protenipenis Sequences from Genbank  in 4 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila pressobrunnea_COI_gb.fa
+2 Sequences to be downloaded for: (Scaptodrosophila pressobrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+2
+Chunk1 of 1 downloaded
+Downloaded 2 Scaptodrosophila pressobrunnea Sequences from Genbank  in 3.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila obscurata_COI_gb.fa
+6 Sequences to be downloaded for: (Scaptodrosophila obscurata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+6
+Chunk1 of 1 downloaded
+Downloaded 6 Scaptodrosophila obscurata Sequences from Genbank  in 4.3 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigripecta_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigripecta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+Downloaded 3 Scaptodrosophila nigripecta Sequences from Genbank  in 3.9 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila nigricostata_COI_gb.fa
+3 Sequences to be downloaded for: (Scaptodrosophila nigricostata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+3
+Chunk1 of 1 downloaded
+Downloaded 3 Scaptodrosophila nigricostata Sequences from Genbank  in 4 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila melanogaster_COI_gb.fa
+5 Sequences to be downloaded for: (Scaptodrosophila melanogaster[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5
+Chunk1 of 1 downloaded
+Downloaded 5 Scaptodrosophila melanogaster Sequences from Genbank  in 4.5 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila maculata_COI_gb.fa
+4 Sequences to be downloaded for: (Scaptodrosophila maculata[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+4
+Chunk1 of 1 downloaded
+Downloaded 4 Scaptodrosophila maculata Sequences from Genbank  in 4.1 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila parabrunnea_COI_gb.fa
+1 Sequences to be downloaded for: (Scaptodrosophila parabrunnea[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila scutellimargo_COI_gb.fa
+8 Sequences to be downloaded for: (Scaptodrosophila scutellimargo[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+8
+Chunk1 of 1 downloaded
+Downloaded 8 Scaptodrosophila scutellimargo Sequences from Genbank  in 4.6 secs
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+Warning message:
+executing %dopar% sequentially: no parallel backend registered 
+starting worker pid=6128 on localhost:11068 at 20:44:36.993
+starting worker pid=17340 on localhost:11068 at 20:44:37.476
+Loading required package: bold
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Loading required package: Biostrings
+Loading required package: Biostrings
+Loading required package: BiocGenerics
+Loading required package: BiocGenerics
+Loading required package: parallel
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+Loading required package: stats4
+starting worker pid=17832 on localhost:11068 at 20:45:07.620
+starting worker pid=20244 on localhost:11068 at 20:45:08.073
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Loading required package: rentrez
+Loading required package: Biostrings
+Loading required package: Biostrings
+Loading required package: BiocGenerics
+Loading required package: BiocGenerics
+Loading required package: parallel
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+Loading required package: stats4
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+Loading required package: IRanges
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+
+Attaching package: 'IRanges'
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+s
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+Loading required package: XVector
+Loading required package: XVector
+
+Attaching package: 'XVector'
+
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+
+Attaching package: 'Biostrings'
+
+Loading required package: biofiles
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+Loading required package: Rcpp
+Loading required package: Rcpp
+
+Attaching package: 'biofiles'
+
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following object is masked from 'package:stats':
+
+    filter
+
+The following object is masked from 'package:stats':
+
+    filter
+
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila parabrunnea_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila ventriobscurata_COI-5P_bold.fa
+Downloaded 5 Scaptodrosophila ventriobscurata Sequences from BOLD  in 1.8 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila trivittata_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila parabrunnea Sequences from BOLD  in 1.8 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila scutellimargo_COI-5P_bold.fa
+Downloaded 2 Scaptodrosophila trivittata Sequences from BOLD  in 0.74 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila nigrolimbata_COI-5P_bold.fa
+Downloaded 8 Scaptodrosophila scutellimargo Sequences from BOLD  in 0.83 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila riverata_COI-5P_bold.fa
+Downloaded 2 Scaptodrosophila nigrolimbata Sequences from BOLD  in 0.71 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila longispinata_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila puncticeps_COI-5P_bold.fa
+Downloaded 0 Scaptodrosophila longispinata Sequences from BOLD  in 0.69 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila helvpecta_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila kirki_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila kirki Sequences from BOLD  in 0.73 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila dorsocentralis_COI-5P_bold.fa
+Downloaded 6 Scaptodrosophila helvpecta Sequences from BOLD  in 0.77 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila fusciventricula_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila dorsocentralis Sequences from BOLD  in 0.73 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila coracina_COI-5P_bold.fa
+Downloaded 2 Scaptodrosophila fusciventricula Sequences from BOLD  in 0.71 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila fuscilimba_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila lativittata_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila fuscilimba Sequences from BOLD  in 0.73 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila rhina_COI-5P_bold.fa
+Downloaded 0 Scaptodrosophila lativittata Sequences from BOLD  in 0.69 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila stonei_COI-5P_bold.fa
+Downloaded 2 Scaptodrosophila rhina Sequences from BOLD  in 0.71 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila protenipenis_COI-5P_bold.fa
+Downloaded 0 Scaptodrosophila stonei Sequences from BOLD  in 0.65 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila pattersoni_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila protenipenis Sequences from BOLD  in 0.69 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila obscurata_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila pattersoni Sequences from BOLD  in 0.73 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila latifasciaeformis_COI-5P_bold.fa
+Downloaded 6 Scaptodrosophila obscurata Sequences from BOLD  in 0.71 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila nigripecta_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila latifasciaeformis Sequences from BOLD  in 0.71 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila deflexa_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila nigripecta Sequences from BOLD  in 0.7 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila nigricostata_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila lebanonensis_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila nigricostata Sequences from BOLD  in 0.66 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila melanogaster_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila lebanonensis Sequences from BOLD  in 0.67 secs
+Downloaded 5 Scaptodrosophila melanogaster Sequences from BOLD  in 0.68 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila maculata_COI-5P_bold.fa
+Downloaded 4 Scaptodrosophila maculata Sequences from BOLD  in 0.67 secs
+starting worker pid=232 on localhost:11068 at 20:46:31.711
+starting worker pid=17348 on localhost:11068 at 20:46:31.939
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Loading required package: Biostrings
+Loading required package: Biostrings
+Loading required package: BiocGenerics
+Loading required package: BiocGenerics
+Loading required package: parallel
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: stats4
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+Loading required package: XVector
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+Loading required package: XVector
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+Loading required package: Rcpp
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+Loading required package: Rcpp
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following object is masked from 'package:stats':
+
+    filter
+
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following object is masked from 'package:stats':
+
+    filter
+
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila ventriobscurata_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila parabrunnea_COI-5P_bold.fa
+Downloaded 5 Scaptodrosophila ventriobscurata Sequences from BOLD  in 1.5 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila trivittata_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila parabrunnea Sequences from BOLD  in 1.5 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila scutellimargo_COI-5P_bold.fa
+Downloaded 2 Scaptodrosophila trivittata Sequences from BOLD  in 0.73 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila nigrolimbata_COI-5P_bold.fa
+Downloaded 8 Scaptodrosophila scutellimargo Sequences from BOLD  in 0.77 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila riverata_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila puncticeps_COI-5P_bold.fa
+Downloaded 2 Scaptodrosophila nigrolimbata Sequences from BOLD  in 0.78 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila longispinata_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila kirki_COI-5P_bold.fa
+Downloaded 0 Scaptodrosophila longispinata Sequences from BOLD  in 0.78 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila helvpecta_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila kirki Sequences from BOLD  in 0.67 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila dorsocentralis_COI-5P_bold.fa
+Downloaded 6 Scaptodrosophila helvpecta Sequences from BOLD  in 0.73 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila fusciventricula_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila dorsocentralis Sequences from BOLD  in 0.65 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila coracina_COI-5P_bold.fa
+Downloaded 2 Scaptodrosophila fusciventricula Sequences from BOLD  in 0.67 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila fuscilimba_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila lativittata_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila fuscilimba Sequences from BOLD  in 0.7 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila rhina_COI-5P_bold.fa
+Downloaded 0 Scaptodrosophila lativittata Sequences from BOLD  in 0.66 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila stonei_COI-5P_bold.fa
+Downloaded 2 Scaptodrosophila rhina Sequences from BOLD  in 0.68 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila protenipenis_COI-5P_bold.fa
+Downloaded 0 Scaptodrosophila stonei Sequences from BOLD  in 0.66 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila pattersoni_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila protenipenis Sequences from BOLD  in 0.68 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila obscurata_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila pattersoni Sequences from BOLD  in 0.7 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila latifasciaeformis_COI-5P_bold.fa
+Downloaded 6 Scaptodrosophila obscurata Sequences from BOLD  in 0.71 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila nigripecta_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila latifasciaeformis Sequences from BOLD  in 0.71 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila deflexa_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila nigripecta Sequences from BOLD  in 0.74 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila nigricostata_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila lebanonensis_COI-5P_bold.fa
+Downloaded 3 Scaptodrosophila nigricostata Sequences from BOLD  in 0.69 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila melanogaster_COI-5P_bold.fa
+Downloaded 1 Scaptodrosophila lebanonensis Sequences from BOLD  in 0.66 secs
+Downloaded 5 Scaptodrosophila melanogaster Sequences from BOLD  in 0.68 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila maculata_COI-5P_bold.fa
+Downloaded 4 Scaptodrosophila maculata Sequences from BOLD  in 0.67 secs
+Warning messages:
+1: In FUN(X[[i]], ...) : No data for Scaptodrosophila riverata on bold
+
+2: In FUN(X[[i]], ...) : No data for Scaptodrosophila puncticeps on bold
+
+3: In FUN(X[[i]], ...) : No data for Scaptodrosophila coracina on bold
+
+4: In FUN(X[[i]], ...) : No data for Scaptodrosophila deflexa on bold
+
+starting worker pid=8388 on localhost:11068 at 20:47:53.602
+starting worker pid=672 on localhost:11068 at 20:47:53.992
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Loading required package: rentrez
+Loading required package: Biostrings
+Loading required package: Biostrings
+Loading required package: BiocGenerics
+Loading required package: BiocGenerics
+Loading required package: parallel
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+Loading required package: stats4
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+Loading required package: IRanges
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+Loading required package: XVector
+Loading required package: XVector
+
+Attaching package: 'XVector'
+
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+Loading required package: Rcpp
+Loading required package: Rcpp
+
+Attaching package: 'biofiles'
+
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following object is masked from 'package:stats':
+
+    filter
+
+The following object is masked from 'package:stats':
+
+    filter
+
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Zapriothrica_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Dettopsomyia_COI-5P_bold.fa
+Downloaded 0 Zapriothrica Sequences from BOLD  in 1.5 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Cladochaeta_COI-5P_bold.fa
+Downloaded 1 Dettopsomyia Sequences from BOLD  in 1.5 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Apsiphortica_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Amiota_COI-5P_bold.fa
+Downloaded 0 Cladochaeta Sequences from BOLD  in 0.72 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Collessia_COI-5P_bold.fa
+Downloaded 4 Collessia Sequences from BOLD  in 0.74 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Impatiophila_COI-5P_bold.fa
+Downloaded 17 Amiota Sequences from BOLD  in 1.2 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Laccodrosophila_COI-5P_bold.fa
+Downloaded 0 Laccodrosophila Sequences from BOLD  in 1.1 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptodrosophila_COI-5P_bold.fa
+Downloaded 210 Impatiophila Sequences from BOLD  in 2.5 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Microdrosophila_COI-5P_bold.fa
+Downloaded 78 Scaptodrosophila Sequences from BOLD  in 1.9 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Samoaia_COI-5P_bold.fa
+Downloaded 45 Microdrosophila Sequences from BOLD  in 1.7 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Luzonimyia_COI-5P_bold.fa
+Downloaded 1 Samoaia Sequences from BOLD  in 0.72 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Paramycodrosophila_COI-5P_bold.fa
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Pseudostegana_COI-5P_bold.fa
+Downloaded 1 Paramycodrosophila Sequences from BOLD  in 0.7 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Paraliodrosophila_COI-5P_bold.fa
+Downloaded 12 Paraliodrosophila Sequences from BOLD  in 1.1 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Mycodrosophila_COI-5P_bold.fa
+Downloaded 22 Pseudostegana Sequences from BOLD  in 1.4 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Apenthecia_COI-5P_bold.fa
+Downloaded 1 Apenthecia Sequences from BOLD  in 0.72 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Colocasiomyia_COI-5P_bold.fa
+Downloaded 170 Mycodrosophila Sequences from BOLD  in 2.4 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Lordiphosa_COI-5P_bold.fa
+Downloaded 92 Colocasiomyia Sequences from BOLD  in 2.1 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Zygothrica_COI-5P_bold.fa
+Downloaded 61 Lordiphosa Sequences from BOLD  in 1.8 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Leucophenga_COI-5P_bold.fa
+Downloaded 120 Zygothrica Sequences from BOLD  in 6.4 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Cacoxenus_COI-5P_bold.fa
+Downloaded 369 Leucophenga Sequences from BOLD  in 5.6 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Hirtodrosophila_COI-5P_bold.fa
+Downloaded 1 Cacoxenus Sequences from BOLD  in 0.67 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Acletoxenus_COI-5P_bold.fa
+Downloaded 0 Acletoxenus Sequences from BOLD  in 0.65 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Phortica_COI-5P_bold.fa
+Downloaded 116 Hirtodrosophila Sequences from BOLD  in 2.8 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Scaptomyza_COI-5P_bold.fa
+Downloaded 35 Phortica Sequences from BOLD  in 2.2 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Stegana_COI-5P_bold.fa
+Downloaded 92 Stegana Sequences from BOLD  in 2.5 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Rhinoleucophenga_COI-5P_bold.fa
+Downloaded 26 Rhinoleucophenga Sequences from BOLD  in 1.2 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Gitona_COI-5P_bold.fa
+Downloaded 0 Gitona Sequences from BOLD  in 0.68 secs
+Downloaded 2910 Scaptomyza Sequences from BOLD  in 22 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Zaprionus_COI-5P_bold.fa
+Downloaded 182 Zaprionus Sequences from BOLD  in 2.6 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Liodrosophila_COI-5P_bold.fa
+Downloaded 0 Liodrosophila Sequences from BOLD  in 0.72 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Chymomyza_COI-5P_bold.fa
+Downloaded 225 Chymomyza Sequences from BOLD  in 2.8 secs
+Using default marker 'COI-5P' 
+No input file given, saving output file to: bold/Drosophila_COI-5P_bold.fa
+Downloaded 8291 Drosophila Sequences from BOLD  in 1.2 mins
+Warning message:
+In FUN(X[[i]], ...) : No data for Luzonimyia on bold
+
+Warning message:
+In FUN(X[[i]], ...) : No data for Apsiphortica on bold
+
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+In addition: Warning messages:
+1: In FUN(X[[i]], ...) : No data for Scaptodrosophila riverata on bold
+
+2: In FUN(X[[i]], ...) : No data for Scaptodrosophila puncticeps on bold
+
+3: In FUN(X[[i]], ...) : No data for Scaptodrosophila coracina on bold
+
+4: In FUN(X[[i]], ...) : No data for Scaptodrosophila deflexa on bold
+
+Execution halted
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
+starting worker pid=10976 on localhost:11068 at 21:20:41.240
+starting worker pid=11212 on localhost:11068 at 21:20:41.641
+Loading required package: bold
+Loading required package: bold
+Loading required package: taxize
+Loading required package: taxize
+Loading required package: tidyverse
+Loading required package: tidyverse
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+-- Attaching packages ---------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+v ggplot2 3.1.1       v purrr   0.3.2  
+v tibble  2.1.1       v dplyr   0.8.0.1
+v tidyr   0.8.3       v stringr 1.4.0  
+v readr   1.3.1       v forcats 0.4.0  
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+-- Conflicts ------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()
+Loading required package: rentrez
+Loading required package: Biostrings
+Loading required package: Biostrings
+Loading required package: BiocGenerics
+Loading required package: BiocGenerics
+Loading required package: parallel
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+The following objects are masked from 'package:base':
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: S4Vectors
+Loading required package: stats4
+Loading required package: stats4
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:tidyr':
+
+    expand
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+The following object is masked from 'package:purrr':
+
+    reduce
+
+The following object is masked from 'package:grDevices':
+
+    windows
+
+Loading required package: XVector
+Loading required package: XVector
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'XVector'
+
+The following object is masked from 'package:purrr':
+
+    compact
+
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+
+Attaching package: 'Biostrings'
+
+The following object is masked from 'package:base':
+
+    strsplit
+
+Loading required package: biofiles
+Loading required package: Rcpp
+Loading required package: Rcpp
+
+Attaching package: 'biofiles'
+
+
+Attaching package: 'biofiles'
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following objects are masked from 'package:IRanges':
+
+    ranges, shift
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following object is masked from 'package:BiocGenerics':
+
+    strand<-
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following objects are masked from 'package:dplyr':
+
+    filter, location, select
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following object is masked from 'package:tibble':
+
+    view
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following objects are masked from 'package:taxize':
+
+    downstream, upstream
+
+The following object is masked from 'package:stats':
+
+    filter
+
+The following object is masked from 'package:stats':
+
+    filter
+
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Gitona_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Zapriothrica_COI_gb.fa
+1 Sequences to be downloaded for: (Zapriothrica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Dettopsomyia_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Cladochaeta_COI_gb.fa
+1 Sequences to be downloaded for: (Dettopsomyia[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+6 Sequences to be downloaded for: (Cladochaeta[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Apsiphortica_COI_gb.fa
+Chunk1 of 1 downloaded
+4 Sequences to be downloaded for: (Apsiphortica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 6 Cladochaeta Sequences from Genbank  in 4.2 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Collessia_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Impatiophila_COI_gb.fa
+Downloaded 4 Apsiphortica Sequences from Genbank  in 4.5 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Amiota_COI_gb.fa
+214 Sequences to be downloaded for: (Impatiophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+25 Sequences to be downloaded for: (Amiota[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 25 Amiota Sequences from Genbank  in 6.2 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Laccodrosophila_COI_gb.fa
+13 Sequences to be downloaded for: (Laccodrosophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 13 Laccodrosophila Sequences from Genbank  in 5.3 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Styloptera_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Sphaerogastrella_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptodrosophila_COI_gb.fa
+113 Sequences to be downloaded for: (Scaptodrosophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 113 Scaptodrosophila Sequences from Genbank  in 11 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Samoaia_COI_gb.fa
+Chunk1 of 1 downloaded
+1 Sequences to be downloaded for: (Samoaia[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Phorticella_COI_gb.fa
+Downloaded 214 Impatiophila Sequences from Genbank  in 29 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Microdrosophila_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Paramycodrosophila_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Paraliodrosophila_COI_gb.fa
+29 Sequences to be downloaded for: (Microdrosophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+12 Sequences to be downloaded for: (Paraliodrosophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 12 Paraliodrosophila Sequences from Genbank  in 9.7 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Neotanygastrella_COI_gb.fa
+Chunk1 of 1 downloaded
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Mycodrosophila_COI_gb.fa
+72 Sequences to be downloaded for: (Mycodrosophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Downloaded 29 Microdrosophila Sequences from Genbank  in 15 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Lissocephala_COI_gb.fa
+1 Sequences to be downloaded for: (Lissocephala[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Jeannelopsis_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Hypselothyrea_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Dichaetophora_COI_gb.fa
+23 Sequences to be downloaded for: (Dichaetophora[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Chunk1 of 1 downloaded
+Downloaded 72 Mycodrosophila Sequences from Genbank  in 10 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Mulgravea_COI_gb.fa
+Downloaded 23 Dichaetophora Sequences from Genbank  in 5.7 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Diathoneura_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Lordiphosa_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Luzonimyia_COI_gb.fa
+80 Sequences to be downloaded for: (Lordiphosa[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+5 Sequences to be downloaded for: (Luzonimyia[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 5 Luzonimyia Sequences from Genbank  in 4.3 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Pseudostegana_COI_gb.fa
+50 Sequences to be downloaded for: (Pseudostegana[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Chunk1 of 1 downloaded
+Downloaded 80 Lordiphosa Sequences from Genbank  in 12 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Leucophenga_COI_gb.fa
+Downloaded 50 Pseudostegana Sequences from Genbank  in 6.8 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Parastegana_COI_gb.fa
+7 Sequences to be downloaded for: (Parastegana[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+828 Sequences to be downloaded for: (Leucophenga[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 7 Parastegana Sequences from Genbank  in 6 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Apenthecia_COI_gb.fa
+5 Sequences to be downloaded for: (Apenthecia[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 5 Apenthecia Sequences from Genbank  in 4.7 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Colocasiomyia_COI_gb.fa
+103 Sequences to be downloaded for: (Colocasiomyia[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 103 Colocasiomyia Sequences from Genbank  in 12 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Zygothrica_COI_gb.fa
+522 Sequences to be downloaded for: (Zygothrica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 522 Zygothrica Sequences from Genbank  in 33 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Paraleucophenga_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Cacoxenus_COI_gb.fa
+1 Sequences to be downloaded for: (Cacoxenus[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Acletoxenus_COI_gb.fa
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Phortica_COI_gb.fa
+Chunk1 of 1 downloaded
+248 Sequences to be downloaded for: (Phortica[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Downloaded 828 Leucophenga Sequences from Genbank  in 1.1 mins
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Hirtodrosophila_COI_gb.fa
+214 Sequences to be downloaded for: (Hirtodrosophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 214 Hirtodrosophila Sequences from Genbank  in 16 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Scaptomyza_COI_gb.fa
+Chunk1 of 1 downloaded
+1576 Sequences to be downloaded for: (Scaptomyza[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Downloaded 248 Phortica Sequences from Genbank  in 24 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Stegana_COI_gb.fa
+244 Sequences to be downloaded for: (Stegana[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 244 Stegana Sequences from Genbank  in 23 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Rhinoleucophenga_COI_gb.fa
+26 Sequences to be downloaded for: (Rhinoleucophenga[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 26 Rhinoleucophenga Sequences from Genbank  in 5.8 secs
+Chunk1 of 1 downloaded
+Downloaded 1576 Scaptomyza Sequences from Genbank  in 2.3 mins
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Zaprionus_COI_gb.fa
+141 Sequences to be downloaded for: (Zaprionus[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 141 Zaprionus Sequences from Genbank  in 15 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Liodrosophila_COI_gb.fa
+7 Sequences to be downloaded for: (Liodrosophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 7 Liodrosophila Sequences from Genbank  in 6.6 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Chymomyza_COI_gb.fa
+189 Sequences to be downloaded for: (Chymomyza[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Chunk1 of 1 downloaded
+Downloaded 189 Chymomyza Sequences from Genbank  in 39 secs
+Using default marker 'COI' 
+No input file given, saving output file to: C:/Users/ap0y/Dropbox/R/taxreturn/genbank/Drosophila_COI_gb.fa
+8481 Sequences to be downloaded for: (Drosophila[ORGN]) AND (COI) AND 1:2000[Sequence Length]
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
+Error in unserialize(node$con) : error reading from connection
+Calls: <Anonymous> ... doTryCatch -> recvData -> recvData.SOCKnode -> unserialize
+Execution halted
