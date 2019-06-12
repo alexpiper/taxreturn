@@ -18,16 +18,16 @@ Suggests:
     spelling
 Language: en-US
 Imports: 
-    dplyr,
-    magrittr,
-    tibble,
+    tidyverse,
     rentrez,
     aphid,
     insect,
     biofiles,
     Biostrings,
+    ape,
     taxizedb,
     stringr,
-    bold
+    bold,
+    parallel
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1

@@ -71,15 +71,17 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
         na.omit() %>%
         mutate(species_name = trimws(species_name, which="both")) %>%
         mutate(gb= taxizedb::name2taxid(data$species_name)) %>%
-        unite("name",c("sampleid","gb"),sep=";")
+        unite("name",c("sampleid","gb"),sep="|")
     #gb-binom
     } else if (output=="gb-binom") {
     data <- subset(data, select=c("sampleid", "species_name", "nucleotides")) %>%
       na.omit() %>%
       mutate(species_name = trimws(species_name, which="both")) %>%
       mutate(gb= taxizedb::name2taxid(data$species_name)) %>%
-      unite("name",c("sampleid","gb","species_name"),sep=";")
-  }
+      unite("name",c("sampleid","gb"),sep="|") %>%
+      unite("name",c("name","species_name"),sep=";")
+    }
+
 
 
     #Output fASTA
@@ -152,7 +154,7 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
                 taxid <- map(x,biofiles::dbxref, "taxon")
                 tax_chr <- map_chr(taxid, function(y){as.character(y[1,1])})
                 attributes(tax_chr) <- NULL
-                taxout <- paste0(attributes(taxid)$names,";",tax_chr)
+                taxout <- paste0(attributes(taxid)$names,"|",tax_chr)
                 return(taxout)
               }
           names <- cat_acctax(gb)
@@ -164,7 +166,7 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
               taxid <- map(x,biofiles::dbxref, "taxon")
               tax_chr <- map_chr(taxid, function(y){as.character(y[1,1])})
               attributes(tax_chr) <- NULL
-              taxout <- paste0(attributes(taxid)$names,";",tax_chr)
+              taxout <- paste0(attributes(taxid)$names,"|",tax_chr)
               return(taxout)
             }
             names <- paste0(cat_acctax(gb),";",getOrganism(gb))

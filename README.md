@@ -75,3 +75,5 @@ This is a basic example which shows you how to solve a common problem:
 -   Step 4 - cluster and Purge misannotated sequences using insect::Purge
 -   Step 5 - Fetch heirarchial taxonomy using taxizedb
 -   Step 6 - Trim to amplicon region using insect::VirtualPCR
+
+UPDATESD

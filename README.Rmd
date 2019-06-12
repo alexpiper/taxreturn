@@ -76,26 +76,66 @@ This is a basic example which shows you how to solve a common problem:
 * Step 6 - Trim to amplicon region using insect::VirtualPCR
 
 
+UPDATESD
+
 ```{r example, eval=FALSE, include=FALSE}
-#install_github("alexpiper/taxreturn")
+devtools::install_github("alexpiper/taxreturn")
 library(taxreturn)
 
 ## Fetch sequences from GenBank - Might also be good having an output="all" option
-fetchSeqs("Insecta", database="genbank",downstream=TRUE,quiet=FALSE, downto="Family", marker="COI", output = "gb-binom",compress=FALSE, cores=3)
+fetchSeqs("Scaptodrosophila", database="genbank",downstream=TRUE,quiet=FALSE, downto="Species", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=FALSE, cores=3)
 
 ## Fetch sequences from BOLD
-fetchSeqs("Insecta", database="bold",downstream=TRUE,quiet=FALSE, downto="Family", marker="COI-5P", output = "gb-binom",compress=FALSE, cores=3)
+fetchSeqs("Scaptodrosophila", database="bold",downstream=TRUE,quiet=FALSE, downto="Species", marker="COI-5P", output = "gb-binom",compress=FALSE, cores=3)
 
-#Might be worth having an append all option? - if append = true the output = FILE
+#read in all fastas and merge
+gbSeqs <-  readDNAStringSet(sort(list.files("genbank", pattern = ".fa", full.names = TRUE)))
+boldSeqs <-  readDNAStringSet(sort(list.files("bold", pattern = ".fa", full.names = TRUE)))
+mergedSeqs <- append(gbSeqs, boldSeqs, after=length(gbSeqs))
+uniqSeqs <- mergedSeqs[unique(names(mergedSeqs)),] # Remove those sequnce names that are identical across both databases
+  
 
-#read in fastas and merge
-gbseqs <-
-boldseqs <- 
-mergedseqs <- ape::join(gbseqs,boldseqs)
-#filter out duplicate sampleid's - this will remove those on both BOLD and GB
+#Filter using hidden markov model
 
-#Filter sequences - needs to be later?
+#build PHMM from midori longest - sequences need to be same length
+midori <-  readDNAStringSet("MIDORI_LONGEST_20180221_COI.fasta")
+Scapto_midori <- as.DNAbin(midori[str_detect(names(midori),pattern=";Scaptodrosophila;"),])
+folmer <- virtualPCR(Scapto_midori, up = "TITCIACIAAYCAYAARGAYATTGG",down= "TAIACYTCIGGRTGICCRAARAAYCA",cores=3, rcdown = TRUE, trimprimers = TRUE)
+model <- derivePHMM(folmer)
+
+#Clean taxa
+testSeqs <-  readDNAStringSet("test_set.fa")
+filtered <- clean_seqs(testSeqs, model,minscore = 100, minamplen = 50, maxamplen = 1000, shave=TRUE,maxNs = 0)
+
+#filter using insect::purge - Could wrap this in a function for ease of use?
+db <- taxonomy(db = "NCBI", synonyms = TRUE)
+
+#Save old names into attributes
+attributes(filtered)$oldnames <- names(filtered)
+#Get names in format for Pugre
+names(filtered) <- names(filtered) %>%
+  str_split_fixed(";",n=2) %>%
+  as_tibble() %>%
+  pull("V1") 
+purged  <- purge(filtered, db = db, level = "species", confidence = 0.5,
+                  threshold = 0.99, method = "farthest")
+
+#Restore old names
+names(purged) <- attributes(purged)$oldnames
+
+#Prune group sizes down to 5 #Add a discardby=Random, or discardby=Length to the  function
+pruned <- prune_groups(purged,maxGroupSize = 5,quiet = FALSE)
+
+#Check alignments
+filt_aligned <- pruned %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
+filt_aligned <- AlignSeqs(filt_aligned)
+BrowseSeqs(filt_aligned)
+
+
+#Filter out misannotated terms and species that arent binomials - Maybe this can be done during groups as well?
 filtseqs <- filter_taxa(mergedseqs,minlength=200,maxlength=1000,unique=TRUE,binomials=TRUE, removeterms=c("sp.","cf.","NA"))
+
+#Resolve taxonomy - insufficiently identified, synonyms
 
 #Filter_phmm
 #calls aphid to filter with a prebuilt PHMM
@@ -103,17 +143,6 @@ filtseqs <- filter_taxa(mergedseqs,minlength=200,maxlength=1000,unique=TRUE,bino
 #Trim to primer region using virtualPCR from insect package
 amplicon <- virtualPCR(filtseqs, up = "ACWGGWTGRACWGTNTAYCC",down= "ARYATDGTRATDGCHCCDGC",cores=3, rcdown = TRUE, trimprimers = TRUE)
 writeFASTA(amplicon,"gb_trimmed.fa")
-
-
-#filter taxonomically mislabelled sequences using insect::purgeseqs
-#Get taxonomy database
-db <- taxonomy(db = "NCBI", synonyms = FALSE)
-
-#Cluster OTU's and flag mislabelled taxa - PROBLEM this does not currently work on heirarchy, maybe we should therefore retain taxid from JSON until after this
-cleaned <- purge(amplicon, db, level = "order", confidence = 0.8, cores = 20,
-  quiet = FALSE, threshold = 0.99, method = "farthest")
-
-#Fetch taxonomic names
 
 #Resolve taxonomic names using taxize
 #data source 4 = NCBI - To see more data sources use gnr_datasources()
