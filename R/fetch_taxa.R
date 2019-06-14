@@ -31,22 +31,23 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
   time <- Sys.time() # get time
   if (!output %in% c("h","binom","gb","bold","gb-binom")){ stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))}
   if (marker=="COI-5P")  {if (!quiet) (cat("Using default marker 'COI-5P' \n"))}
+  if(is.null(dir)){dir="bold"}
+  if (!file.exists(dir)){ dir.create(dir)}
   if (is.null(file)){
-    if(!is.null(dir)){file=paste0(getwd(),"/",dir,"/",x,"_",marker,"_bold.fa")
-    } else (file=paste0("bold/",x,"_",marker,"_bold.fa"))
+    file=paste0(getwd(),"/",dir,"/",x,"_",marker,"_bold.fa")
     if (!quiet) (message(paste0("No input file given, saving output file to: ",file)))
-    if (!file.exists("bold")){ dir.create("bold")}
   }
   if (file.exists(file)) {file.remove(file)}
   if (stringr::str_detect(file,".gz")){compress=TRUE}
 
   #Bold search
   data <- bold::bold_seqspec(taxon=x, sepfasta=FALSE)
-  if(length(data)!=0 && !is.na(data)){
+  if(length(data)!=0 && !is.na(data$processid[1])){
     data <- data %>%
       dplyr::filter(grepl(marker, markercode)) %>% #Remove all sequences for unwanted markers
-      dplyr::filter(!grepl("sp.", species_name)) %>%
       dplyr::mutate(domain_name = "Eukaryota")
+  }
+  if(length(data)!=0 && !is.na(data$processid[1])){
 
     #Hierarchial output
     if (output=="h") {
