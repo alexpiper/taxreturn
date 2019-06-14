@@ -9,6 +9,18 @@
 #' @param compress
 #' @param dir
 #'
+#' @import bold
+#' @import tidyverse
+#' @import rentrez
+#' @import aphid
+#' @import insect
+#' @import biofiles
+#' @import Biostrings
+#' @import ape
+#' @import taxizedb
+#' @import stringr
+#' @import parallel
+#'
 #' @return
 #' @export
 #'
@@ -26,15 +38,15 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
     if (!file.exists("bold")){ dir.create("bold")}
   }
   if (file.exists(file)) {file.remove(file)}
-  if (str_detect(file,".gz")){compress=TRUE}
+  if (stringr::str_detect(file,".gz")){compress=TRUE}
 
   #Bold search
-  data <- bold_seqspec(taxon=x, sepfasta=FALSE)
+  data <- bold::bold_seqspec(taxon=x, sepfasta=FALSE)
   if(length(data)!=0 && !is.na(data)){
     data <- data %>%
       dplyr::filter(grepl(marker, markercode)) %>% #Remove all sequences for unwanted markers
       dplyr::filter(!grepl("sp.", species_name)) %>%
-      mutate(domain_name = "Eukaryota")
+      dplyr::mutate(domain_name = "Eukaryota")
 
     #Hierarchial output
     if (output=="h") {
@@ -44,13 +56,13 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
                                     "genus_name", "species_name",
                                     "nucleotides")) %>%
         na.omit() %>%
-        unite("name",c("sampleid", "domain_name",
+        tidyr::unite("name",c("sampleid", "domain_name",
                        "phylum_name", "class_name",
                        "order_name", "family_name",
                        "genus_name", "species_name"),
               sep=";") %>%
-        mutate(name = name %>%
-                 str_replace_all(pattern=" ",replacement="_") %>%
+        dplyr::mutate(name = name %>%
+                 stringr::str_replace_all(pattern=" ",replacement="_") %>%
                  trimws(which="both")
         )
 
@@ -58,9 +70,9 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
     } else if (output=="binom") {
       data <- subset(data, select=c("sampleid", "species_name", "nucleotides")) %>%
         na.omit() %>%
-        unite("name",c("sampleid", "species_name"), sep=";") %>%
-        mutate(name = name %>%
-                 str_replace_all(pattern=" ",replacement="_") %>%
+        tidyr::unite("name",c("sampleid", "species_name"), sep=";") %>%
+        dplyr::mutate(name = name %>%
+                 stringr::str_replace_all(pattern=" ",replacement="_") %>%
                  trimws(which="both")
         )
 
@@ -68,9 +80,9 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
     } else if (output=="bold") {
       data <- subset(data, select=c("sampleid", "species_taxID", "nucleotides")) %>%
         na.omit() %>%
-        unite("name",c("sampleid","species_taxID"), sep=";") %>%
-        mutate(name = name %>%
-                 str_replace_all(pattern=" ",replacement="_") %>%
+        tidyr::unite("name",c("sampleid","species_taxID"), sep=";") %>%
+        dplyr::mutate(name = name %>%
+                 stringr::str_replace_all(pattern=" ",replacement="_") %>%
                  trimws(which="both")
                  )
 
@@ -78,26 +90,24 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
     } else if (output=="gb") {
       data <- subset(data, select=c("sampleid", "species_name", "nucleotides")) %>%
         na.omit() %>%
-        mutate(species_name = trimws(species_name, which="both")) %>%
-        mutate(gb= taxizedb::name2taxid(data$species_name)) %>%
-        unite("name",c("sampleid","gb"),sep="|")
+        dplyr::mutate(species_name = trimws(species_name, which="both")) %>%
+        dplyr::mutate(gb= taxizedb::name2taxid(data$species_name)) %>%
+        tidyr::unite("name",c("sampleid","gb"),sep="|")
     #gb-binom
     } else if (output=="gb-binom") {
     data <- subset(data, select=c("sampleid", "species_name", "nucleotides")) %>%
       na.omit() %>%
-      mutate(species_name = trimws(species_name, which="both")) %>%
-      mutate(gb= taxizedb::name2taxid(data$species_name)) %>%
-      unite("name",c("sampleid","gb"),sep="|") %>%
-      unite("name",c("name","species_name"),sep=";")
+      dplyr::mutate(species_name = trimws(species_name, which="both")) %>%
+      dplyr::mutate(gb= taxizedb::name2taxid(data$species_name)) %>%
+      tidyr::unite("name",c("sampleid","gb"),sep="|") %>%
+      tidyr::unite("name",c("name","species_name"),sep=";")
     }
 
-
-
     #Output fASTA
-    seqs <- DNAStringSet(data$nucleotides)
+    seqs <- Biostrings::DNAStringSet(data$nucleotides)
     names(seqs) <- data$name
-    if (compress==TRUE){writeXStringSet(seqs,file,format="fasta",compress="gzip",width=5000)
-    } else if(compress==FALSE){writeXStringSet(seqs,file,format="fasta",width=5000)}
+    if (compress==TRUE){Biostrings::writeXStringSet(seqs,file,format="fasta",compress="gzip",width=5000)
+    } else if(compress==FALSE){Biostrings::writeXStringSet(seqs,file,format="fasta",width=5000)}
 
     #Done message
     time <- Sys.time() - time
@@ -124,6 +134,19 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
 #' @param compress
 #' @param dir
 #'
+#'
+#' @import bold
+#' @import tidyverse
+#' @import rentrez
+#' @import aphid
+#' @import insect
+#' @import biofiles
+#' @import Biostrings
+#' @import ape
+#' @import taxizedb
+#' @import stringr
+#' @import parallel
+#'
 #' @return
 #' @export
 #'
@@ -141,13 +164,13 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
     if (!file.exists("genbank")){ dir.create("genbank")}
   }
   if (file.exists(file)) {file.remove(file)}
-  if (str_detect(file,".gz")){compress=TRUE}
+  if (stringr::str_detect(file,".gz")){compress=TRUE}
 
   tryCatch(
     {
       #Genbank Search
       searchQ <- paste("(",x, "[ORGN])", " AND (", paste(c(marker), collapse=" OR "), ") AND ", minlength,":", maxlength,"[Sequence Length]", sep="")
-      search_results <- entrez_search(db   = "nuccore", term = searchQ, retmax=9999999, use_history=TRUE)
+      search_results <- rentrez::entrez_search(db   = "nuccore", term = searchQ, retmax=9999999, use_history=TRUE)
 
       if(search_results$count!=0 & !is.na(search_results$count)){
         if (!quiet) (message(paste0(search_results$count," Sequences to be downloaded for: ", searchQ)))
@@ -166,21 +189,21 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
 
           #Hierarchial output
           if (output=="h") {
-          lineage <- getTaxonomy(gb) %>%
+          lineage <- biofiles::getTaxonomy(gb) %>%
             str_split_fixed(pattern=";",n=Inf) %>%
             trimws(which="both") %>%
             as_tibble()         %>%
-            mutate(Species = getOrganism(gb)) %>%
-            mutate(Genus = str_replace(V15, pattern="[.]", replacement="")) %>%
-            unite("names", c("V1","V2","V4","V6","V10","V14","Genus","Species"), sep=";") %>%
-            mutate(names = str_replace(names,pattern=" ", replacement="_"))
+            dplyr::mutate(Species = biofiles::getOrganism(gb)) %>%
+            dplyr::mutate(Genus = str_replace(V15, pattern="[.]", replacement="")) %>%
+            tidyr::unite("names", c("V1","V2","V4","V6","V10","V14","Genus","Species"), sep=";") %>%
+            dplyr::mutate(names = str_replace(names,pattern=" ", replacement="_"))
           names <- paste0(names(biofiles::getSequence(gb)),";",lineage$names)
 
             #Genbank taxID output
           } else if (output=="gb") {
               cat_acctax <- function(x){
-                taxid <- map(x,biofiles::dbxref, "taxon")
-                tax_chr <- map_chr(taxid, function(y){as.character(y[1,1])})
+                taxid <- purrr::map(x,biofiles::dbxref, "taxon")
+                tax_chr <- purrr::map_chr(taxid, function(y){as.character(y[1,1])})
                 attributes(tax_chr) <- NULL
                 taxout <- paste0(attributes(taxid)$names,"|",tax_chr)
                 return(taxout)
@@ -188,24 +211,24 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
           names <- cat_acctax(gb)
           } else if (output=="binom") {
 
-            names<- paste0(names(biofiles::getSequence(gb)),";",getOrganism(gb))
+            names<- paste0(names(biofiles::getSequence(gb)),";",biofiles::getOrganism(gb))
           } else if (output=="gb-binom"){
             cat_acctax <- function(x){
-              taxid <- map(x,biofiles::dbxref, "taxon")
-              tax_chr <- map_chr(taxid, function(y){as.character(y[1,1])})
+              taxid <- purrr::map(x,biofiles::dbxref, "taxon")
+              tax_chr <- purrr::map_chr(taxid, function(y){as.character(y[1,1])})
               attributes(tax_chr) <- NULL
               taxout <- paste0(attributes(taxid)$names,"|",tax_chr)
               return(taxout)
             }
-            names <- paste0(cat_acctax(gb),";",getOrganism(gb))
+            names <- paste0(cat_acctax(gb),";",biofiles::getOrganism(gb))
 
           }
 
           #Output FASTA
           seqs <- biofiles::getSequence(gb)
           names(seqs) <- names
-          if (compress==TRUE){writeXStringSet(seqs,file,format="fasta",compress="gzip",width=5000)
-          } else if(compress==FALSE){writeXStringSet(seqs,file,format="fasta",width=5000)}
+          if (compress==TRUE){Biostrings::writeXStringSet(seqs,file,format="fasta",compress="gzip",width=5000)
+          } else if(compress==FALSE){Biostrings::writeXStringSet(seqs,file,format="fasta",width=5000)}
 
 
           if (!quiet) (message("Chunk", l, " of ",chunks, " downloaded\r"))
@@ -239,6 +262,20 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
 #' @param compress
 #' @param cores
 #'
+#'
+#'@import bold
+#' @import tidyverse
+#' @import rentrez
+#' @import aphid
+#' @import insect
+#' @import biofiles
+#' @import Biostrings
+#' @import ape
+#' @import taxizedb
+#' @import stringr
+#' @import parallel
+#'
+#'
 #' @return
 #' @export
 #'
@@ -258,7 +295,7 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
       # if(cores > navailcores) stop("Number of cores is more than number available")
       if(!quiet) cat("Multithreading with", cores, "cores\n")
       cores <- parallel::makeCluster(cores, outfile="out.txt")
-      junk <- clusterEvalQ(cores, sapply(c("bold","taxizedb","tidyverse","rentrez","Biostrings","biofiles"), require, character.only = TRUE)) #Discard result
+      junk <- parallel::clusterEvalQ(cores, sapply(c("bold","taxizedb","tidyverse","rentrez","Biostrings","biofiles"), require, character.only = TRUE)) #Discard result
       para <- TRUE
       stopclustr <- TRUE
     }else{
@@ -276,8 +313,8 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
 
   if (downstream !=FALSE){
     if(!quiet) cat(paste0("Getting downstream taxa to the level of: ", downto,"\n"))
-    taxon <- bind_rows(taxizedb::downstream(x, db = "ncbi")) %>%
-      dplyr::filter(rank == str_to_lower(!!downto))
+    taxon <- dplyr::bind_rows(taxizedb::downstream(x, db = "ncbi")) %>%
+      dplyr::filter(rank == stringr::str_to_lower(!!downto))
 
     if (nrow(taxon)>0) {taxon <- taxon$childtaxa_name} else (taxon=x)
     if(!quiet) cat(paste0(length(taxon), " downstream taxa found\n"))
@@ -287,7 +324,7 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
   if(database=="genbank" && length(taxon)>0){
     #Multithread
     taxon <- if(para){
-      clusterExport(cl=cores, varlist=c("taxon", "gbSearch", "quiet", "dir","output","minlength","maxlength","compress"), envir=environment())
+      parallel::clusterExport(cl=cores, varlist=c("taxon", "gbSearch", "quiet", "dir","output","minlength","maxlength","compress"), envir=environment())
 
       parallel::parLapply(cores, taxon, gbSearch, marker, quiet, file=NULL, output, minlength, maxlength, compress)
     }else{
@@ -298,7 +335,7 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
     } else if (database=="bold" && length(taxon)>0){
       #Check taxon names exist on bold
       if(!quiet) cat("Checking validity of taxon names for BOLD search\n")
-      checks <- bold_tax_name(taxon)
+      checks <- bold::bold_tax_name(taxon)
       bold_taxon <- checks$taxon[which(!is.na(checks$taxon))]
       if(!quiet) cat(paste0(length(bold_taxon)," of ", length(taxon), " taxa found to be valid names on BOLD\n"))
 
@@ -311,9 +348,9 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
       }
     #If taxon is a single name
     }else if (database=="genbank" && length(taxon)==0){
-      boldSearch(taxon,marker, quiet, file=NULL, output, compress)
+      bold::boldSearch(taxon,marker, quiet, file=NULL, output, compress)
     }else if (database=="bold" && length(taxon)==0){
-      boldSearch(taxon,marker, quiet, file=NULL, output, compress)
+      bold::boldSearch(taxon,marker, quiet, file=NULL, output, compress)
     }
 
   #Close clusters

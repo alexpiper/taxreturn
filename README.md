@@ -44,11 +44,6 @@ Primer evaluation
 -   evaluate\_primerbind(use hmm similar to insect r package to locate bind site, then primer miner evaluation)
 -   plot\_primer - Plot the above output\*
 
-Analysis
---------
-
-Mostly handled by DADA2 evaluate\_bias and calibrate\_bias - Imported from
-
 Plotting
 --------
 
@@ -66,11 +61,4 @@ Summarising
 Examples
 --------
 
-This is a basic example which shows you how to solve a common problem:
-
--   Step 1 - Downlaod sequences for BOLD and genbank
--   Step 2 - Convert bold to have genbank accessions using taxizedb and merge fastas
--   Step 3 - clean sequences using a PHMM of COI - Include a RDS data file already trained on the midori set
--   Step 4 - cluster and Purge misannotated sequences using insect::Purge
--   Step 5 - Fetch heirarchial taxonomy using taxizedb
--   Step 6 - Trim to amplicon region using insect::VirtualPCR
+This is a basic example which shows you how to solve a common problem

@@ -48,10 +48,6 @@ This package is still in development and not yet available on CRAN.  You can ins
 * evaluate_primerbind(use hmm similar to insect r package to locate bind site, then primer miner evaluation)
 * plot_primer - Plot the above output* 
 
-## Analysis
-Mostly handled by DADA2
-evaluate_bias and calibrate_bias - Imported from 
-
 ## Plotting
 * Mostly hanadled by phyloseq
 * summarise_Taxa(samples=c()) - similar to current summarise taxa but allow subsettign to desired samples
@@ -65,14 +61,7 @@ evaluate_bias and calibrate_bias - Imported from
 
 ## Examples
 
-This is a basic example which shows you how to solve a common problem:
-
-* Step 1 - Downlaod sequences for BOLD and genbank
-* Step 2 - Convert bold to have genbank accessions using taxizedb and merge fastas
-* Step 3 - clean sequences using a PHMM of COI - Include a RDS data file already trained on the midori set
-* Step 4 - cluster and Purge misannotated sequences using insect::Purge
-* Step 5 - Fetch heirarchial taxonomy using taxizedb
-* Step 6 - Trim to amplicon region using insect::VirtualPCR
+This is a basic example which shows you how to solve a common problem
 
 
 ```{r example, eval=FALSE, include=FALSE}
@@ -83,9 +72,13 @@ library(taxreturn)
 fetchSeqs("Insecta", database="genbank",downstream=TRUE,quiet=FALSE, downto="Family", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=FALSE, cores=3)
 
 
+#Get rid of the sequential warning
+
 ##TEST
 ## Fetch sequences from GenBank - Might also be good having an output="all" option
-fetchSeqs("Scaptodrosophila", database="genbank",downstream=TRUE,quiet=FALSE, downto="Species", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=FALSE, cores=2)
+fetchSeqs("Scaptodrosophila", database="genbank",downstream=TRUE,quiet=FALSE,dir="test", downto="Species", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=FALSE, cores=1)
+
+fetchSeqs("Scaptodrosophila", database="bold",downstream=TRUE,quiet=FALSE, downto="Species", marker="COI-5P", output = "gb-binom",compress=FALSE, cores=1)
 
 ##PROBLEM - went really slow after 800 and stopped working in chunks
 

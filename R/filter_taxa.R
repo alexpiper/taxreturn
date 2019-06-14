@@ -11,6 +11,19 @@
 #' @param cores
 #' @param quiet
 #'
+#'
+#' @import bold
+#' @import tidyverse
+#' @import rentrez
+#' @import aphid
+#' @import insect
+#' @import biofiles
+#' @import Biostrings
+#' @import ape
+#' @import taxizedb
+#' @import stringr
+#' @import parallel
+#'
 #' @return
 #' @export
 #'
@@ -108,6 +121,7 @@ clean_seqs <- function(x, model, minscore = 100, minamplen = 50,
 #' @return
 #' @export
 #'
+#' @import tidyverse
 #' @examples
 prune_groups <- function(x, maxGroupSize=5, quiet=FALSE){
   groups <- names(x) %>%
