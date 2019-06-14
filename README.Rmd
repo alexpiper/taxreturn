@@ -32,9 +32,8 @@ This package is still in development and not yet available on CRAN.  You can ins
 #Current progress:
 
 ## Database creation
-* get_database(options="bold, "genbank" etc) + some hmmer cleaning?
-* clean_database(ie automated filters)
-* clean_alignment(remove badly aligend sequences)
+* fetchSeqs
+* cleanSeqs - use a profile hidden markov model to clean non-homologous sequences
 * format_datbase(options="blast","RDP","q2","IDTAXA" etc))
 * add_sequences(add local db)
 * Trim_to_primer_regions - Using insect r package HMM's
@@ -82,6 +81,11 @@ library(taxreturn)
 
 ## Fetch sequences from GenBank - Might also be good having an output="all" option
 fetchSeqs("Insecta", database="genbank",downstream=TRUE,quiet=FALSE, downto="Family", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=FALSE, cores=3)
+
+
+##TEST
+## Fetch sequences from GenBank - Might also be good having an output="all" option
+fetchSeqs("Scaptodrosophila", database="genbank",downstream=TRUE,quiet=FALSE, downto="Species", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=FALSE, cores=2)
 
 ##PROBLEM - went really slow after 800 and stopped working in chunks
 

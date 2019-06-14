@@ -24,9 +24,8 @@ Current progress:
 Database creation
 -----------------
 
--   get\_database(options="bold, "genbank" etc) + some hmmer cleaning?
--   clean\_database(ie automated filters)
--   clean\_alignment(remove badly aligend sequences)
+-   fetchSeqs
+-   cleanSeqs - use a profile hidden markov model to clean non-homologous sequences
 -   format\_datbase(options="blast","RDP","q2","IDTAXA" etc))
 -   add\_sequences(add local db)
 -   Trim\_to\_primer\_regions - Using insect r package HMM's
