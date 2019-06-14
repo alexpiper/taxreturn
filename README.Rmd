@@ -76,17 +76,17 @@ This is a basic example which shows you how to solve a common problem:
 * Step 6 - Trim to amplicon region using insect::VirtualPCR
 
 
-UPDATESD
-
 ```{r example, eval=FALSE, include=FALSE}
 devtools::install_github("alexpiper/taxreturn")
 library(taxreturn)
 
 ## Fetch sequences from GenBank - Might also be good having an output="all" option
-fetchSeqs("Scaptodrosophila", database="genbank",downstream=TRUE,quiet=FALSE, downto="Species", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=FALSE, cores=3)
+fetchSeqs("Insecta", database="genbank",downstream=TRUE,quiet=FALSE, downto="Family", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=FALSE, cores=3)
+
+##PROBLEM - went really slow after 800 and stopped working in chunks
 
 ## Fetch sequences from BOLD
-fetchSeqs("Scaptodrosophila", database="bold",downstream=TRUE,quiet=FALSE, downto="Species", marker="COI-5P", output = "gb-binom",compress=FALSE, cores=3)
+fetchSeqs("Insecta", database="bold",downstream=TRUE,quiet=FALSE, downto="Family", marker="COI-5P", output = "gb-binom",compress=FALSE, cores=1)
 
 #read in all fastas and merge
 gbSeqs <-  readDNAStringSet(sort(list.files("genbank", pattern = ".fa", full.names = TRUE)))

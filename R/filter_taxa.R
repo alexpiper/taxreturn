@@ -1,8 +1,20 @@
-##Could turn this into a function with different inputs!
 
-#Add a default model for clean_seqs
-
-#First part - PHMM
+#' Clean Sequences with PHMM
+#'
+#' @param x
+#' @param model
+#' @param minscore
+#' @param minamplen
+#' @param maxamplen
+#' @param shave
+#' @param maxNs
+#' @param cores
+#' @param quiet
+#'
+#' @return
+#' @export
+#'
+#' @examples
 clean_seqs <- function(x, model, minscore = 100, minamplen = 50,
                        maxamplen = 500,shave=FALSE, maxNs = 0.02, cores = 1,
                        quiet = FALSE){
@@ -80,9 +92,23 @@ clean_seqs <- function(x, model, minscore = 100, minamplen = 50,
   return(x)
 }
 
+
+# Prune group sizes -------------------------------------------------------
+
+
 ## Prune groups function - See if there is a way to removed by length - Can we sort the groups by seq length then start from bottom
 #Add a discardby=Random, or discardby=Length
 
+#' Prune group sizes
+#'
+#' @param x
+#' @param maxGroupSize
+#' @param quiet
+#'
+#' @return
+#' @export
+#'
+#' @examples
 prune_groups <- function(x, maxGroupSize=5, quiet=FALSE){
   groups <- names(x) %>%
     str_split_fixed(";",n=2) %>%

@@ -1,9 +1,18 @@
-#Split the two functions into fetch_GB and fetch_BOLD
-#Use a third function - fetch_taxa, that combines these two with the option of selecting either?
-#Switch for loops to safely(Purrr) and then a function afterwards ot check if it worked
-#Add an option to merge the file or put in seperate files, also add an option to gzip or not
 
-#Define bold search function
+#' boldSearch
+#'
+#' @param x
+#' @param marker
+#' @param quiet
+#' @param output
+#' @param file
+#' @param compress
+#' @param dir
+#'
+#' @return
+#' @export
+#'
+#' @examples
 boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compress=FALSE,dir=NULL){
 
   #function setup
@@ -99,7 +108,26 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
   invisible(NULL)
 }
 
-#Define genbank search function - edit this to output the taxid in header
+
+
+# Genbank fetching function -----------------------------------------------
+
+#' Genbank search function
+#'
+#' @param x
+#' @param marker
+#' @param quiet
+#' @param output
+#' @param minlength
+#' @param maxlength
+#' @param file
+#' @param compress
+#' @param dir
+#'
+#' @return
+#' @export
+#'
+#' @examples
 gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlength=2000,file=NULL,compress=FALSE,dir=NULL){
 
   #function setup
@@ -193,8 +221,28 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
 }
 
 
-#define wrapper function
+# Fetchseqs wrapper function ----------------------------------------------
 
+
+#' Fetchseqs wrapper function
+#'
+#' @param x
+#' @param database
+#' @param marker
+#' @param downstream
+#' @param downto
+#' @param quiet
+#' @param output
+#' @param minlength
+#' @param maxlength
+#' @param dir
+#' @param compress
+#' @param cores
+#'
+#' @return
+#' @export
+#'
+#' @examples
 fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family", quiet=TRUE, output="h", minlength=1, maxlength=2000,dir=NULL,compress=FALSE, cores=1){
   #Setup parallel
   if(inherits(cores, "cluster")){
