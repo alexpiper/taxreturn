@@ -42,13 +42,14 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
 
   #Bold search
   data <- bold::bold_seqspec(taxon=x, sepfasta=FALSE)
-  if(length(data)!=0 && !is.na(data$processid[1])){
+  if(length(data)!=0 && !class(data)=="logical"){
     data <- data %>%
+      dplyr::na_if("") %>%
       dplyr::filter(grepl(marker, markercode)) %>% #Remove all sequences for unwanted markers
-      dplyr::mutate(domain_name = "Eukaryota")
-  }
-  if(length(data)!=0 && !is.na(data$processid[1])){
+      dplyr::mutate(domain_name = "Eukaryota") %>%
+      dplyr::filter(!is.na(species_name))
 
+    if(nrow(data)!=0){
     #Hierarchial output
     if (output=="h") {
       data <- subset(data, select=c("sampleid", "domain_name",
@@ -94,17 +95,52 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
         dplyr::mutate(species_name = trimws(species_name, which="both")) %>%
         dplyr::mutate(gb= taxizedb::name2taxid(data$species_name)) %>%
         tidyr::unite("name",c("sampleid","gb"),sep="|")
+
     #gb-binom
     } else if (output=="gb-binom") {
     data <- subset(data, select=c("sampleid", "species_name", "nucleotides")) %>%
       na.omit() %>%
-      dplyr::mutate(species_name = trimws(species_name, which="both")) %>%
-      dplyr::mutate(gb= taxizedb::name2taxid(data$species_name)) %>%
+      dplyr::mutate(species_name = trimws(species_name, which="both"))
+
+    ids <- taxizedb::name2taxid(data$species_name,out_type="summary")
+    #Add exception handling for duplicated taxon names
+    if (any(duplicated(ids$name_txt))){
+
+      dupname <- ids$name_txt[ duplicated(ids$name_txt)]
+      dup <- ids[ids$name_txt %in% dupname,] %>%
+        dplyr::mutate(correct = FALSE)
+      class <- taxizedb::classification(dup$tax_id)
+
+      for (i in 1:length(class)){
+          dup$correct[i] <- any(stringr::str_detect(class[[i]]$name,pattern="Insecta"))
+      }
+
+    filt <- dup$tax_id[which(dup$correct==FALSE)]
+    ids <- ids %>%
+      dplyr::filter(!tax_id %in% filt) %>%
+      dplyr::rename(species_name = name_txt)
+
+    data <- data %>%
+      dplyr::left_join(ids,by='species_name') %>%
+      dplyr::rename(gb = tax_id) %>%
+      tidyr::unite("name",c("sampleid","gb"),sep="|") %>%
+      tidyr::unite("name",c("name","species_name"),sep=";")
+
+    } else if (!any(duplicated(ids$name_txt))){
+    data <- data %>%
+      dplyr::mutate(gb = taxizedb::name2taxid(data$species_name)) %>%
       tidyr::unite("name",c("sampleid","gb"),sep="|") %>%
       tidyr::unite("name",c("name","species_name"),sep=";")
     }
+    }
 
     #Output fASTA
+    #iupac <- paste0(paste(names(Biostrings::IUPAC_CODE_MAP),collapse="|"),"|-")
+
+    #Problem -some bold sequences contain an Ionisine
+    data <- data %>%
+      dplyr::filter(!stringr::str_detect(nucleotides, pattern="I"))
+
     seqs <- Biostrings::DNAStringSet(data$nucleotides)
     names(seqs) <- data$name
     if (compress==TRUE){Biostrings::writeXStringSet(seqs,file,format="fasta",compress="gzip",width=5000)
@@ -113,8 +149,8 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
     #Done message
     time <- Sys.time() - time
     if (!quiet) (message(paste0("Downloaded ", length(seqs)," ", x, " Sequences from BOLD ", " in ", format(time, digits=2))))
-  } else {
-    warning(paste0("No data for ",x," on bold\n"))
+  } } else {
+    warning(paste0("No species level data for ",x," on bold\n"))
   }
   invisible(NULL)
 }
