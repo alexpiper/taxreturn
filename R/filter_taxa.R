@@ -4,42 +4,38 @@
 #' @param x
 #' @param model
 #' @param minscore
-#' @param minamplen
-#' @param maxamplen
 #' @param shave
 #' @param maxNs
 #' @param cores
 #' @param quiet
 #'
 #'
-#' @import bold
 #' @import tidyverse
-#' @import rentrez
 #' @import aphid
 #' @import insect
-#' @import biofiles
 #' @import Biostrings
 #' @import ape
-#' @import taxizedb
 #' @import stringr
 #' @import parallel
+#' @import pbapply
 #'
 #' @return
 #' @export
 #'
 #' @examples
-clean_seqs <- function(x, model, minscore = 100, minamplen = 50,
-                       maxamplen = 500,shave=FALSE, maxNs = 0.02, cores = 1,
-                       quiet = FALSE){
-
-  #Change to DNAbin
-  x <- as.DNAbin(x)
+clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0.02, cores = 1,
+                       quiet = FALSE, progress=FALSE){
+  time <- Sys.time() # get time
+  #Convert to DNAbin
+  if(!is(x,"DNAbin")){ x <- ape::as.DNAbin(x)}
 
   #Define PHMM function
 
   filt_phmm <- function(s, model, minscore, minamplen, maxamplen){
+
+    #.packages=c("aphid","insect","ape")
     s <- s[!s %in% as.raw(c(2, 4))]
-    vit <- aphid::Viterbi(model, s, odds = TRUE, type = "semiglobal")
+    vit <- aphid::Viterbi(model, s, odds = TRUE, type = "semiglobal",cpp=TRUE,residues="DNA")
 
     if(vit$score < minscore) return(NULL)
     path <- vit$path
@@ -48,46 +44,54 @@ clean_seqs <- function(x, model, minscore = 100, minamplen = 50,
 
     if(is.na(match1) | is.na(match2)) return(NULL)
 
-    newlength <- length(vit$path) - match1 - match2 + 2
-    if(newlength < minamplen | newlength > maxamplen) return(NULL)
-
+    if(shave==TRUE){
+      ntoshavef <- match(c(0, 1), rev(vit$path)) - 1
+      ntoshavef <- min(ntoshavef[!is.na(ntoshavef)])
+      last <- length(s) - ntoshavef
+      begin <- match(c(0, 1), vit$path)
+      begin <- min(begin[!is.na(begin)])
+      s <- s[begin:last]
+    }
     attr(s, "score") <- vit$score
     return(s)
   }
 
   nseq <- length(x)
 
-  if(inherits(cores, "cluster")){
-    x <- parallel::parLapply(cores, x, filt_phmm,  model, minscore, minamplen, maxamplen)
-  }else if(cores == 1){
-    x <- lapply(x, filt_phmm, model, minscore, minamplen, maxamplen)
-  }else{
+  if(cores == 1 && progress == TRUE){
+    x <- pbapply::pblapply(x, filt_phmm, model, minscore)
+    } else if(cores == 1 && progress == FALSE){
+      x <- lapply(x, filt_phmm, model, minscore)
+  } else if(cores > 1 && progress == TRUE){
+    stop("Progress bar currently not supported for multithreading")
+  }  else{
     navailcores <- parallel::detectCores()
     if(identical(cores, "autodetect")) cores <- navailcores - 1
     if(!(mode(cores) %in% c("numeric", "integer"))) stop("Invalid 'cores'")
-    # if(cores > navailcores) stop("Number of cores is more than available")
+     if(cores > navailcores) stop("Number of cores is more than available")
+
     if(cores > 1){
       if(!quiet) cat("Multithreading with", cores, "cores\n")
 
       cores <- parallel::makeCluster(cores, outfile="out.txt")
-      junk <- clusterEvalQ(cores, sapply(c("bold","taxizedb","tidyverse","rentrez","Biostrings","biofiles"), require, character.only = TRUE)) #Discard result
+      #parallel::clusterExport(cores, c("model", "minscore"))
+      junk <- parallel::clusterEvalQ(cores, sapply(c("aphid","insect","ape"), require, character.only = TRUE)) #Discard result
 
-      x <- parallel::parLapply(cores, filt_phmm,  model, minscore, minamplen, maxamplen)
+      x <- parallel::parLapply(cores,x, filt_phmm,  model, minscore)
       parallel::stopCluster(cores)
     }else{
-      x <- lapply(x, filt_phmm, model, minscore, minamplen, maxamplen)
+      x <- lapply(x, filt_phmm, model, minscore)
     }
   }
 
   discards <- sapply(x, is.null)
   nseq <- sum(!discards)
 
-
   if(nseq > 0){
     if(!quiet) cat("Retained", nseq, "sequences after alignment to PHMM\n")
     scores <- unlist(lapply(x, function(s) attr(s, "score")), use.names = FALSE)
     x <- x[!discards]
-    x <- as.DNAbin(as.character.DNAbin(x))
+    x <- ape::as.DNAbin(ape::as.character.DNAbin(x))
 
   }else{
     if(!quiet) cat("None of the sequences met PHMM specificity criteria. Returning NULL\n")
@@ -95,13 +99,12 @@ clean_seqs <- function(x, model, minscore = 100, minamplen = 50,
   }
   if(!quiet) cat("Filtering ambiguous sequences\n")
   discards <- sapply(x, function(s) sum(s == 0xf0)/length(s)) > maxNs
-  x <- subset.DNAbin(x, subset = !discards)
+  x <- insect::subset.DNAbin(x, subset = !discards)
   if(!quiet) cat(length(x), "sequences retained after applying ambiguity filter\n")
-  if(shave==TRUE){
-   x <- shave(x, model, direction = "both", cores)
-   if(!quiet) cat("Overhanging sequence data shaved from PHMM\n")
-  }
+  if(!quiet) cat("Bases overhanging PHMM shaved from alignment\n")
   if(!quiet) cat("Done\n")
+  time <- Sys.time() - time
+  if (!quiet) (message(paste0("finished in ", format(time, digits=2))))
   return(x)
 }
 
@@ -123,23 +126,38 @@ clean_seqs <- function(x, model, minscore = 100, minamplen = 50,
 #'
 #' @import tidyverse
 #' @examples
-prune_groups <- function(x, maxGroupSize=5, quiet=FALSE){
+prune_groups <- function(x, maxGroupSize=5,removeby="random", quiet=FALSE){
   groups <- names(x) %>%
     str_split_fixed(";",n=2) %>%
     as_tibble() %>%
     separate(V1,into=c("acc","taxid"))%>%
     pull(taxid)
-  groupCounts <- table(groups)
-  u_groups <- names(groupCounts)
+  groupCounts <- table(groups) # Count number of seqs per group
+  u_groups <- names(groupCounts) #Get unique groups
 
   remove <- logical(length(x))
-  for (i in which(groupCounts > maxGroupSize)) {
-    index <- which(groups == u_groups[i])
-    keep <- sample(
-      length(index),
-      maxGroupSize
-    )
-    remove[index[-keep]] <- TRUE
+  if(removeby=="random"){
+    for (i in which(groupCounts > maxGroupSize)) {
+      index <- which(groups == u_groups[i])
+      keep <- sample( # Take random sample
+        length(index),
+        maxGroupSize
+      )
+      remove[index[-keep]] <- TRUE
+    }
+  }else if (removeby=="length"){
+    for (i in which(groupCounts > maxGroupSize)) {
+
+      index <- which(groups == u_groups[i])
+
+      rem <- lengths(x[index])
+      names(rem) <- index
+      rem <- sort(rem, decreasing = TRUE)
+
+      keep <- as.integer(names(rem[1:maxGroupSize]))
+      remove[index[!index %in% keep]] <- TRUE
+
+    }
   }
   x <- x[!remove]
   if(!quiet) cat(paste0(sum(remove), " sequences pruned from over-represented groups"))

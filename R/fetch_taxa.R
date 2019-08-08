@@ -187,6 +187,20 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
 #' @return
 #' @export
 #'
+#'Some useful Entrez queries
+#'
+#'all [filter] 	Retrieves everthing
+#'Specified [property] 	Formal binomial and trinomial
+#'at or below species level [property]
+#'family [rank] 	Rank-based query
+#'taxonomy genome [filter] 	Taxa with a direct link to a genome sequence
+#'2009/10/21:2020 [date] 	Date-bounded query
+#'mammalia [subtree] 	All taxa within the Mammalia
+#'extinct [property] 	Extinct organisms
+#'Terminal [property] 	Terminal nodes in the tree
+#'loprovencyclife [filter] 	Entries with LinkOut links to the Encyclopedia of Life
+#'
+#'
 #' @examples
 gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlength=2000,file=NULL,compress=FALSE,dir=NULL){
 
