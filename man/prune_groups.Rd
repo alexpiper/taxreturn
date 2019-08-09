@@ -4,7 +4,8 @@
 \alias{prune_groups}
 \title{Prune group sizes}
 \usage{
-prune_groups(x, maxGroupSize = 5, quiet = FALSE)
+prune_groups(x, maxGroupSize = 5, dedup = TRUE, discardby = "random",
+  quiet = FALSE)
 }
 \arguments{
 \item{quiet}{}

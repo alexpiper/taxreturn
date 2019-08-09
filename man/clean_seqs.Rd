@@ -4,8 +4,8 @@
 \alias{clean_seqs}
 \title{Clean Sequences with PHMM}
 \usage{
-clean_seqs(x, model, minscore = 100, minamplen = 50, maxamplen = 500,
-  shave = FALSE, maxNs = 0.02, cores = 1, quiet = FALSE)
+clean_seqs(x, model, minscore = 100, shave = TRUE, maxNs = 0.02,
+  cores = 1, quiet = FALSE, progress = FALSE)
 }
 \arguments{
 \item{quiet}{}

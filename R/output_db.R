@@ -4,6 +4,16 @@
 
 #make this just run output heirarchy but removing species rank
 
+#' Reformat DADA2 Genus
+#'
+#' @param x
+#' @param quiet
+#' @param ranks
+#'
+#' @return
+#' @export
+#'
+#' @examples
 reformat_dada2_gen <- function(x,quiet=TRUE,ranks=NULL){
     if(!is.null(ranks)){
       ranks = ranks
@@ -14,8 +24,19 @@ reformat_dada2_gen <- function(x,quiet=TRUE,ranks=NULL){
   x <- reformat_heirarchy(x,quiet=quiet,ranks=ranks)
   return(x)
 }
+
+
 # Reformat DADA2 Species ----------------------------------------------------
 
+#' Reformat DADA2 Species
+#'
+#' @param x
+#' @param quiet
+#'
+#' @return
+#' @export
+#'
+#' @examples
 reformat_dada2_spp <- function(x,quiet=TRUE){
   time <- Sys.time() # get time
   #Convert to DNAbin
@@ -30,6 +51,16 @@ reformat_dada2_spp <- function(x,quiet=TRUE){
 
 # Reformat heirarchy ------------------------------------------------------
 
+#' Reformat heirarchy
+#'
+#' @param x
+#' @param quiet
+#' @param ranks
+#'
+#' @return
+#' @export
+#'
+#' @examples
 reformat_heirarchy <- function(x,quiet=TRUE,ranks=NULL){
   time <- Sys.time() # get time
   #Convert to DNAbin
