@@ -28,7 +28,7 @@ clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0.02, cores
   time <- Sys.time() # get time
   #Convert to DNAbin
   if(!is(x,"DNAbin")){ x <- ape::as.DNAbin(x)}
-
+  if(!is(model,"PHMM")){stop("Model needs to be a PHMM object")}
   #Define PHMM function
 
   filt_phmm <- function(s, model, minscore, minamplen, maxamplen){
@@ -111,10 +111,6 @@ clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0.02, cores
 
 # Prune group sizes -------------------------------------------------------
 
-
-## Prune groups function - See if there is a way to removed by length - Can we sort the groups by seq length then start from bottom
-#Add a discardby=Random, or discardby=Length
-
 #' Prune group sizes
 #'
 #' @param x
@@ -126,7 +122,14 @@ clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0.02, cores
 #'
 #' @import tidyverse
 #' @examples
-prune_groups <- function(x, maxGroupSize=5,removeby="random", quiet=FALSE){
+prune_groups <- function(x, maxGroupSize=5,dedup=TRUE,discardby="random", quiet=FALSE){
+
+  if (dedup){
+    dup <- length(x)
+    x <- insect::subset.DNAbin(x, subset = !insect::duplicated.DNAbin(x, point = TRUE))
+    if(!quiet) cat(paste0((dup - length(x)), " duplicate sequences removed \n"))
+  }
+
   groups <- names(x) %>%
     str_split_fixed(";",n=2) %>%
     as_tibble() %>%
@@ -136,7 +139,7 @@ prune_groups <- function(x, maxGroupSize=5,removeby="random", quiet=FALSE){
   u_groups <- names(groupCounts) #Get unique groups
 
   remove <- logical(length(x))
-  if(removeby=="random"){
+  if(discardby=="random"){
     for (i in which(groupCounts > maxGroupSize)) {
       index <- which(groups == u_groups[i])
       keep <- sample( # Take random sample
@@ -145,7 +148,7 @@ prune_groups <- function(x, maxGroupSize=5,removeby="random", quiet=FALSE){
       )
       remove[index[-keep]] <- TRUE
     }
-  }else if (removeby=="length"){
+  }else if (discardby=="length"){
     for (i in which(groupCounts > maxGroupSize)) {
 
       index <- which(groups == u_groups[i])
@@ -163,6 +166,77 @@ prune_groups <- function(x, maxGroupSize=5,removeby="random", quiet=FALSE){
   if(!quiet) cat(paste0(sum(remove), " sequences pruned from over-represented groups"))
   return(x)
 }
+
+
+# Resolve synonyms -------------------------------------------------------
+
+#' Resolve taxonomic synonyms
+#'
+#' @param x
+#' @param subspecies
+#' @param quiet
+#' @param treat_taxid
+#' @param higherrank
+#' @param fuzzy
+#'
+#' @return
+#' @export
+#'
+#' @import tidyverse
+#' @examples
+resolve_synonyms <- function(x, subspecies=FALSE,quiet=TRUE,treat_taxid="ignore",higherrank=FALSE,fuzzy=TRUE){
+  time <- Sys.time() # get time
+  #Convert to DNAbin
+  if(!is(x,"DNAbin")){ x <- ape::as.DNAbin(x)}
+  if(quiet==TRUE){verbose=FALSE} else(verbose=TRUE)
+
+  #first split names
+  query <- names(x) %>%
+    stringr::str_split_fixed(";",n=2) %>%
+    tibble::as_tibble() %>%
+    tidyr::separate(col=V1,into=c("acc","taxid"),sep="\\|") %>%
+    dplyr::rename(query = V2)
+
+  out <- traitdataform::get_gbif_taxonomy(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
+
+  out <- out %>%
+    dplyr::filter(synonym==TRUE) %>%
+    dplyr::mutate(taxid = taxizedb::name2taxid(scientificNameStd))%>%
+    dplyr::mutate(taxidold = taxizedb::name2taxid(scientificName)) %>%
+    dplyr::mutate(scientificName = as.character(scientificName)) %>%
+    dplyr::mutate(scientificNameStd = as.character(scientificNameStd)) %>%
+    dplyr::mutate_all(as.character())
+
+  if(treat_taxid=="ignore"){
+    for (i in 1:nrow(out)){
+      query$query <- stringr::str_replace_all(query$query,pattern=out$scientificName[i], replacement = out$scientificNameStd[i])
+
+      if(!is.na(out$taxid[i])){
+        query$taxid <- stringr::str_replace_all(query$taxid, pattern=out$taxidold[i],replacement = out$taxid[i])
+      }
+    }
+  } else if(treat_taxid=="remove"){
+    for (i in 1:nrow(out)){
+      query$query <- stringr::str_replace_all(query$query,pattern=out$scientificName[i], replacement = out$scientificNameStd[i])
+
+      if(!is.na(out$taxid[i])){
+        query$taxid <- stringr::str_replace_all(query$taxid, pattern=out$taxidold[i],replacement = out$taxid[i])
+      } else if(is.na(out$taxid[i])){
+        query <- query %>%
+          dplyr::filter(!str_detect(taxid,pattern=out$taxidold[i]))
+      }
+    }
+
+  }
+  query <- query %>%
+    tidyr::unite(col=V1,c("acc","taxid"),sep="|")
+
+  names(x) <- paste(query$V1,query$query,sep=";")
+  time <- Sys.time() - time
+  if (!quiet) (message(paste0("finished in ", format(time, digits=2))))
+  return(x)
+}
+
 
 #filter_taxa <- function(file,minlength,maxlength,unique=TRUE,binomials=TRUE, removeterms){
 
@@ -211,3 +285,4 @@ prune_groups <- function(x, maxGroupSize=5,removeby="random", quiet=FALSE){
 #rm(amplicon)
 #rm(bold)
 #
+

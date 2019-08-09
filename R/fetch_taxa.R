@@ -364,10 +364,11 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
 
   if (downstream !=FALSE){
     if(!quiet) cat(paste0("Getting downstream taxa to the level of: ", downto,"\n"))
-    taxon <- dplyr::bind_rows(taxizedb::downstream(x, db = "ncbi")) %>%
-      dplyr::filter(rank == stringr::str_to_lower(!!downto))
+    taxlist <- dplyr::bind_rows(taxizedb::downstream(x, db = "ncbi")) %>%
+      dplyr::filter(rank == stringr::str_to_lower(!!downto))%>%
+      dplyr::mutate(downloaded = FALSE)
 
-    if (nrow(taxon)>0) {taxon <- taxon$childtaxa_name} else (taxon=x)
+    if (nrow(taxlist)>0) {taxon <- taxlist$childtaxa_name} else (taxon=x)
     if(!quiet) cat(paste0(length(taxon), " downstream taxa found\n"))
   } else (taxon = x)
 
@@ -407,7 +408,18 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
   #Close clusters
   if(para & stopclustr) parallel::stopCluster(cores)
   if(!quiet) message("Done\n")
-invisible(NULL)
+
+
+#invisible(NULL)
+
+#Check if all downloaded
+done <- list.files(path=database,pattern=".fa") %>%
+  stringr::str_split_fixed(pattern="_",n=2) %>%
+  dplyr::as_tibble() %>%
+  dplyr::pull(V1)
+
+taxlist$downloaded[which(taxlist$childtaxa_name %in% done)] <- TRUE
+return(taxlist)
 }
 
 
