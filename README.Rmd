@@ -48,7 +48,7 @@ IDTAXA format >
 
 
 ```{r example, eval=FALSE, include=TRUE}
-library(taxreturn)
+#library(taxreturn)
 library(Biostrings)
 library(tidyverse)
 
@@ -74,9 +74,60 @@ filtered <- clean_seqs(uniqSeqs, model,minscore = 100, cores=2, shave=TRUE,maxNs
 #Here - resolve synonyms and check for those that have changed
 #for those that have been changed - retrieve a new NCBI taxID using name2rank
 
-#Resole synonyms
+##Need to subset to binomials only
 
-filtered <- resolve_synonyms(filtered,subspecies=FALSE,quiet=FALSE,treat_taxid="ignore",higherrank=FALSE,fuzzy=TRUE)
+
+#filter using insect::purge - Could wrap this in a function for ease of use?
+db <- insect::taxonomy(db = "NCBI", synonyms = TRUE)
+#filter db
+
+db <- db %>%
+  filter(!rank %in% c("varietas","subspecies","species subgroup")) %>%
+  dplyr::filter(!str_detect(name, fixed("sp."))) %>%
+  dplyr::filter(!str_detect(name, fixed("spp."))) %>%
+  dplyr::filter(!str_detect(name, fixed("aff."))) %>%
+  dplyr::filter(!str_detect(name, fixed("nr."))) %>%
+  dplyr::filter(!str_detect(name, fixed("bv."))) %>%
+  dplyr::filter(!str_detect(name, fixed("cf."))) %>%
+  dplyr::filter(!str_detect(name, fixed("nom."))) %>%
+  dplyr::filter(!str_detect(name, fixed("nud."))) %>%
+  dplyr::filter(!str_detect(name, fixed("environment"))) %>%
+  dplyr::filter(!str_detect(name, fixed("undescribed"))) %>%
+  dplyr::filter(!str_detect(name, fixed("unverified"))) %>%
+  dplyr::filter(!str_detect(name, fixed("unclassified"))) %>%
+  dplyr::filter(!str_detect(name, fixed("uncultured"))) %>%
+  dplyr::filter(!str_detect(name, fixed("unidentif"))) %>%
+  dplyr::filter(!str_detect(name, fixed("NA"))) %>%
+  dplyr::filter(!str_detect(name, fixed("error"))) %>% 
+  dplyr::filter(!str_detect(name,"[0-9]"))%>% 
+  dplyr::filter(!str_detect(name,"[:punct:]"))
+
+
+filtered <- ape::read.FASTA(gzfile("Sequences/filtered.fa.gz"))
+
+
+namefilt <- names(filtered)  %>% 
+  str_split_fixed(";", n = 2) %>% 
+  as_tibble() %>%
+  filter(V2 %in% db$name) %>%
+  unite(names,c("V1","V2"),sep=";")
+
+subset <- filtered[names(filtered) %in% namefilt$names]
+
+rm(filtered)
+rm(test)
+
+resolved <- resolve_synonyms(subset,subspecies=FALSE,quiet=FALSE,missing="ignore",higherrank=FALSE,fuzzy=TRUE)
+
+ape::write.FASTA(resolved, "synonyms_resolved.fa")
+
+ape::write.dna(resolved, "syn2test.fa", format="fasta")
+
+test <- ape::read.FASTA("synonyms_resolved.fa")
+
+
+#Check differences in names
+names(resolved)[which(!names(resolved) %in% names(subset))]
 
 #Save old names into attributes
 attributes(filtered)$oldnames <- names(filtered)

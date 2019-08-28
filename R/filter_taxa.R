@@ -175,7 +175,7 @@ prune_groups <- function(x, maxGroupSize=5,dedup=TRUE,discardby="random", quiet=
 #' @param x
 #' @param subspecies
 #' @param quiet
-#' @param treat_taxid
+#' @param missing
 #' @param higherrank
 #' @param fuzzy
 #'
@@ -184,7 +184,7 @@ prune_groups <- function(x, maxGroupSize=5,dedup=TRUE,discardby="random", quiet=
 #'
 #' @import tidyverse
 #' @examples
-resolve_synonyms <- function(x, subspecies=FALSE,quiet=TRUE,treat_taxid="ignore",higherrank=FALSE,fuzzy=TRUE){
+resolve_synonyms <- function(x, subspecies=FALSE,quiet=TRUE,missing="ignore",higherrank=FALSE,fuzzy=TRUE){
   time <- Sys.time() # get time
   #Convert to DNAbin
   if(!is(x,"DNAbin")){ x <- ape::as.DNAbin(x)}
@@ -197,37 +197,64 @@ resolve_synonyms <- function(x, subspecies=FALSE,quiet=TRUE,treat_taxid="ignore"
     tidyr::separate(col=V1,into=c("acc","taxid"),sep="\\|") %>%
     dplyr::rename(query = V2)
 
-  out <- traitdataform::get_gbif_taxonomy(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
+  #Need to make a better estimator
+  if(verbose==TRUE){message(paste0("resolving synonyms for ", length(unique(query$query)),
+                                  " Unique taxa, estimated time: ", signif((length(unique(query$query))*0.08)/3600,digits=3), " hours"))}
+
+  #out <- traitdataform::get_gbif_taxonomy(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
+  out <- get_gbif_taxonomy_edited(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
 
   out <- out %>%
     dplyr::filter(synonym==TRUE) %>%
-    dplyr::mutate(taxid = taxizedb::name2taxid(scientificNameStd))%>%
-    dplyr::mutate(taxidold = taxizedb::name2taxid(scientificName)) %>%
-    dplyr::mutate(scientificName = as.character(scientificName)) %>%
+    dplyr::filter(!scientificName=="Curculio bimaculatus") %>% # This taxa is breaking function
+    dplyr::mutate(taxidnew = taxizedb::name2taxid(scientificNameStd))%>%
+    dplyr::mutate(query = as.character(scientificName)) %>%
     dplyr::mutate(scientificNameStd = as.character(scientificNameStd)) %>%
     dplyr::mutate_all(as.character())
 
-  if(treat_taxid=="ignore"){
-    for (i in 1:nrow(out)){
-      query$query <- stringr::str_replace_all(query$query,pattern=out$scientificName[i], replacement = out$scientificNameStd[i])
+  if(missing=="ignore"){ # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, update name but keep old taxid
 
-      if(!is.na(out$taxid[i])){
-        query$taxid <- stringr::str_replace_all(query$taxid, pattern=out$taxidold[i],replacement = out$taxid[i])
-      }
+    query <- query %>%
+    dplyr::left_join(out, by="query") %>%
+    dplyr::mutate(query = case_when(
+      !is.na(scientificNameStd) ~ scientificNameStd,
+      TRUE ~ query)) %>%   #Catch all for anything that is not above case
+    dplyr::mutate(taxid = case_when(
+      !is.na(taxidnew) ~ taxidnew,
+      TRUE ~ taxid)) %>%
+    dplyr::select(acc, taxid, query)
+
+  } else if(missing=="keepold"){ # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, keep old column
+
+    query <- query %>%
+      dplyr::left_join(out, by="query") %>%
+      dplyr::mutate(query = case_when(
+        !is.na(scientificNameStd)  & !is.na(taxidnew) ~ scientificNameStd,
+        TRUE ~ query)) %>%    #Catch all for anything that is not above case
+      dplyr::mutate(taxid = case_when(
+        !is.na(scientificNameStd)  & !is.na(taxidnew) ~ taxidnew,
+        TRUE ~ taxid)) %>%
+      dplyr::select(acc, taxid, query)
+
+  } else if(missing=="remove"){ # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, remvoe
+
+    query <- query %>%
+      dplyr::left_join(out, by="query") %>%
+      dplyr::mutate(keepcol = case_when(
+        !is.na(scientificNameStd) & is.na(taxidnew) ~ FALSE,
+        !is.na(scientificNameStd) & !is.na(taxidnew) ~ TRUE,
+        is.na(scientificNameStd) & !is.na(query) ~ TRUE,
+        TRUE ~ TRUE)) %>%   #Catch all for anything that is not above case
+      dplyr::filter(keepcol == TRUE) %>%
+      dplyr::mutate(query = case_when(
+        !is.na(scientificNameStd) ~ scientificNameStd,
+        TRUE ~ query)) %>%    #Catch all for anything that is not above case
+      dplyr::mutate(taxid = case_when(
+        !is.na(taxidnew) ~ taxidnew,
+        TRUE ~ taxid)) %>%
+      dplyr::select(acc, taxid, query)
+
     }
-  } else if(treat_taxid=="remove"){
-    for (i in 1:nrow(out)){
-      query$query <- stringr::str_replace_all(query$query,pattern=out$scientificName[i], replacement = out$scientificNameStd[i])
-
-      if(!is.na(out$taxid[i])){
-        query$taxid <- stringr::str_replace_all(query$taxid, pattern=out$taxidold[i],replacement = out$taxid[i])
-      } else if(is.na(out$taxid[i])){
-        query <- query %>%
-          dplyr::filter(!str_detect(taxid,pattern=out$taxidold[i]))
-      }
-    }
-
-  }
   query <- query %>%
     tidyr::unite(col=V1,c("acc","taxid"),sep="|")
 
@@ -237,3 +264,181 @@ resolve_synonyms <- function(x, subspecies=FALSE,quiet=TRUE,treat_taxid="ignore"
   return(x)
 }
 
+
+
+### Get GBIF Taxonomy
+
+#modified from traitdataform pacakge https://github.com/EcologicalTraitData/traitdataform/issues/35
+
+#COuld remove subspecies
+# COuld te
+
+get_gbif_taxonomy_edited <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALSE,
+                                        fuzzy = TRUE, conf_threshold = 90, resolve_synonyms = TRUE)
+{
+  matchtype = status = confidence = NULL
+
+  ## Get GBIF data - this needs to be sped up majorly, would be nice to move to taxize::db
+  #temp <- taxize::get_gbifid_(x, messages = verbose)
+
+  temp <- x %>%
+      purrr::map(safely(taxize::get_gbifid_)) %>%
+      purrr::map("result") %>%
+      flatten()
+
+  ##Backup temp
+  temp2 <- temp
+write_rds(temp,"temp.rds")
+
+  temp <- temp2
+i=1
+#
+  for (i in 1:length(temp)) {
+    warning_i = ""
+    synonym_i = FALSE
+    if (nrow(temp[[i]]) == 0) {
+      warning_i <- paste("No matching species concept!")
+      temp[[i]] <- data.frame(scientificName = x[i], matchtype = "NONE",
+                              status = "NA", rank = "species")
+    }
+    if (!fuzzy & nrow(temp[[i]]) > 0) {
+      temp[[i]] <- subset(temp[[i]], matchtype != "FUZZY")
+      if (nrow(temp[[i]]) == 0) {
+        warning_i <- paste(warning_i, "Fuzzy matching might yield results.")
+      }
+    }
+    if (!is.null(conf_threshold) & nrow(temp[[i]]) > 0) {
+      temp[[i]] <- subset(temp[[i]], confidence >= conf_threshold)
+      if (nrow(temp[[i]]) == 0) {
+        temp[[i]] <- data.frame(scientificName = x[i],
+                                matchtype = "NONE", status = "NA", rank = "species")
+        warning_i <- paste(warning_i, "No match! Check spelling or lower confidence threshold!")
+      }
+    }
+    if (any(temp[[i]]$status == "ACCEPTED")) {
+      temp[[i]] <- subset(temp[[i]], status == "ACCEPTED")
+      temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
+                            max(temp[[i]]$confidence))
+      if (nrow(temp[[i]]) > 1) {
+        temp[[i]] <- temp[[i]][1, ]
+        warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
+      }
+    }
+    if (!any(temp[[i]]$status == "ACCEPTED") & any(temp[[i]]$status ==
+                                                   "SYNONYM")) {
+      if (resolve_synonyms) {
+        keep <- temp[i]
+        if(!is.null(temp[[i]]$species) && !is.na(temp[[i]]$species)){
+          temp[i] <- taxize::get_gbifid_(temp[[i]]$species[which.max(temp[[i]]$confidence)],
+                                         messages = verbose)
+        } else if(is.null(temp[[i]]$species)){
+          newspp = str_split_fixed(names(temp[i]),pattern=" ", n=2)
+          temp[[i]]$species = paste(temp[[i]]$genus, newspp[1,2])
+          temp[i] <- taxize::get_gbifid_(temp[[i]]$species[which.max(temp[[i]]$confidence)],
+                                         messages = verbose)
+          if(nrow(temp[[i]]) <1){temp[i] <- keep}
+        }
+
+        if (temp[[i]][1, ]$status == "ACCEPTED" & !temp[[i]][1, ]$matchtype == "HIGHERRANK") {
+        #if (temp[[i]][1, ]$status == "ACCEPTED") {
+          temp[[i]] <- subset(temp[[i]], status == "ACCEPTED") #, matchtype == "EXACT" &
+          temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
+                                max(temp[[i]]$confidence))
+          if (nrow(temp[[i]]) > 1) {
+            temp[[i]] <- temp[[i]][1, ]
+            warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
+          }
+          warning_i <- paste(warning_i, "A synonym was mapped to the accepted species concept!",
+                             sep = " ")
+          synonym_i = TRUE
+        }  else {
+          status <- temp[[i]][1, ]$status
+          temp[i] <- keep #Putting it back to before the call?
+          if (nrow(temp[[i]]) > 1) {
+            temp[[i]] <- temp[[i]][1, ]
+            warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
+          }
+          warning_i <- paste0(warning_i, " Resolved synonym '",
+                              temp[[i]]$species, "' is labelled '", status,
+                              "'. Clarification required!")
+        }
+      }   else {
+        temp[[i]] <- subset(temp[[i]], status == "SYNONYM")
+        temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
+                              max(temp[[i]]$confidence))
+        warning_i <- paste(warning_i, "The provided taxon seems to be a synonym of '",
+                           temp[[i]]$species, "'!", sep = "")
+      }
+    }
+    if (all(temp[[i]]$status == "DOUBTFUL")) {
+      temp[[i]] <- subset(temp[[i]], status == "DOUBTFUL")
+      warning_i <- paste(warning_i, "Mapped concept is labelled 'DOUBTFUL'!")
+      temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
+                            max(temp[[i]]$confidence))
+      if (nrow(temp[[i]]) > 1) {
+        temp[[i]] <- temp[[i]][1, ]
+        warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
+      }
+    }
+    rankorder <- c("kingdom", "phylum", "order", "class",
+                   "family", "genus", "species", "subspecies")
+    if (match(temp[[i]]$rank, rankorder) > 7 & !subspecies) {
+      if (length(strsplit(as.character(temp[[i]]$canonicalname),
+                          " ")[[1]]) > 2) {
+        temp[i] <- taxize::get_gbifid_(paste(strsplit(names(temp[i]),
+                                                      " ")[[1]][1:2], collapse = " "), messages = verbose)
+        temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
+                              max(temp[[i]]$confidence))
+        warning_i <- paste(warning_i, "Subspecies has been remapped to species concept!",
+                           sep = " ")
+      } else {
+        temp[[i]] <- data.frame(scientificName = x[i],
+                                matchtype = "NONE", rank = "subspecies")
+        warning_i <- paste(warning_i, "No mapping of subspecies name to species was possible!",
+                           sep = " ")
+      }
+    }
+    if (temp[[i]]$matchtype == "HIGHERRANK") {
+      if (higherrank) {
+        temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
+                              max(temp[[i]]$confidence))
+        warning_i <- paste(warning_i, "No matching species concept! Entry has been mapped to higher taxonomic level.")
+      }
+      else {
+        temp[[i]] <- data.frame(scientificName = x[i],
+                                matchtype = "NONE", rank = "highertaxon")
+        warning_i <- paste("No matching species concept!",
+                           warning_i)
+      }
+    }
+    if (temp[[i]]$matchtype != "NONE") {
+      temp[[i]] <- data.frame(scientificName = x[i], synonym = synonym_i,
+                              scientificNameStd = temp[[i]]$canonicalname,
+                              author = sub(paste0(temp[[i]]$canonicalname,
+                                                  " "), "", temp[[i]]$scientificname), taxonRank = temp[[i]]$rank,
+                              confidence = temp[[i]]$confidence, kingdom = if (is.null(temp[[i]]$kingdom))
+                                NA
+                              else temp[[i]]$kingdom, phylum = if (is.null(temp[[i]]$phylum))
+                                NA
+                              else temp[[i]]$phylum, class = if (is.null(temp[[i]]$class))
+                                NA
+                              else temp[[i]]$class, order = if (is.null(temp[[i]]$order))
+                                NA
+                              else temp[[i]]$order, family = if (is.null(temp[[i]]$family))
+                                NA
+                              else temp[[i]]$family, genus = if (is.null(temp[[i]]$genus))
+                                NA
+                              else temp[[i]]$genus, taxonomy = "GBIF Backbone Taxonomy",
+                              taxonID = paste0("http://www.gbif.org/species/",
+                                               temp[[i]]$usagekey, ""), warnings = NA)
+    } else {
+      temp[[i]] <- data.frame(scientificName = x[i], warnings = NA) # FAILING HERE?
+    }
+    temp[[i]]$warnings <- warning_i
+    if (verbose & nchar(warning_i) >= 1)
+      warning(warning_i)
+  }
+  out <- data.table::rbindlist(temp, fill = TRUE)
+  class(out) <- c("data.frame", "taxonomy")
+  return(out)
+}

@@ -5,7 +5,7 @@
 \title{Resolve taxonomic synonyms}
 \usage{
 resolve_synonyms(x, subspecies = FALSE, quiet = TRUE,
-  treat_taxid = "ignore", higherrank = FALSE, fuzzy = TRUE)
+  missing = "ignore", higherrank = FALSE, fuzzy = TRUE)
 }
 \arguments{
 \item{fuzzy}{}
