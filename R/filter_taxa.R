@@ -23,7 +23,7 @@
 #' @export
 #'
 #' @examples
-clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0.02, cores = 1,
+clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0, cores = 1,
                        quiet = FALSE, progress=FALSE){
   time <- Sys.time() # get time
   #Convert to DNAbin
@@ -199,7 +199,7 @@ resolve_synonyms <- function(x, subspecies=FALSE,quiet=TRUE,missing="ignore",hig
 
   #Need to make a better estimator
   if(verbose==TRUE){message(paste0("resolving synonyms for ", length(unique(query$query)),
-                                  " Unique taxa, estimated time: ", signif((length(unique(query$query))*0.08)/3600,digits=3), " hours"))}
+                                  " Unique taxa, estimated time: ", signif((length(unique(query$query))*0.5)/3600,digits=3), " hours"))}
 
   #out <- traitdataform::get_gbif_taxonomy(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
   out <- get_gbif_taxonomy_edited(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )

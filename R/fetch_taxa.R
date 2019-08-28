@@ -33,10 +33,13 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
   if (marker=="COI-5P")  {if (!quiet) (cat("Using default marker 'COI-5P' \n"))}
   if(is.null(dir)){dir="bold"}
   if (!file.exists(dir)){ dir.create(dir)}
-  if (is.null(file)){
+  if (is.null(file) & compress==FALSE){
     file=paste0(getwd(),"/",dir,"/",x,"_",marker,"_bold.fa")
-    if (!quiet) (message(paste0("No input file given, saving output file to: ",file)))
+  } else if(is.null(file) & compress==TRUE){
+    file=paste0(getwd(),"/",dir,"/",x,"_",marker,"_bold.fa.gz")
   }
+  if (!quiet) (message(paste0("No input file given, saving output file to: ",file)))
+
   if (file.exists(file)) {file.remove(file)}
   if (stringr::str_detect(file,".gz")){compress=TRUE}
 
@@ -209,8 +212,10 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
   if (!output %in% c("h","binom","gb","bold","gb-binom")){ stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))}
   if (marker=="COI")  {if (!quiet) (cat("Using default marker 'COI' \n"))}
   if (is.null(file)){
-    if(!is.null(dir)){file=paste0(getwd(),"/",dir,"/",x,"_",marker,"_gb.fa")
-    } else (file=paste0(getwd(),"/","genbank/",x,"_",marker,"_gb.fa"))
+    if(!is.null(dir) & compress==FALSE){file=paste0(getwd(),"/",dir,"/",x,"_",marker,"_gb.fa")
+    }else if(!is.null(dir) & compress==TRUE){file=paste0(getwd(),"/",dir,"/",x,"_",marker,"_gb.fa.gz")
+    } else if(is.null(dir) & compress==FALSE){file=paste0(getwd(),"/","genbank/",x,"_",marker,"_gb.fa")
+    } else if(is.null(dir) & compress==TRUE){file=paste0(getwd(),"/","genbank/",x,"_",marker,"_gb.fa")}
     if (!quiet) (message(paste0("No input file given, saving output file to: ",file)))
     if (!file.exists("genbank")){ dir.create("genbank")}
   }
@@ -278,9 +283,9 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
           #Output FASTA
           seqs <- biofiles::getSequence(gb)
           names(seqs) <- names
-          if (compress==TRUE){Biostrings::writeXStringSet(seqs,file,format="fasta",compress="gzip",width=5000)
+          if (compress==TRUE){
+            Biostrings::writeXStringSet(seqs,file,format="fasta",compress="gzip",width=5000)
           } else if(compress==FALSE){Biostrings::writeXStringSet(seqs,file,format="fasta",width=5000)}
-
 
           if (!quiet) (message("Chunk", l, " of ",chunks, " downloaded\r"))
           start <- start + 10000
@@ -297,6 +302,7 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
 
 # Fetchseqs wrapper function ----------------------------------------------
 
+#note - replace downtstream =TRUE and downto with just dowstream="Species" etc, convert everything to !null instead of If true
 
 #' Fetchseqs wrapper function
 #'
@@ -362,7 +368,7 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
   if (!file.exists(dir)){ dir.create(dir)}
 
 
-  if (downstream !=FALSE){
+  if (downstream ==TRUE){
     if(!quiet) cat(paste0("Getting downstream taxa to the level of: ", downto,"\n"))
     taxlist <- dplyr::bind_rows(taxizedb::downstream(x, db = "ncbi")) %>%
       dplyr::filter(rank == stringr::str_to_lower(!!downto))%>%
@@ -375,14 +381,11 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
   #If taxon is a vector of names
   if(database=="genbank" && length(taxon)>0){
     #Multithread
-    taxon <- if(para){
+    taxon <- if(para==TRUE){
       parallel::clusterExport(cl=cores, varlist=c("taxon", "gbSearch", "quiet", "dir","output","minlength","maxlength","compress"), envir=environment())
 
       parallel::parLapply(cores, taxon, gbSearch, marker, quiet, file=NULL, output, minlength, maxlength, compress)
-    }else{
-      #Single core
-      lapply(taxon, gbSearch, marker, quiet, file=NULL, output, minlength, maxlength, compress)
-    }
+    }else(lapply(taxon, gbSearch, marker, quiet, dir=dir, file=NULL, output, minlength, maxlength, compress))       #Single core
 
     } else if (database=="bold" && length(taxon)>0){
       #Check taxon names exist on bold
@@ -392,17 +395,15 @@ fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family"
       if(!quiet) cat(paste0(length(bold_taxon)," of ", length(taxon), " taxa found to be valid names on BOLD\n"))
 
       #Multithread
-      bold_taxon <- if(para){
+      bold_taxon <- if(para==TRUE){
         parallel::parLapply(cores, bold_taxon, boldSearch, marker, quiet, file=NULL, output, compress)
-      }else{
-        #Single core
-        lapply(bold_taxon, boldSearch, marker, quiet, file=NULL, output, compress)
-      }
+      }else (lapply(bold_taxon, boldSearch, marker, quiet, dir=dir, file=NULL, output, compress))#Single core
+
     #If taxon is a single name
     }else if (database=="genbank" && length(taxon)==0){
-      bold::boldSearch(taxon,marker, quiet, file=NULL, output, compress)
+      taxreturn::gbSearch(taxon, marker, quiet=quiet, dir=dir, file=NULL, output=output, compress=compress)
     }else if (database=="bold" && length(taxon)==0){
-      bold::boldSearch(taxon,marker, quiet, file=NULL, output, compress)
+      bold::boldSearch(taxon=taxon, marker=marker, quiet=quiet, dir=dir, file=NULL, output=output, compress=compress)
     }
 
   #Close clusters
@@ -418,8 +419,9 @@ done <- list.files(path=database,pattern=".fa") %>%
   dplyr::as_tibble() %>%
   dplyr::pull(V1)
 
-taxlist$downloaded[which(taxlist$childtaxa_name %in% done)] <- TRUE
+if (downstream ==TRUE){taxlist$downloaded[which(taxlist$childtaxa_name %in% done)] <- TRUE
 return(taxlist)
+}else return(x)
 }
 
 

@@ -43,7 +43,7 @@ reformat_dada2_spp <- function(x,quiet=TRUE){
   if(!is(x,"DNAbin")){ x <- ape::as.DNAbin(x)}
   seqnames <- stringr::str_split_fixed(names(x),pattern=";",n=2) %>%
     as_tibble()
-  names(x) <- paste(seqnames$V1,seqnames$V2,"",sep=" ")
+  names(x) <- paste(seqnames$V1,seqnames$V2,sep=" ")
   return(x)
 }
 
