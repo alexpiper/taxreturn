@@ -158,7 +158,7 @@ db <- insect::taxonomy(db = "NCBI", synonyms = TRUE)
 
 #Filter the taxonomy database to remove contaminants and 
 db <- db %>%
-  filter(!rank %in% c("varietas","subspecies","species subgroup")) %>%
+  dplyr::filter(!rank %in% c("varietas","subspecies","species subgroup")) %>%
   dplyr::filter(!str_detect(name, fixed("sp."))) %>%
   dplyr::filter(!str_detect(name, fixed("spp."))) %>%
   dplyr::filter(!str_detect(name, fixed("aff."))) %>%
@@ -252,9 +252,12 @@ amplicon <- insect::virtualPCR(pruned, up = "ACWGGWTGRACWGTNTAYCC",down= "ARYATD
 ## Reformat to taxonomic classifier
 
 ``` r
-#Change to complete taxonomic heirarchy suitable for assigntaxonomy classifier in DADA2
-heirarchy <- reformat_heirarchy(amplicon, quiet=FALSE)
+#Change to complete taxonomic heirarchy 
+heirarchy <- reformat_heirarchy(amplicon, db=db, quiet=FALSE)
+
+#Reformat to Kingdom to genus heirarchy suitable for assigntaxonomy classifier in DADA2
+dada2_gen <- reformat_dada2_gen(amplicon, db=db, quiet=FALSE)
 
 #Reformat to genus species binomials as suitable for assignSpecies in DADA2
-binomials <- reformat_dada2_spp(pruned)
+dada2_spp <- reformat_dada2_spp(amplicon)
 ```

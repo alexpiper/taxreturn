@@ -14,14 +14,14 @@
 #' @export
 #'
 #' @examples
-reformat_dada2_gen <- function(x,quiet=TRUE,ranks=NULL){
+reformat_dada2_gen <- function(x,db=NULL, quiet=TRUE,ranks=NULL){
     if(!is.null(ranks)){
       ranks = ranks
     } else if (is.null(ranks)){
-      ranks=c("superkingdom","kingdom","class","order","family","genus")
-      message("No ranks supplied, using default ranks for DADA2 assignTaxonomy: superkingdom;kingdom;class;order;family;genus")
+      ranks=c("kingdom", "phylum", "class", "order", "family", "genus")
+      message("No ranks supplied, using default ranks for DADA2 assignTaxonomy: kingdom;phylum;class;order;family;genus")
     }
-  x <- reformat_heirarchy(x,quiet=quiet,ranks=ranks)
+  x <- reformat_heirarchy(x, db=db, quiet=quiet, ranks=ranks)
   return(x)
 }
 
@@ -61,16 +61,19 @@ reformat_dada2_spp <- function(x,quiet=TRUE){
 #' @export
 #'
 #' @examples
-reformat_heirarchy <- function(x,quiet=TRUE,ranks=NULL){
+reformat_heirarchy <- function(x, db=NULL, quiet=TRUE, ranks=NULL, sppsep ="_"){
   time <- Sys.time() # get time
   #Convert to DNAbin
   if(!is(x,"DNAbin")){ x <- ape::as.DNAbin(x)}
+  if(is.null(db)){
+    message("No taxonomy database provided, downloading from NCBI")
+    db <- insect::taxonomy(db = "NCBI", synonyms = TRUE)}
 
   if(!is.null(ranks)){
     ranks = ranks
   } else if (is.null(ranks)){
-    ranks=c("superkingdom","kingdom","class","order","family","genus","species")
-    message("No ranks supplied, using default ranks: superkingdom;kingdom;class;order;family;genus;species")
+    ranks=c("kingdom", "phylum", "class", "order", "family", "genus", "species")
+    message("No ranks supplied, using default ranks: kingdom;phylum;class;order;family;genus;species")
   }
 
   #first split names
@@ -79,14 +82,14 @@ reformat_heirarchy <- function(x,quiet=TRUE,ranks=NULL){
     tibble::as_tibble() %>%
     tidyr::separate(col=V1,into=c("acc","taxid"),sep="\\|") %>%
     dplyr::rename(species = V2) %>%
-    mutate(taxid = as.numeric(taxid))
+    dplyr::mutate(taxid = as.numeric(taxid))
 
   #Get lineage from taxid
   query <- unique(seqnames$taxid)
   lineage <- insect::get_lineage(query, db=db,simplify=TRUE)
 
   #Get desired items from lists
-  ranklist <- list()
+  ranklist <- vector("list",length=length(lineage))
   i=1
   for (i in 1:length(lineage)) {
     line <- as.data.frame(rbind(lineage[[i]]),stringsAsFactors=FALSE)
@@ -100,11 +103,13 @@ reformat_heirarchy <- function(x,quiet=TRUE,ranks=NULL){
 
   if ("species" %in% ranks){
     df_lineage <- bind_rows(ranklist) %>%
-      rename(species_new = species)
+      dplyr::rename(species_new = species) %>%
+      dplyr::mutate(species_new = str_replace(species_new, pattern=" ", replacement=sppsep))
   } else (df_lineage <- bind_rows(ranklist))
 
   seqnames <- seqnames %>%
-    dplyr::left_join(df_lineage,by="taxid") %>%
+    dplyr::left_join(df_lineage,by="taxid")  %>%
+    dplyr::mutate(species = str_replace(species, pattern=" ", replacement=sppsep)) %>%
     tidyr::unite(col=V1,c(acc,taxid),sep="|") %>%
     tidyr::unite(col=V2,c(!!ranks),sep=";")
 
