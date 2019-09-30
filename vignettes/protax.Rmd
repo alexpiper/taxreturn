@@ -1,0 +1,258 @@
+---
+title: "protax"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{protax}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval=FALSE
+)
+```
+
+```{r setup}
+library(taxreturn)
+```
+
+# Introduction
+
+This vignette is a R based version of the PROTAX tutorial
+
+
+
+# Step 1: generate training data
+
+Our example taxonomy tree is in file ‘example_taxonomy.txt’ and the taxonomic information of our reference sequences is in file ‘example_trainseqid2taxoname.txt’. Taxonomy tree file is a text file consisting of four columns separated by space or tab in each line:
+
+```{r}
+tax_tree <- readr::read_tsv("../protax/data/example_taxonomy.txt", col_names=FALSE)
+head(tax_tree)
+```
+
+where nodeid and nodepid are the numeric node identifiers. They can be in principle any integers but the nodeid of the root node must be 0. Nodepid is the parent nodeid (for root node it is the root node itself). Level is the level of the node in taxonomy (root node has level 0) and taxname is the taxonomic name. Any unique character string can be used for the taxonomic name but it should not contain any spaces or tabs (only the first part separated by space will be used as a name). The structure of the taxonomy is constructed based on the (nodeid,nodepid) pairs but the reference sequence data is linked into taxonomy based on the taxname. Taxonomy file does not have any header line so the first row contains already the first values.
+
+The file containing the taxonomic information of the reference data (example_trainseqid2taxname.txt) contains two fields separated by space or tab. The file doesn't have a header line.
+
+```{r}
+ref_tax <- readr::read_tsv("../protax/data/example_trainseqid2taxname.txt", col_names=FALSE)
+head(ref_tax)
+```
+
+For each seqid there should be only one taxname which is the most specific taxonomic classification. Like seqid, also taxname should be unambiguous and unique. Lower level taxonomic classes (taxonomy nodes towards the root of the tree) of each sequence can be obtained based on the taxonomy tree.
+
+## Step 1.1: Defining representative sequences
+
+Each node of the taxonomy is associated with the set of representative sequences. These contain a subset or all of the reference sequence data. There are three possibilities to define the representative sequences:
+1. using all available reference sequences 
+2. selecting a random subset of reference sequences 
+3. using clustering with threshold for pairwise sequence similarity of reference sequences 
+
+The corresponding Perl scripts are get_reference_sequences_all.pl, get_reference_sequences_random.pl, and get_reference_sequences_clustering.pl. Please note that these are the three ways to define the set of representative sequences automatically at the moment and there is no guarantee that the resulting set would be optimal. Since the classification of a new sequence is based on the representative sequences, the selection process is important. As the name ‘representative sequences’ implies, they should be selected so that they characterize the entire taxon. Here is an example of the case for limiting the number of representative sequences by using a random subset of reference sequences. Our example taxonomy has 2 levels and here we define that each node may have at most 10 representative sequences from its child nodes. This number must be specified for each level. Although in the example below we have the same number two times, it is possible to define different number for each level. The order is from the most specific node to the root. The number before the output file ‘my_rseqs.txt’, here defined to be 1, is the seed value for the random number generator.
+
+```{perl}
+get_reference_sequences_random.pl example_taxonomy.txt 2 10 10 example_trainseqid2taxname.txt 1 my_rseqs.txt
+```
+
+In case the number of available reference sequences is smaller than the user defined number (like in our example data), as many representative sequences as possible are included. Output file has one line for each node and each line consists of three columns where the first one is node id, the second column lists the representative sequences of the node, and the third column contains the weights of the representative sequences
+
+The third column is optional for PROTAX, in case it is missing, each representative sequence has a default weight 1. For the first two selection processes (all and random), the weight is the inverse number of the representative sequences coming from each child of a node. This results that each child node has the same importance when computing the average of pairwise sequence similarities regardless of the differences in the number of representative sequences coming from different child nodes. So in effect, the mean similarity is the mean of means in the 9 corresponding PROTAX covariate. When the selection of representative sequences is based on clustering, the weight is the size (number of sequences) of each cluster.
+
+## Step 1.2 Sampling the taxonomy to get training data
+
+In this example, we generate 100 samples representing the nodes of the taxonomy. Each node is associated with a training sequence. The details how the sampling is done can be found in the manuscript. In the present implementation, only leaf nodes of the taxonomy are sampled. The number of samples should represent the taxonomy, here we use only 100 samples because the example taxonomy and the reference data set are tiny and the purpose of the example is mainly to demonstrate the syntax of all commands.
+
+```{perl}
+generate_training_data.pl example_taxonomy.txt example_trainseqid2taxname.txt my_rseqs.txt 100 1 no my_trainsamples.txt
+```
+
+The number 1 after the number of training samples (100) is the seed for random number generator. The next parameter is yes/no indicating whether sequences to be ignored when calculating sequence similarities from the randomly selected training sequence are included in the output file. This information can be reconstructed based on the taxonomy and the other fields of the file, so it should not be selected unless there is a reason for doing so. With large data sets, the amount of this extra information can be excessive resulting in large output files. The last argument of the command is the name of the output file.
+
+Each line of the output file consists of 6 columns:
+
+```{r results}
+
+```
+
+The value for the first column weight is 1, nodeid is the randomly sampled node and priprob is the associated prior probability of this node. Nodeclass gives information of the type of the node, there are 4 classes:
+
+* nseq2 : node is a known taxon and has at least 2 reference sequences
+* nseq1 : node is a known taxon but has only 1 reference sequence 
+* nseq0 : node is a known taxon but doesn't have any reference sequences 
+* unk : node represents an unknown taxon
+
+If nodeclass is nseq2, it has been possible to pick training sequence directly from the sequences belonging to nodeid. In other cases, another node (rnodeid in 5th column) has been randomly selected among the closest neighbors of the original node (nodeid) which is at the same level and has sufficient amount of reference sequences (1 or 2 depending on the case). The details of the process can be found in our manuscript. The new node will mimick the originally sampled node. For nodeclass nseq1, additional information is needed regarding the reference sequence and this information is included in the 4th column field separated by a comma from the nodeclass, as an example nseq1,seqid. The last column is the id of the training sequence. If the 6th argument is 'yes' instead of 'no' for generate_training_data.pl, there will be 7th column in the output file which lists all sequences to be deleted when computing sequence similarities for the training sample in the present line.
+
+## Step 1.3 Creating X Matrices 
+
+*note - need to have sequence distances*
+While the results of Somervuo et al. (2016) suggest that a combination of similarity-based and phylogenetic-based predictors yields the best performance both for simulated and real data, in this study we used solely similarity- based predictors using LAST (Kielbasa et al. 2011), which is fast and does not require multiple sequence alignment. 
+
+
+In order to create input data for model estimation, we have to construct design matrices related to logistic regression for each training sample. Here the design matrix will be denoted by X. For each training sample, there will be X matrix for each level of the taxonomy starting from the parent node of training sample node and then proceeding to the root. In this example, X matrices are calculated based on sequence similarity file. By default, two values, mean similarity and max similarity are calculated based on pairwise sequence similarities. In addition, there are two other covariates, one for the case when the node does not contain any reference sequences, and another for the intercept of mean and max similarities, so altogether, there are four covariates per taxonomy level
+
+```{perl}
+create_xdata_seqsimfile.pl my_trainsamples.txt example_taxonomy.txt example_trainseqid2taxname.txt my_rseqs.txt example_trainseqsim.txt my_trainxdata.txt
+```
+
+The file ‘example_trainseqsim.txt’ contains pairwise sequence similarities in the sparse matrix format, each line consisting of three columns
+```{r}
+
+```
+
+where sim is the similarity between seqid1 and seqid2. Not all pairwise similarities need to be listed in the file. If similarities are symmetric, only one of similarity(seqid1,seqid2) and similarity(seqid2,seqid1) needs to be present in the file. However, if for some reasons the user wants to use asymmetric similarities, then both similarities need to be present in the file in separate lines. If the similarity between two seqids is missing, there are two options, either it is ignored (considered as missing information) or it is treated as being zero. This affects to the calculation of mean similarity. At the moment, missing similarities are treated as missing and mean similarity is calculated only based on present similarities.
+
+The output file ‘my_xdata.txt’ contains one line for each training sample. The format is
+
+```{r}
+
+```
+where priprob is the node prior probability (for details, see the manuscript) and the semicolon separated list of items in the second column contain one or more matrices. These are the design matrices of the regression model (denoted as X matrices below). The number of the items depends on the level of the training sample node, there are matrices for each level from the parent of the training sample node to the root of the taxonomy. Each item has the format
+
+• level,index,nrows,ncols,x11,x12,...,xNM
+
+where level indicates which level of taxonomy the N-by-M matrix X belongs, index is the child node index where the current training sample belongs in this taxonomy level, nrows and ncols are the number of rows and columns of matrix X, respectively, and the rest nrows*ncols values are the elements of X listed row by row. The first row of each matrix which corresponds to the unknown taxon contains only zeros. Since the xdata file will be used in R software where array element indexing starts from 1 instead of 0, also here the index corresponding to the first row of matrix X is 1 instead of 0.
+
+
+# Step 2 Estimating model parameters
+
+Input to the model parameter estimation is given by xdat-file. The parameter estimation is done using R. For MCMC estimation, all required functions are in the file amcmc.rcode.txt.
+
+In our example xdata, there are 4 parameters for each level of the taxonomy and an additional parameter for mislabeling probability, so the total number of parameters is 2*4+1=9. Besides training data, we have to define variance s2 of prior distribution (zero-mean Normal distribution), number of iterations, and how many of them are used for adaptation (num.burnin). Additional parameters are random seed (rseed) and info. By default, info is 0 which results in silent processing, but when it is 1, we can see the progress of the iterations. Here we apply only 1000 iterations but in practice there should be more.
+
+Variance of prior distribution has been set large (10000) in order not to restrict the values of parameters. However, the smaller the range of similarity values is, the larger the prior variance should be in order to allow large value for the coefficients related to sequence similarity, i.e. allowing steeper slope in the regression model. In general, all covariates should be scaled properly before using them in PROTAX.
+
+```{r}
+#Source scripts
+source("../protax/scripts/amcmc.rcode.txt")
+
+# Read in data
+dat=read.xdata("../protax/scripts/data/my_trainxdata.txt")
+
+# Estimate model parameters
+pp=adaptiveMCMC(dat, num.params=9 ,s2=10000, num.iterations=1000, num.burnin=500, rseed=1, info=1)
+```
+
+After training, it is good practice to check trace plots. In R it is simple to plot the values of parameters during the entire MCMC history. Here we are interested in the values after burn-in, so we can plot the parameter samples between iterations 501 and 1000.
+
+Parameter num.levels is the number of levels in our taxonomy, it helps to layout the plot so that parameters from each level are located in the same row. Values corresponding to the largest posterior probability (MAP estimate) within the given iterations are denoted by red circle. Panels next to each individual trace plot show the histograms of the parameter values. This way it is easy to see e.g. whether the MAP estimate is close to the mode of the distribution.
+
+In case there are too many parameters to fit into a single display, trace plots of individual parameters can be visualized using command traceplot.one. Since it produces two figures, we define mfrow to split the display into two subplots.
+
+If trace plots indicate non-convergence, usually another round of adaptation helps to solve the problem. The result of MCMC adaptation can be investigated by amcmc.diagnostic.plot. In addition to acceptance ratios, it shows the adaptive step size and proposal directions. The latter are the eigenvectors of parameter covariance matrix. Parameters may be correlated by incidence due to the random initialization. Diagnostic plot reveals which parameters are correlated in MCMC proposal.
+
+```{r mcmc diagnostics}
+#Traceplot
+traceplot.all(pp,ind=501:1000,num.levels=2,title="my MCMC")
+
+
+#Diagnostic plot
+amcmc.diagnostic.plot(pp)
+ 
+#Acceptance	ratios	should	be	close	to	0.44,
+pp$ac/pp$cc
+
+#Step size for each dimension
+pp$k
+```
+
+If the Markov chain is not mixing well, usually some parameters are correlated, either due to random initialization or otherwise. The following demonstrates how to continue training from previous MCMC state with new adaptation. Here we use last value of previous MCMC chain for parameter estimates but initialize other values (adaptation step size and proposal direction vectors
+
+```{r }
+initstate=initialize.adaptation(pp$params[1000,])
+pp=adaptiveMCMC(dat, num.params=9 , s2=10000, num.iterations=1000, num.burnin=500, rseed=1, info=1, prev.state=initstate)
+
+
+traceplot.all(pp,ind=501:1000,num.levels=2,title="my MCMC\nafter
+re-adaptation")
+```
+
+
+When we are satisfied with MCMC training, the posterior samples can be saved. Either we can save the entire chain, or values after burn-in, e.g. the following writes all values starting from iteration 501
+
+Alternatively,	we	can	choose	a	single	parameter	vector	corresponding	to	the	largest	posterior	
+probability	within	iterations	501-1000	(MAP	estimate)
+
+```{r}
+#Write all
+write.postparams(pp,"my_mcmc.txt",501:1000)
+
+#Write largest posterior probs
+ind=501:1000
+i=which.max(pp$postli[ind])
+write.postparams(pp,"my_mcmc.txt",ind[i])
+```
+
+The output MCMC sample file is a text file where the first value in each line is the posterior probability of the sample and the rest are the parameter values, i.e. if there are 9 parameters, each line contains 10 numbers.
+
+#Step 3 Classifying new sequence data
+
+After the model has been trained, new sequences can be classified. Here we use validation data which are the sequences which were not present in the model training but we know their true taxonomic labels. Therefore they can be used as an independent data set to validate the model. The first file ‘example_testseqids.txt’ contains all sequence ids which we want to classify. Sequence similarities between them and representative sequences are in ‘example_testseqsim.txt
+
+```{perl}
+classify_seqsimfile.pl example_testseqids.txt example_taxonomy.txt example_trainseqid2taxname.txt my_rseqs.txt my_mcmc.txt map example_testseqsim.txt 1 0.01 my_testclas.txt 0 1
+```
+
+Taxonomy tree is the same which was used in the model training and seqid2taxname file contains the taxonomy information of reference data, ‘my_rseqs.txt’ lists the representative reference sequences for each taxonomy node, ‘my_mcmc.txt’ contains the model parameters after which comes the parameter mode (here ‘map’ for Maximum A Posteriori). The following file contains the pairwise sequence similarities between the sequences to be classified and training sequences. The next parameter (here 1) is the number of outcomes for each validation sequence, if it is set to 0 probabilities of all outcomes are included in the output. The next parameter (here 0.01) is the probability threshold which is applied in hierarchical classification. Only those nodes are proceeded which exceed the threshold. Value of 0 implies no restrictions, the closer the threshold is to 1, more strict and therefore more narrow the search becomes. The name of the output file is here ‘my_testclas.txt’, parameter 1/0 after it denotes if classification should be done in validation mode (1) or not (0). In validation mode, the reference sequence is not used if it has the same seqid as the the sequence to be classified. The last parameter 1 results that the name of the sequence being processed is printed on the screen. In case of 0, processing is silent. Last two parameters are optional, in case they are not defined, default value 0 is used for both. Since the order of parameters is important, if verbose output is wanted (last parameter nonzero), the validation mode parameter must be also defined (e.g. to be zero). 
+
+Classification output contains the node id of taxonomic units. For visual inspection it helps to use textual names. The following script adds the level and the name of taxonomic node (4th column of taxonomy tree file) to the output
+
+```{perl}
+add_taxonomy_info.pl example_taxonomy.txt my_testclas.txt > my_testclasname.txt
+```
+
+In case we have the access to true taxonomic label of each test sequence, we can calculate whether the classification is correct or not. It is important to note that by default PROTAX output gives only the probabilities of the leaf nodes so in the following the correctness information is based on only the single output leaf of the taxonomy in each line. The following script outputs 1/0 indicating whether the classification is correct (1) or not (0) in each level of the taxonomy based on the single classification outcome. It works by listing the nodes in two paths, one starting from the classification output node and proceeding to root, and another starting from the true answer node and proceeding to root. Classification in each level is correct if the two node paths intersect in that level. The file containing the true class labels of test sequences (‘example_testseqid2taxname.txt’) has the same format which was described 15 earlier for training data, each line contains two fields seqid and taxname (textual identifier of taxonomy node).
+
+```{perl}
+correct_path.pl my_testclas.txt example_taxonomy.txt example_testseqid2taxname.txt > my_testresults.txt
+```
+
+Summary of the classification can be done in R.
+
+In the output, mean of columns levelL.correct is the correct classification rate at level L. 
+
+Bias-accuracy plot can be investigated by plotting the cumulative probability of the best classification outcome from each test sequence against the cumulative number of the correct classification results. In order to be useful, the input file should contain only the best classification outcome for each sequence. Note that the outcome probability a$prob is only for the most probable leaf node of the taxonomy and the probabilities of its parent nodes are not saved in file ‘my_testresults.txt’. Therefore some care must be taken how to choose against which the outcome probabilities are compared. In this particular example, we can use column a$correct.level2.
+
+```{r}
+a=read.table("../protax/data/my_testresults.txt",header=T)
+summary(a)
+
+table(a$level)
+
+accuracy.plot(a$prob, a$correct.level2, name="my results")
+```
+
+The plot is a straight line along the diagonal of the display when there is no bias in the output probabilities
+
+In addition to producing only the most probable taxon as a result of classification, it is possible to output multiple taxa. The following outputs 2 best taxa for each test sequence (in this example we set the probability threshold equal to zero)
+
+Again, the most informative way to investigate the results is to add the taxon name
+
+```{perl}
+classify_seqsimfile.pl example_testseqids.txt example_taxonomy.txt example_trainseqid2taxname.txt my_rseqs.txt my_mcmc.txt map example_testseqsim.txt 2 0.0 my_testclas2.txt 0 1
+
+add_taxonomy_info.pl example_taxonomy.txt my_testclas2.txt > my_testclas2name.txt
+```
+
+The previous PROTAX classification lists only leaf nodes as an outcome. In order to investigate node probabilities in different levels of taxonomy, we can use another program. The input is similar as in the previous step, but now the maximum number of outcomes to be outputted is the maximum number of nodes within each taxonomy level. Here we specify to get only the best node in each taxonomy level whose probability must be above 0.01
+
+The output file consists of four columns: seqid, probability, nodeid, and level. When we combine this output with the information of correct taxonomic membership, we get the classification results for each taxonomy level. The following program outputs 1/0 depending if the classification is correct/false for each taxonomy level in a separate column. The output includes also the best classification result of the query sequence (probability and taxon name) in each level. In case the previous program outputted more than one node per level, the correct one is selected, otherwise the node with the largest probability. There is only one output line for each query sequence.
+
+```{perl}
+nodeprob_seqsimfile.pl example_testseqids.txt example_taxonomy.txt example_trainseqid2taxname.txt my_rseqs.txt my_mcmc.txt map example_testseqsim.txt 1 0.01 my_testnodeprobs.txt 0 1
+
+correct_levels.pl my_testnodeprobs.txt example_taxonomy.txt example_testseqid2taxname.txt > my_testresults2.txt
+```
+
+Taxonomy level specific classification summaries can now be calculated e.g. in R using the output file ‘my_testresults2.txt’
+
+```{r}
+a=read.table("my_testresults2.txt",header=T)
+summary(a)
+```
+

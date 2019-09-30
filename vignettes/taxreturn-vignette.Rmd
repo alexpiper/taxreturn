@@ -1,0 +1,204 @@
+---
+title: "taxreturn-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{taxreturn-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval=FALSE
+)
+```
+
+```{r setup}
+library(taxreturn)
+library(Biostrings)
+library(tidyverse)
+```
+
+## Fetching sequences from GenBank and BOLD
+
+The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetchSeqs function, which wraps an interface to entrez and BOLD API's respectively. This function can either take a single higher level rank, i.e. the family 'Trioza', or it can take a vector of taxon names, such as the species contained on a priority pest list or those of conservation concern.
+
+The downstream option lets the function know if you want to conduct searches and output fasta files using the input rank, or at a taxonomic rank downstream of it, i.e. Species. The downto option then determines what that downstream rank is. This functionality is important for getting around server limits when conducting large searches for example 'Insecta', however comes with some computational overhead when downloading few taxa.
+
+The marker option determines what will be in the search, note that the naming of loci differs between Genbank and bold so i suggest conducting a test search on their respective websites to confirm the desired marker.
+*note - add functionality for checking if marker exists* 
+
+The compress option toggles whether to output as a gzipped fasta file to save space. All further functions in this package should be capable of handling gzipped files.
+
+Finally, the cores option determines how many cores to use when downloading sequences, using more cores can speed up searches. *note - i dont believe cores is currently working properly so use 1 core for now* 
+
+Depending on the amount of sequences you are downloading, and the speed of your internet connection this step can take from minutes to hours, i suggest running this overnight for large searches.
+
+```{r Download all sequences, eval=FALSE, include=TRUE}
+## Fetch sequences from GenBank 
+genbank <- fetchSeqs("Scaptodrosophila", database="genbank",dir="genbank",downstream=TRUE,quiet=FALSE, downto="species", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=TRUE, cores=1)
+
+
+## Fetch sequences from BOLD
+bold <- fetchSeqs("Scaptodrosophila", database="bold", dir="bold", downstream=TRUE,quiet=FALSE, downto="species", marker="COI-5P", output = "gb-binom",compress=TRUE, cores=1)
+
+```
+
+# Curating public reference sequences
+
+
+## Removing non-homologous sequences
+
+Due to the prevalence of misannotated data on public reference data we will use a number of filtering steps to try and curate this to only the markers desired. The first curation step we wish to use is to remove non-homologous markers
+
+In order to reduce bias involved in mapping sequences to a single reference sequence, we will align them to a profile hidden markov model of the gene that uses a probablistic framework to take into account a wider range of diversity. To make this model we will use the aphid R package, and a curated alignment of insect COI sequences obtained from the Midori dataset and trimmed to the folmer region.
+
+This model can be loaded from the package data as below:
+
+```{r load model}
+#model <- data("model", package="taxreturn")
+load("C:/Users/ap0y/Dropbox/R/taxreturn/data/model.rda")
+```
+
+Or a new model can be trained on a new dataset or loci using:
+
+```{r build PHMM,eval=FALSE}
+#build PHMM from midori longest - sequences need to be same length
+midori <-  Biostrings::readDNAStringSet("MIDORI_LONGEST_20180221_COI.fasta")
+insecta_midori <- as.DNAbin(midori[str_detect(names(midori),pattern=";Insecta;"),])
+folmer <- insect::virtualPCR(insecta_midori, up = "TITCIACIAAYCAYAARGAYATTGG",down= "TAIACYTCIGGRTGICCRAARAAYCA",cores=2, rcdown = TRUE, trimprimers = TRUE)
+filt <- folmer[lengths(folmer)==658]
+
+#alignment was then manually curated in geneious prime
+folmer_curated <-  ape::read.dna("folmer_insecta_fullength_aligned_curated.fa",format="fasta")
+model <- aphid::derivePHMM(folmer_curated)
+```
+
+We will now use the cleanseqs function, and this model in order to remove putatively non-homolgous sequences. Firstly we will merge the sequences from each database together. As BOLD and GenBank share a number of sequences, we subset the merged file to only the unique sequences to speed things up.
+
+As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases to the left and right of the model.
+
+```{r clean seqs}
+#read in all fastas and merge
+library(Biostrings)
+gbSeqs <-  readDNAStringSet(sort(list.files("genbank", pattern = ".fa", full.names = TRUE)))
+boldSeqs <-  readDNAStringSet(sort(list.files("bold", pattern = ".fa", full.names = TRUE)))
+mergedSeqs <- append(gbSeqs, boldSeqs, after=length(gbSeqs))
+uniqSeqs <- mergedSeqs[unique(names(mergedSeqs)),] # Remove those sequnce names that are identical across both databases
+
+#remove non-homologous sequences
+filtered <- clean_seqs(uniqSeqs, model, minscore = 100, cores=2, shave=TRUE)
+```
+
+## Resolve Contaminated sequences and misannotated taxonomy
+
+The other main form of misannotation that can effect metabarcoding datasets is incorrect taxonomy for the reference sequences. To resolve this issue, we use the purge function from the insect R package, which clusters sequences at a specific similarity threshold (in this case 99% simularity), and compares the heirarchial taxonomy within clusters. When the taxonomy of a sequences diverges from the other sequences in its cluster, it is removed as a putative misannotation. The confidence required the remove a sequence can be adjusted. In this case we use a confidence threshold of 0.8, which indicates the putative misannotated sequence must diverge from 4/5 other sequences in its cluster to be removed from the dataset.
+
+insect::purge requires specifically formated names, so we do some transformations to get the names in this format, retaining the old names in the attributes. These old names are then restored following removal of missanotated sequences
+
+```{r insect purge}
+#Download the NCBI taxonomy database
+db <- insect::taxonomy(db = "NCBI", synonyms = TRUE)
+
+#Filter the taxonomy database to remove contaminants and 
+db <- db %>%
+  dplyr::filter(!rank %in% c("varietas","subspecies","species subgroup")) %>%
+  dplyr::filter(!str_detect(name, fixed("sp."))) %>%
+  dplyr::filter(!str_detect(name, fixed("spp."))) %>%
+  dplyr::filter(!str_detect(name, fixed("aff."))) %>%
+  dplyr::filter(!str_detect(name, fixed("nr."))) %>%
+  dplyr::filter(!str_detect(name, fixed("bv."))) %>%
+  dplyr::filter(!str_detect(name, fixed("cf."))) %>%
+  dplyr::filter(!str_detect(name, fixed("nom."))) %>%
+  dplyr::filter(!str_detect(name, fixed("nud."))) %>%
+  dplyr::filter(!str_detect(name, fixed("environment"))) %>%
+  dplyr::filter(!str_detect(name, fixed("undescribed"))) %>%
+  dplyr::filter(!str_detect(name, fixed("unverified"))) %>%
+  dplyr::filter(!str_detect(name, fixed("unclassified"))) %>%
+  dplyr::filter(!str_detect(name, fixed("uncultured"))) %>%
+  dplyr::filter(!str_detect(name, fixed("unidentif"))) %>%
+  dplyr::filter(!str_detect(name, fixed("NA"))) %>%
+  dplyr::filter(!str_detect(name, fixed("error"))) %>% 
+  dplyr::filter(!str_detect(name,"[0-9]"))%>% 
+  dplyr::filter(!str_detect(name,"[:punct:]"))
+
+remove <- names(filtered)  %>% 
+  str_split_fixed(";", n = 2) %>% 
+  as_tibble() %>%
+  filter(V2 %in% db$name) %>%
+  unite(names,c("V1","V2"),sep=";")
+
+subset <- filtered[names(filtered) %in% remove$names]
+
+#Save names into attributes
+attributes(filtered)$oldnames <- names(filtered)
+
+#Transform names to format appropriate for insect::purge
+names(filtered) <- names(filtered) %>%
+  str_split_fixed(";",n=2) %>%
+  as_tibble() %>%
+  pull("V1") 
+
+#Retain unique names only
+filtered <- insect::subset.DNAbin(filtered, subset = !duplicated(names(filtered)))
+
+#Cluster and remove misannotated sequences
+purged  <- insect::purge(filtered, db = db, level = "species", confidence = 0.8,
+                  threshold = 0.99, method = "farthest")
+
+#Restore old names
+names(purged) <- attributes(purged)$oldnames
+```
+
+## Resolve synonyms
+
+Classification of sequences into reference taxonomy can be complicated by the existence of taxonomic synonyms. To resolve this we use the GBIF server to check each name to see if it represents a currently valid taxa. If it represents a synonym, the name is replaced with the accepted taxon name.
+
+The options to consider here, is what to do with the synonyms that dont exist in the NCBI taxonomy, in this case we ignore the fact taxa are missing from the NCBI taxonomy and rename them anyway
+
+```{r resolve synoynms}
+resolved <- resolve_synonyms(subset,subspecies=FALSE,quiet=FALSE,missing="ignore",higherrank=FALSE,fuzzy=TRUE)
+
+#Check for differences in names
+names(resolved)[which(!names(resolved) %in% names(subset))]
+```
+
+
+## Prune large groups
+
+In many cases groups of taxa are over-represented in databases, which can slow down and in some cases bias the taxonomic assignment process. Here we prune over-represented groups down to 5 sequences. Here we have the option of discarding these sequences by length (ie removing smaller sequences first), or randomly.
+
+
+```{r prune groups}
+#Prune group sizes down to 5, removing all identical sequences first
+pruned <- prune_groups(resolved,maxGroupSize = 5, discardby="length",dedup=TRUE, quiet = FALSE)
+
+```
+
+## Trim to primer regions
+
+Next we will trim the sequences to the primer regions we use for metabarcoding using the virtualPCR function from the insect R pacakge
+
+```{r trim to primer regions}
+#Trim to primer region using virtualPCR from insect package
+amplicon <- insect::virtualPCR(pruned, up = "ACWGGWTGRACWGTNTAYCC",down= "ARYATDGTRATDGCHCCDGC",cores=2, rcdown = TRUE, trimprimers = TRUE)
+
+```
+
+## Reformat to taxonomic classifier
+
+```{r reformat taxonomy}
+#Change to complete taxonomic heirarchy 
+heirarchy <- reformat_heirarchy(amplicon, db=db, quiet=FALSE)
+
+#Reformat to Kingdom to genus heirarchy suitable for assigntaxonomy classifier in DADA2
+dada2_gen <- reformat_dada2_gen(amplicon, db=db, quiet=FALSE)
+
+#Reformat to genus species binomials as suitable for assignSpecies in DADA2
+dada2_spp <- reformat_dada2_spp(amplicon)
+
+```
+
+
