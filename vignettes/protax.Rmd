@@ -21,6 +21,7 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 ```{r setup}
 library(taxreturn)
+library(tidyverse)
 ```
 
 # Introduction
@@ -33,6 +34,81 @@ functions to add
 
 # Generate training data
 
+
+Get taxonomy as per https://github.com/alexcrampton-platt/screenforbio-mbc/
+```{r get taxonomy crampton}
+library(taxize)
+taxon_list <- taxizedb::downstream("Insecta",db="ncbi",downto="species")
+taxon_sp <- as.data.frame(taxon_list[1])[,1]
+taxon_class <- taxizedb::classification(taxon_sp, db="ncbi",return_id=FALSE)
+
+taxon_tab <- cbind(taxon_class)
+
+#This is what screenbio pipeline requires
+taxon_tab_out <- taxon_tab %>% 
+  select(phylum, class, order, family, genus, species) %>%
+  mutate(species = str_replace(species, pattern=" ", replacement="_")) 
+  
+write.table(taxon_tab_out,paste0("Insecta","_ncbi_taxonomy.txt"),sep="\t",col.names=FALSE,row.names=FALSE,quote=FALSE)
+
+## Either use the screenbio perl scripts or reformat in R
+
+
+
+tax_reformat <- taxon_tab_out %>%
+  mutate(species = str_replace(species, pattern=" ", replacement="_")) 
+
+%>%
+  unite(lineage, c("phylum","class","order","family","genus","species"))
+  #filter(class=="Insecta" | tax_name=="Insecta") %>%
+  #select(1:7) %>% 
+  gather("key", "value") 
+
+%>%
+  filter(!is.na(value)) %>% 
+  unite(2:3, col="taxname", sep="=") %>%
+  group_by(tax_id) %>%
+  summarize(lineage= paste(taxname, collapse="; ")) %>%
+  separate(lineage, into = c("taxname", "parent"), sep=";")
+
+
+```
+
+Perl /protaxscripts/maketaxonomy.pl gives
+    0	0	0	root
+    1	0	1	Diptera
+    2	1	2	Diptera,Drosophilidae
+    3	2	3	Diptera,Drosophilidae,Gitonides
+    4	3	4	Diptera,Drosophilidae,Gitonides,Gitonides
+    5	2	3	Diptera,Drosophilidae,Chymomyza
+    6	5	4	Diptera,Drosophilidae,Chymomyza,Chymomyza
+    
+    
+Basically this script seems to just reformat it to similar to my script below, but they also keep the taxon heirarchy seperated by a ,
+
+
+perl /protaxscripts/taxonomy_priors.pl gives:
+
+0       0       0       root    1.0000000000
+1       0       1       Diptera 1.0000000000
+2       1       2       Diptera,Drosophilidae   1.0000000000
+3       2       3       Diptera,Drosophilidae,Gitonides 0.0416666667
+4       3       4       Diptera,Drosophilidae,Gitonides,Gitonides       0.0416666667
+5       2       3       Diptera,Drosophilidae,Chymomyza 0.0416666667
+6       5       4       Diptera,Drosophilidae,Chymomyza,Chymomyza       0.0416666667
+7       2       3       Diptera,Drosophilidae,Cladochaeta       0.0416666667
+8       7       4       Diptera,Drosophilidae,Cladochaeta,Cladochaeta   0.0416666667
+
+This next script taxonomy_priors.pl seems to just give an even prior by dividing the taxa by the number of options at that level
+
+perl /protaxscripts/thintaxonomy.pl 1 gives:
+0       0       0       root    1.0000000000
+1       0       1       Diptera 1.0000000000
+
+the number decides the level to prinbt
+
+
+
 Our example taxonomy tree is in file ‘example_taxonomy.txt’ and the taxonomic information of our reference sequences is in file ‘example_trainseqid2taxoname.txt’. Taxonomy tree file is a text file consisting of four columns separated by space or tab in each line, where nodeid and nodepid are the numeric node identifiers. They can be in principle any integers but the nodeid of the root node must be 0. Nodepid is the parent nodeid (for root node it is the root node itself). Level is the level of the node in taxonomy (root node has level 0) and taxname is the taxonomic name. Any unique character string can be used for the taxonomic name but it should not contain any spaces or tabs (only the first part separated by space will be used as a name). The structure of the taxonomy is constructed based on the (nodeid,nodepid) pairs but the reference sequence data is linked into taxonomy based on the taxname. Taxonomy file does not have any header line so the first row contains already the first values.
 
 ```{r display taxonomy}
@@ -43,35 +119,47 @@ head(tax_tree)
 
 #get taxonomy tree
 library(tidyverse)
-ranked_lineage <- get_ranked_lineage(db="NCBI", synonyms=FALSE)
+ranked_lineage <- get_ranked_lineage(db="NCBI", synonyms=TRUE) # Synonyms==FALSE is removing many real samples!
 
 #Filter and transform taxonomy tree
 
-tax2 <- ranked_lineage %>%
+tax <- ranked_lineage %>%
   filter(class=="Insecta" | tax_name=="Insecta") %>%
   select(1:7) %>% 
-  gather("key", "value", 2:7)%>%
+  gather("key", "value", 2:7) %>%
   filter(!is.na(value)) %>% 
   unite(2:3, col="taxname", sep="=") %>%
   group_by(tax_id) %>%
   summarize(lineage= paste(taxname, collapse="; ")) %>%
-  separate(lineage, into = c("taxname", "parent"), sep=";") %>%
+  mutate(lineage = str_replace(lineage, pattern="tax_name=", ))
+
+%>%
+  separate(lineage, into = c("taxname", "parent"), sep=";")
+
+%>% # Change here to instead take out family= and replace with columns
+  
+  
+  
   separate(parent, into=c("level", "parent"), sep="=") %>%
   mutate(level = trimws(level)) %>%
-  mutate(taxname = taxname %>% str_replace(pattern="tax_name=", replacement = "")) %>%
+  mutate(taxname = taxname %>%
+           str_replace(pattern="tax_name=", replacement = "")) %>%
   mutate(level = case_when(
     is.na(level) ~ 0, #Set the root
     level=="class" ~ 1,
     level=="order" ~ 2,
     level=="family" ~ 3,
     level=="genus" ~ 4,
+  )) %>%
+  filter(!is.na(level)) %>%
+  mutate(parent=case_when(
+    is.na(parent) ~ "root", # rename the root
+    TRUE ~ parent
   ))
 
-#Rename 
 
-  
 #Filter bad taxnames
-tax2 <- tax2 %>%
+tax2 <- tax %>%
   dplyr::filter(!str_detect(taxname, fixed("sp."))) %>%
   dplyr::filter(!str_detect(taxname, fixed("spp."))) %>%
   dplyr::filter(!str_detect(taxname, fixed("aff."))) %>%
@@ -110,20 +198,74 @@ tax3 <- tax2 %>%
   filter(!is.na(level)) %>%
   rename(nodeid = tax_id) %>%
   select(nodeid, nodepid, level, taxname)  %>%
-  mutate(taxname = taxname %>% str_replace(pattern=" ", replacement="_")) 
+  mutate(taxname = taxname %>% str_replace(pattern=" ", replacement="_")) %>%
+  filter(!is.na(nodepid))
 
+# Add priors
+tax3 <- tax3 %>%
+  mutate(priors = 1)
+
+#split species
+tax3 <- tax3 %>%
+  mutate(taxname = case_when(
+    level==4 ~ str_split_fixed(taxname, "_", n=2) %>% as_tibble %>% pull(V2),
+    TRUE ~ taxname
+    
+  ))
+
+
+write_tsv(tax3, path="../protax/insecta_taxonomy.txt", col_names = FALSE)
 
 ```
+
+
+Next part of script
+
+1- First part of the script finds matches between the taxonomy and reference sequences using the taxon names to create trainseqid2taxname.txt
+
+2- The next part of the script takes an input of a method of defining the reference sequences, and a number of reference sequences to choose, as well as optional weightings, and creates the rseqs.txt  file with  or without the weightings
+
+3- The next part of the script takes an option for how many samples to take from the taxonomy, and generates the trainsamples.txt which contains the prior probability . Need to work out why we need to subsample the trainign set like this and how many subsamples should i use?
+
+4- Generates the pairwise sequence similarities from the trainseq fasta using either kmer::mbed or kmer::kdistance (slightly more accurate), depending on the size of the dataset
+
+5- generate the design matrix - this takes in the taxonomy, training samples and sequence similarities etc and geenerates the design matrix for MCMC
+
+
+## Create trainseqid2taxname
 
 The file containing the taxonomic information of the reference sequence data (example_trainseqid2taxname.txt) contains two fields separated by space or tab. The file doesn't have a header line. For each seqid there should be only one taxname which is the most specific taxonomic classification. Like seqid, also taxname should be unambiguous and unique. Lower level taxonomic classes (taxonomy nodes towards the root of the tree) of each sequence can be obtained based on the taxonomy tree.
 
-```{r display reference taxonomy}
-ref_tax <- readr::read_tsv("../protax/data/example_trainseqid2taxname.txt", col_names=FALSE)%>%
-  magrittr::set_colnames(c("seqid", "taxname"))
-head(ref_tax)
+```{r}
+#trainseq2taxid
+#ref_tax <- readr::read_tsv("../protax/data/example_trainseqid2taxname.txt", col_names=FALSE)%>%
+#  magrittr::set_colnames(c("seqid", "taxname"))
+#head(ref_tax)
+
+#inputs: Taxonomy (table, or tree object?), refseqs (DNAbin)
+
+refseqs <- insect::readFASTA("../pruned.fa.gz")
+
+trainseqid2taxname <-  names(refseqs) %>%
+    stringr::str_split_fixed(";",n=2) %>%
+    tibble::as_tibble() %>%
+    tidyr::separate(col=V1,into=c("seqid","nodeid"),sep="\\|") %>%
+    dplyr::rename(species = V2) %>%
+    dplyr::mutate(nodeid = as.numeric(nodeid)) %>%
+  tidyr::separate(species, into=c("kingdom", "phylum", "class", "order", "family", "genus", "taxname"), sep=";") %>%
+  select(seqid, taxname) %>%
+  mutate(seqid = str_replace_all(seqid, pattern=" ", replacement="")) %>%
+  mutate(taxname = str_split_fixed(taxname, "_",n=2) %>% as_tibble() %>% pull(V2))
+
+#filter to only those in the taxonomy
+trainseqid2taxname <- trainseqid2taxname %>%
+  mutate(taxname = str_replace_all(taxname, pattern = " ", replacement = "")) %>%
+  filter(!str_detect(seqid, "#")) %>% 
+  filter(!taxname=="") %>%
+  filter(taxname %in% tax3$taxname) 
+
+write_tsv(trainseqid2taxname, path="../protax/insecta_trainseqid2taxname.txt", col_names = FALSE)
 ```
-
-
 
 ## Define representative sequences
 
@@ -136,14 +278,13 @@ The corresponding Perl scripts are get_reference_sequences_all.pl, get_reference
 
 
 ```{r protax get reference sequences}
-
 protax_get_reference_sequences(install ="protax",
-                               taxonomy = "/protax/data/example_taxonomy.txt",
-                               trainseq2taxid =  "/protax/data/example_trainseqid2taxname.txt",
+                               taxonomy = "/protax/Insecta_ncbi_tax_priors.txt",
+                               trainseq2taxid =  "/protax/insecta_trainseqid2taxname.txt",
                                method = "random", 
-                               levels = 2,
+                               levels = 4,
                                max_per_level = 10,
-                               output = "/protax/data/my_rseqs.txt",
+                               output = "/protax/insecta_rseqs.txt",
                                seed = 1)
 ```
 
@@ -152,6 +293,10 @@ In case the number of available reference sequences is smaller than the user def
 
 ```{r output myrseqs}
 my_rseqs <- readr::read_tsv("../protax/data/my_rseqs.txt", col_names=FALSE) %>%
+  magrittr::set_colnames(c("nodeid", "refseqs","weights"))
+head(my_rseqs)
+
+my_rseqs <- readr::read_tsv("../protax/insecta_rseqs.txt", col_names=FALSE) %>%
   magrittr::set_colnames(c("nodeid", "refseqs","weights"))
 head(my_rseqs)
 ```
@@ -163,17 +308,16 @@ The third column is optional for PROTAX, in case it is missing, each representat
 In this example, we generate 100 samples representing the nodes of the taxonomy. Each node is associated with a training sequence. The details how the sampling is done can be found in the manuscript. In the present implementation, only leaf nodes of the taxonomy are sampled. The number of samples should represent the taxonomy, here we use only 100 samples because the example taxonomy and the reference data set are tiny and the purpose of the example is mainly to demonstrate the syntax of all commands.
 
 ```{r generate training data}
-
 # Why does this need to be done?
 
 #Also should be able to have one big function that takes in a DNAbin training set and conducts all these scripts on them - perhaps this should be contained within an S4 object?
 
 protax_generate_training_data(install ="protax",
-                              taxonomy ="/protax/data/example_taxonomy.txt",
-                              trainseq2taxid = "/protax/data/example_trainseqid2taxname.txt",
-                              repseqs = "/protax/data/my_rseqs.txt",
+                              taxonomy ="/protax/insecta_taxonomy.txt",
+                              trainseq2taxid = "/protax/insecta_trainseqid2taxname.txt",
+                              repseqs = "/protax/insecta_rseqs.txt",
                               samples = 100,
-                              output = "/protax/data/my_trainsamples.txt",
+                              output = "/protax/insecta_trainsamples.txt",
                               seed=1)
 ```
 

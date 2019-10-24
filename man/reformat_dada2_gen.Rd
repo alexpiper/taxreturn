@@ -4,7 +4,7 @@
 \alias{reformat_dada2_gen}
 \title{Reformat DADA2 Genus}
 \usage{
-reformat_dada2_gen(x, quiet = TRUE, ranks = NULL)
+reformat_dada2_gen(x, db = NULL, quiet = TRUE, ranks = NULL)
 }
 \arguments{
 \item{ranks}{}

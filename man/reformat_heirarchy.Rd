@@ -4,7 +4,8 @@
 \alias{reformat_heirarchy}
 \title{Reformat heirarchy}
 \usage{
-reformat_heirarchy(x, quiet = TRUE, ranks = NULL)
+reformat_heirarchy(x, db = NULL, quiet = TRUE, ranks = NULL,
+  sppsep = "_")
 }
 \arguments{
 \item{ranks}{}

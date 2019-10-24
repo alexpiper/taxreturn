@@ -47,7 +47,7 @@ protax_generate_training_data <- function(install=NULL, taxonomy, trainseq2taxid
   repseqs <- normalizePath(paste0(getwd(),repseqs))
   output <- paste0(getwd(),output)
 
-  script <- paste0(install, "/generate_training_data.pl")
+  script <- paste0(install, "/generate_training_data2.pl")
 
   if(is.null(samples)){stop("Number of samples to be drawn form input taxonomy needs to be defined")}
 

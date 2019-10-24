@@ -1,4 +1,6 @@
-## Get ranked lineage
+
+# Get_ranked_lineage ------------------------------------------------------
+
 
 library(tidyverse)
 ranked_lineage <- read_tsv("../rankedlineage.dmp",
@@ -42,6 +44,10 @@ get_ranked_lineage <- function (db = "NCBI", synonyms = FALSE)
       message("Done\n")
       return(lin)
 }
+
+
+# taxonomy_to_newick ------------------------------------------------------
+
 
 ## data frame to newick
 
