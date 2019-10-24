@@ -11,16 +11,25 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Load libraries
 
+<<<<<<< HEAD
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 #devtools::install_github("alexpiper/taxreturn")
+=======
+```{r}
+>>>>>>> 41d83c47f13290ba4877f0c773f3accf234113ec
 library(tidyverse)
 library(taxreturn)
 ```
 
 Here is my example data
 ```{r example, warnings=FALSE}
+<<<<<<< HEAD
 test_taxid <- read.csv("../test_taxid.csv")
 head(test_taxid)
+=======
+test_taxid <- read_csv("../test_taxid.csv")
+print(test_taxid)
+>>>>>>> 41d83c47f13290ba4877f0c773f3accf234113ec
 ```
 
 First rename the columns so that one is tax_id
@@ -37,7 +46,11 @@ Use the get_ranked_lineage function from taxreturn to get a local copy of the NC
 # Get heirarchial NCBI taxonomy
 ranked_lineage <- get_ranked_lineage(db="NCBI") 
 
+<<<<<<< HEAD
 print(ranked_lineage[520:530,])
+=======
+print(ranked_lineage)
+>>>>>>> 41d83c47f13290ba4877f0c773f3accf234113ec
 
 ```
 
@@ -47,7 +60,11 @@ Left join the two tables together (left join keeps only those matching the left 
 #Join the taxID table to the taxonomy
 tax_table <- left_join(test_taxid, ranked_lineage, by="tax_id")
 
+<<<<<<< HEAD
 head(tax_table)
+=======
+print(tax_table)
+>>>>>>> 41d83c47f13290ba4877f0c773f3accf234113ec
 ```
 
 Rearrange the taxonomy table to work well with phyloseq
@@ -64,7 +81,11 @@ Or collapse ranks and write to file
 ```{r}
 
 export <- tax_table %>%
+<<<<<<< HEAD
   unite(col="export", c("OTU","superkingdom", "kingdom", "phylum", "class", "order", "family", "genus", "species"), sep=";") %>%
+=======
+  unite(col="export", c("OTU","superkingdom", "kingdom", "phylum", "class", "order", "family", "genus", "species"), sep="_") %>%
+>>>>>>> 41d83c47f13290ba4877f0c773f3accf234113ec
   pull(export)
 
 writeLines(export, con="otu_table.txt")
