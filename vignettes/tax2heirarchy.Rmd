@@ -1,0 +1,72 @@
+---
+title: "taxid_2_heirarchy"
+author: "Alexander Piper"
+date: "24/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#devtools::install_github("alexpiper/taxreturn")
+library(tidyverse)
+library(taxreturn)
+```
+
+Here is my example data
+```{r example, warnings=FALSE}
+test_taxid <- read.csv("../test_taxid.csv")
+head(test_taxid)
+```
+
+First rename the columns so that one is tax_id
+
+```{r}
+test_taxid  <- test_taxid %>%
+  magrittr::set_colnames(c("tax_id", "OTU"))
+
+```
+
+Use the get_ranked_lineage function from taxreturn to get a local copy of the NCBI heirarchial taxonomy
+
+```{r}
+# Get heirarchial NCBI taxonomy
+ranked_lineage <- get_ranked_lineage(db="NCBI") 
+
+print(ranked_lineage[520:530,])
+
+```
+
+Left join the two tables together (left join keeps only those matching the left side)
+
+```{r join}
+#Join the taxID table to the taxonomy
+tax_table <- left_join(test_taxid, ranked_lineage, by="tax_id")
+
+head(tax_table)
+```
+
+Rearrange the taxonomy table to work well with phyloseq
+
+```{r rearrange}
+tax_table <- tax_table %>%
+   select("OTU","superkingdom", "kingdom", "phylum", "class", "order", "family", "genus", "species") %>%
+  as.data.frame()
+
+```
+
+Or collapse ranks and write to file
+
+```{r}
+
+export <- tax_table %>%
+  unite(col="export", c("OTU","superkingdom", "kingdom", "phylum", "class", "order", "family", "genus", "species"), sep=";") %>%
+  pull(export)
+
+writeLines(export, con="otu_table.txt")
+```
+

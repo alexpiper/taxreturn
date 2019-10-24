@@ -1,12 +1,16 @@
-## Get ranked lineage
 
-library(tidyverse)
-ranked_lineage <- read_tsv("../rankedlineage.dmp",
-                           col_names = c("tax_id","tax_name","species","genus","family","order","class","phylum","kingdom","superkingdom"),
-                           col_types=("i-c-c-c-c-c-c-c-c-c-"))
+# Get_ranked_lineage ------------------------------------------------------
 
-
-get_ranked_lineage <- function (db = "NCBI", synonyms = FALSE)
+#' Title
+#'
+#' @param db
+#' @param synonyms
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_ranked_lineage <- function (db = "NCBI", synonyms = TRUE)
     {
       if (!identical(db, "NCBI")) {
         stop("Only the NCBI taxonomy database is available in this version\n")
@@ -21,7 +25,7 @@ get_ranked_lineage <- function (db = "NCBI", synonyms = FALSE)
       message("Building data frame\n")
 
       #Read data frame
-      lin <- read_tsv(paste0(tmp, "/rankedlineage.dmp"),
+      lin <- readr::read_tsv(paste0(tmp, "/rankedlineage.dmp"),
                       col_names = c("tax_id","tax_name","species","genus","family","order","class","phylum","kingdom","superkingdom"),
                       col_types=("i-c-c-c-c-c-c-c-c-c-"))
 
@@ -42,6 +46,10 @@ get_ranked_lineage <- function (db = "NCBI", synonyms = FALSE)
       message("Done\n")
       return(lin)
 }
+
+
+# taxonomy_to_newick ------------------------------------------------------
+
 
 ## data frame to newick
 
