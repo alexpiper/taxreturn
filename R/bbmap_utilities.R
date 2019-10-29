@@ -8,33 +8,32 @@
 #'
 #' @examples
 bbmap_install <- function(url, destdir = "bin") {
-
   if (missing(url)) {
     url <- ("https://downloads.sourceforge.net/project/bbmap/BBMap_38.57.tar.gz")
   }
 
   if (!dir.exists(destdir)) {
     dir.create(destdir)
-    } # Create first directory
+  } # Create first directory
 
-  if (dir.exists(paste0(destdir,  "/bbmap"))) {
+  if (dir.exists(paste0(destdir, "/bbmap"))) {
     unlink(paste0(destdir, "/bbmap"), recursive = TRUE)
-    } # Remove old version
+  } # Remove old version
 
   destfile <- file.path(destdir, basename(url))
   if (exists(destfile)) {
     file.remove(destfile)
-    } # Remove old zip file
+  } # Remove old zip file
 
   utils::download.file(url, destfile = destfile)
-  utils::untar(destfile, exdir = destdir)  ## check contents
+  utils::untar(destfile, exdir = destdir) ## check contents
   file.remove(destfile)
 }
 
 # Trim primers ------------------------------------------------------------
 
-#Note - may be worth adding an automated Maxlength to remove any untrimmed reads - maxlength = Readlength - shorterst primer + 1
-#Note - Write out stats and output to a file within the output directory
+# Note - may be worth adding an automated Maxlength to remove any untrimmed reads - maxlength = Readlength - shorterst primer + 1
+# Note - Write out stats and output to a file within the output directory
 
 #' Trim primers using BBDuk
 #'
@@ -59,99 +58,128 @@ bbmap_install <- function(url, destdir = "bin") {
 #' @export
 #'
 #' @examples
-bbtools_trim <- function(install=NULL, fwd, rev=NULL, primers,
-         restrictleft=NULL, outpath="bbduk", ktrim="l", ordered=TRUE,
-         kmer=NULL, mink=FALSE, tpe=TRUE, hdist=0, copyundefined=TRUE,
-         overwrite=TRUE, quality=TRUE, maxlength=NULL) {
+bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
+                         restrictleft = NULL, outpath = "bbduk", ktrim = "l", ordered = TRUE,
+                         kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, copyundefined = TRUE,
+                         overwrite = TRUE, quality = TRUE, maxlength = NULL) {
   nsamples <- length(fwd)
 
-  bbduk <- function(install=NULL, fwd, rev=NULL, primers,
-                    restrictleft=NULL, outpath="bbduk", ktrim="l", ordered=TRUE,
-                    kmer=NULL, mink=FALSE, tpe=TRUE, hdist=0, copyundefined=TRUE,
-                    overwrite=TRUE, quality=TRUE, maxlength=NULL) {
+  bbduk <- function(install = NULL, fwd, rev = NULL, primers,
+                    restrictleft = NULL, outpath = "bbduk", ktrim = "l", ordered = TRUE,
+                    kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, copyundefined = TRUE,
+                    overwrite = TRUE, quality = TRUE, maxlength = NULL) {
+    install <- paste0(install, "/current jgi.BBDuk")
 
-
-    install <- paste0(install,"/current jgi.BBDuk")
-
-    in1 <- paste0 ( "in=",fwd)
-    if (!is.null(rev)){
-      in2 <- paste0( "in2=",rev)
-      }  else (in2 <- "")
+    in1 <- paste0("in=", fwd)
+    if (!is.null(rev)) {
+      in2 <- paste0("in2=", rev)
+    } else {
+      (in2 <- "")
+    }
 
     if (!is.null(primers)) {
-      literal <- paste0("literal=",paste0(primers,collapse=","))
-    } else (stop("Primer sequences are required for trimming"))
+      literal <- paste0("literal=", paste0(primers, collapse = ","))
+    } else {
+      (stop("Primer sequences are required for trimming"))
+    }
 
     if (is.null(rev)) {
       out <- paste0(
-        "out=",dirname(fwd),"/",outpath,"/", basename(fwd) ) %>%
-        str_replace(pattern=".fastq", replacement=".trimmed.fastq")
+        "out=", dirname(fwd), "/", outpath, "/", basename(fwd)
+      ) %>%
+        str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
       out1 <- ""
       out2 <- ""
     } else if (!is.null(rev)) {
       out <- ""
-      out1 <- paste0("out1=",dirname(fwd),"/",outpath,"/", basename(fwd) ) %>%
-        str_replace(pattern=".fastq", replacement=".trimmed.fastq")
-      out2 <- paste0("out2=",dirname(rev),"/",outpath,"/", basename(rev) ) %>%
-        str_replace(pattern=".fastq", replacement=".trimmed.fastq")
+      out1 <- paste0("out1=", dirname(fwd), "/", outpath, "/", basename(fwd)) %>%
+        str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
+      out2 <- paste0("out2=", dirname(rev), "/", outpath, "/", basename(rev)) %>%
+        str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
     }
 
 
-    if (ktrim=="l") {ktrim <- paste0("ktrim=l")
-    } else if (ktrim=="r") {ktrim <- paste0("ktrim=r")}
+    if (ktrim == "l") {
+      ktrim <- paste0("ktrim=l")
+    } else if (ktrim == "r") {
+      ktrim <- paste0("ktrim=r")
+    }
 
-    if (is.numeric(kmer)) {kmer <- paste0("k=", kmer)
-    }  else (kmer <- paste0("k=",nchar(sort(primers,decreasing=TRUE)[1])))
+    if (is.numeric(kmer)) {
+      kmer <- paste0("k=", kmer)
+    } else {
+      (kmer <- paste0("k=", nchar(sort(primers, decreasing = TRUE)[1])))
+    }
 
-    if (is.numeric(maxlength)) {maxlength <- paste0("maxlength=", maxlength)
-    }  else (maxlength <- "")
+    if (is.numeric(maxlength)) {
+      maxlength <- paste0("maxlength=", maxlength)
+    } else {
+      (maxlength <- "")
+    }
 
-    if (is.numeric(mink)) {mink <- paste0("mink=", mink) # Note - mink makes it noticibly slower
-    }  else if (mink==TRUE) {mink <- paste0("mink=",(ceiling(nchar(sort(primers,decreasing=TRUE)[1])/2)))
-    } else if (mink==FALSE) {mink <-""}
+    if (is.numeric(mink)) {
+      mink <- paste0("mink=", mink) # Note - mink makes it noticibly slower
+    } else if (mink == TRUE) {
+      mink <- paste0("mink=", (ceiling(nchar(sort(primers, decreasing = TRUE)[1]) / 2)))
+    } else if (mink == FALSE) {
+      mink <- ""
+    }
 
 
-    if(is.numeric(restrictleft)) {
+    if (is.numeric(restrictleft)) {
       restrictleft <- paste0("restrictleft=", restrictleft)
-    }  else (restrictleft <- paste0("restrictleft=", nchar(sort(primers,decreasing=FALSE)[1])+ 1))
+    } else {
+      (restrictleft <- paste0("restrictleft=", nchar(sort(primers, decreasing = FALSE)[1]) + 1))
+    }
 
-    if (ordered==TRUE) {
+    if (ordered == TRUE) {
       ordered <- "ordered=T"
-      } else (ordered <- "")
+    } else {
+      (ordered <- "")
+    }
 
     if (is.numeric(hdist)) {
-      hdist <- paste0("hdist=",hdist)
+      hdist <- paste0("hdist=", hdist)
     }
 
-    if (copyundefined==TRUE) {copyundefined <- "copyundefined"
-    } else (copyundefined="")
+    if (copyundefined == TRUE) {
+      copyundefined <- "copyundefined"
+    } else {
+      (copyundefined <- "")
+    }
 
-    if (overwrite==TRUE) {
+    if (overwrite == TRUE) {
       overwrite <- "overwrite=TRUE"
-      } else (overwrite <- "")
-
-    if (tpe==TRUE) {
-      tpe <- "tpe"
-      } else (tpe <- "")
-
-    if (quality==TRUE) {
-      quality <- "bhist=bhist.txt qhist=qhist.txt gchist=gchist.txt aqhist=aqhist.txt lhist=lhist.txt gcbins=auto"
-    } else (quality <- "")
-
-    args <- paste(" -cp ",install, in1, in2,literal, restrictleft, out, out1,
-                  out2, kmer,mink, hdist, ktrim, tpe, copyundefined, quality,
-                  maxlength, overwrite,"-da >> stdout.log 2>> stderr.log", collapse = " ")
-
-    print(paste0(args," /n"))
-    #Run bbduk
-    system2("java", args = args, wait=TRUE)
-
-  }
-  if (nsamples >1){
-    for (i in 1:nsamples) {
-      bbduk(install=install, fwd=fwd[i], rev=rev[i], primers, restrictleft, outpath, ktrim, ordered, kmer, mink,tpe, hdist, copyundefined, quality, overwrite, maxlength)
+    } else {
+      (overwrite <- "")
     }
 
+    if (tpe == TRUE) {
+      tpe <- "tpe"
+    } else {
+      (tpe <- "")
+    }
+
+    if (quality == TRUE) {
+      quality <- "bhist=bhist.txt qhist=qhist.txt gchist=gchist.txt aqhist=aqhist.txt lhist=lhist.txt gcbins=auto"
+    } else {
+      (quality <- "")
+    }
+
+    args <- paste(" -cp ", install, in1, in2, literal, restrictleft, out, out1,
+      out2, kmer, mink, hdist, ktrim, tpe, copyundefined, quality,
+      maxlength, overwrite, "-da >> stdout.log 2>> stderr.log",
+      collapse = " "
+    )
+
+    print(paste0(args, " /n"))
+    # Run bbduk
+    system2("java", args = args, wait = TRUE)
+  }
+  if (nsamples > 1) {
+    for (i in 1:nsamples) {
+      bbduk(install = install, fwd = fwd[i], rev = rev[i], primers, restrictleft, outpath, ktrim, ordered, kmer, mink, tpe, hdist, copyundefined, quality, overwrite, maxlength)
+    }
   } else if (nsamples == 1) {
     bbduk(install, fwd, rev, primers, restrictleft, outpath, ktrim, ordered, kmer, mink, tpe, hdist, copyundefined, overwrite, quality, maxlength)
   }
@@ -179,82 +207,100 @@ bbtools_trim <- function(install=NULL, fwd, rev=NULL, primers,
 #' @export
 #'
 #' @examples
-bbtools_demux <- function(install=NULL, fwds, revs=NULL, Fbarcodes=NULL, Rbarcodes=NULL,
-                          restrictleft=NULL, outpath="trimmed", kmer=NULL, hdist=0, copyundefined=TRUE,
-                          overwrite=TRUE, threads=NULL, mem=NULL, interleaved=FALSE){
-
+bbtools_demux <- function(install = NULL, fwds, revs = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
+                          restrictleft = NULL, outpath = "trimmed", kmer = NULL, hdist = 0, copyundefined = TRUE,
+                          overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE) {
   nsamples <- length(fwds)
 
-  bbtools_seal <- function(install=NULL, fwd, rev=NULL, Fbarcodes=NULL, Rbarcodes=NULL,
-                           restrictleft=NULL, outpath="trimmed", kmer=NULL, hdist=0, copyundefined=TRUE,
-                           overwrite=TRUE, mem=NULL, threads=NULL) {
-
-    in1 <- paste0( "in=", fwd)
+  bbtools_seal <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
+                           restrictleft = NULL, outpath = "trimmed", kmer = NULL, hdist = 0, copyundefined = TRUE,
+                           overwrite = TRUE, mem = NULL, threads = NULL) {
+    in1 <- paste0("in=", fwd)
     if (!is.null(rev)) {
-      in2 <- paste0( "in2=",rev)
-      }  else (in2 <- "")
+      in2 <- paste0("in2=", rev)
+    } else {
+      (in2 <- "")
+    }
 
     if (!is.null(Fbarcodes) & is.null(Rbarcodes)) {
-      writeLines(paste0(">Rep", seq(1:length(Fbarcodes))," \n", Fbarcodes," \n"),con="Fprimers.fa")
+      writeLines(paste0(">Rep", seq(1:length(Fbarcodes)), " \n", Fbarcodes, " \n"), con = "Fprimers.fa")
       ref <- "ref=Fprimers.fa"
-    }  else if(!is.null(Fbarcodes) & !is.null(Rbarcodes)) {
-      writeLines(paste0(">Rep", seq(1:length(Fbarcodes))," \n", Fbarcodes,"\n"), con="Fprimers.fa",sep="")
-      writeLines(paste0(">Rep", seq(1:length(Rbarcodes))," \n", Rbarcodes,"\n"), con="Rprimers.fa",sep="")
+    } else if (!is.null(Fbarcodes) & !is.null(Rbarcodes)) {
+      writeLines(paste0(">Rep", seq(1:length(Fbarcodes)), " \n", Fbarcodes, "\n"), con = "Fprimers.fa", sep = "")
+      writeLines(paste0(">Rep", seq(1:length(Rbarcodes)), " \n", Rbarcodes, "\n"), con = "Rprimers.fa", sep = "")
       ref <- "ref=Fprimers.fa,Rprimers.fa"
     }
 
-    pattern <-  paste0("pattern=",outpath,"/", basename(fwd) %>%
-                       str_split_fixed("\\.",n=2) %>%
-                       as_tibble() %>% pull(V1) %>%
-                       str_replace(pattern="_R1_",replacement="_R1R2_") , "_%.fastq.gz")
+    pattern <- paste0("pattern=", outpath, "/", basename(fwd) %>%
+      str_split_fixed("\\.", n = 2) %>%
+      as_tibble() %>% pull(V1) %>%
+      str_replace(pattern = "_R1_", replacement = "_R1R2_"), "_%.fastq.gz")
 
     if (is.numeric(kmer)) {
       kmer <- paste0("k=", kmer)
-    }  else (kmer <- paste0("k=",nchar(sort(c(Fbarcodes, Rbarcodes), decreasing=TRUE)[1])))
+    } else {
+      (kmer <- paste0("k=", nchar(sort(c(Fbarcodes, Rbarcodes), decreasing = TRUE)[1])))
+    }
 
     if (is.numeric(restrictleft)) {
-      restrictleft <- paste0("restrictleft=",restrictleft)
-    }  else (restrictleft <- paste0("restrictleft=",nchar(sort(c(Fbarcodes,Rbarcodes))[1])))
-
-
-    if (is.numeric(hdist)){hdist <- paste0("hdist=",hdist)
+      restrictleft <- paste0("restrictleft=", restrictleft)
+    } else {
+      (restrictleft <- paste0("restrictleft=", nchar(sort(c(Fbarcodes, Rbarcodes))[1])))
     }
-    if (copyundefined==TRUE) {
+
+
+    if (is.numeric(hdist)) {
+      hdist <- paste0("hdist=", hdist)
+    }
+    if (copyundefined == TRUE) {
       copyundefined <- "copyundefined"
-      } else (copyundefined <- "")
+    } else {
+      (copyundefined <- "")
+    }
 
-    if(overwrite==TRUE) {
-      overwrite <- "overwrite=TRUE"} else (overwrite <- "")
+    if (overwrite == TRUE) {
+      overwrite <- "overwrite=TRUE"
+    } else {
+      (overwrite <- "")
+    }
 
-    if(!is.null(threads)) {
-      threads <- paste0( "threads=", threads)
-      }  else (threads <- "threads=auto")
+    if (!is.null(threads)) {
+      threads <- paste0("threads=", threads)
+    } else {
+      (threads <- "threads=auto")
+    }
 
-    if(!is.null(mem)) {
-      mem <- paste0( "-Xmx", mem,"g")
-      }  else (mem <- "")
+    if (!is.null(mem)) {
+      mem <- paste0("-Xmx", mem, "g")
+    } else {
+      (mem <- "")
+    }
 
-    args <- paste(" -cp ",paste0(install,"/current jgi.Seal"), mem, in1, in2, ref,
-                  restrictleft, pattern, kmer, hdist,
-                  copyundefined, overwrite, threads, "kpt=t >> stdout.log 2>> stderr.log", collapse = " ")
+    args <- paste(" -cp ", paste0(install, "/current jgi.Seal"), mem, in1, in2, ref,
+      restrictleft, pattern, kmer, hdist,
+      copyundefined, overwrite, threads, "kpt=t >> stdout.log 2>> stderr.log",
+      collapse = " "
+    )
 
-    #Run Seal
-    system2("java", args = args, wait=TRUE)
-
+    # Run Seal
+    system2("java", args = args, wait = TRUE)
   }
 
 
-  if(nsamples >1) {
+  if (nsamples > 1) {
     for (i in 1:nsamples) {
-      bbtools_seal(install=install, fwd=fwds[i], rev=revs[i], Fbarcodes=Fbarcodes, Rbarcodes=Rbarcodes,
-                   restrictleft=restrictleft, outpath=outpath, kmer=kmer, hdist=hdist, copyundefined=copyundefined,
-                   overwrite=overwrite, threads=threads, mem=mem)
+      bbtools_seal(
+        install = install, fwd = fwds[i], rev = revs[i], Fbarcodes = Fbarcodes, Rbarcodes = Rbarcodes,
+        restrictleft = restrictleft, outpath = outpath, kmer = kmer, hdist = hdist, copyundefined = copyundefined,
+        overwrite = overwrite, threads = threads, mem = mem
+      )
     }
-
-  } else if(nsamples == 1) {
+  } else if (nsamples == 1) {
     bbtools_seal(install, fwd, rev,
-                 Fbarcodes, Rbarcodes, restrictleft,
-                 outpath, kmer, hdist, copyundefined, overwrite, threads=threads, mem=mem)
+      Fbarcodes, Rbarcodes, restrictleft,
+      outpath, kmer, hdist, copyundefined, overwrite,
+      threads = threads, mem = mem
+    )
   }
 }
 
@@ -271,32 +317,31 @@ bbtools_demux <- function(install=NULL, fwds, revs=NULL, Fbarcodes=NULL, Rbarcod
 #' @export
 #'
 #' @examples
-bbtools_split <- function(install=NULL, files, overwrite=FALSE) {
+bbtools_split <- function(install = NULL, files, overwrite = FALSE) {
   nsamples <- length(files)
 
-  bbtools_reformatreads <- function(install=NULL, file, overwrite=FALSE) {
-    #Split interleaved reads
+  bbtools_reformatreads <- function(install = NULL, file, overwrite = FALSE) {
+    # Split interleaved reads
     out1 <- paste0("out1=", file %>% str_replace(pattern = "_R1R2_", replacement = "_R1_"))
     out2 <- paste0("out2=", file %>% str_replace(pattern = "_R1R2_", replacement = "_R2_"))
 
-    if (overwrite==TRUE) {
+    if (overwrite == TRUE) {
       overwrite <- "overwrite=TRUE"
-      } else (overwrite <- "")
+    } else {
+      (overwrite <- "")
+    }
 
-    reformat_args <- paste(" -cp ",paste0(install, "/current jgi.ReformatReads "), file, out1, out2, overwrite, collapse = " ")
+    reformat_args <- paste(" -cp ", paste0(install, "/current jgi.ReformatReads "), file, out1, out2, overwrite, collapse = " ")
     system2("java", args = reformat_args)
   }
 
-  if (nsamples >1) {
+  if (nsamples > 1) {
     for (i in 1:nsamples) {
       bbtools_reformatreads(install = install, file = files[i], overwrite = overwrite)
       file.remove(files[i])
     }
-
   } else if (nsamples == 1) {
     bbtools_reformatreads(install = install, file = files, overwrite = overwrite)
     file.remove(files)
   }
 }
-
-

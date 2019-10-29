@@ -23,28 +23,36 @@
 #' @export
 #'
 #' @examples
-clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0, cores = 1,
-                       quiet = FALSE, progress=FALSE){
+clean_seqs <- function(x, model, minscore = 100, shave = TRUE, maxNs = 0, cores = 1,
+                       quiet = FALSE, progress = FALSE) {
   time <- Sys.time() # get time
-  #Convert to DNAbin
-  if(!is(x,"DNAbin")){ x <- ape::as.DNAbin(x)}
-  if(!is(model,"PHMM")){stop("Model needs to be a PHMM object")}
-  #Define PHMM function
+  # Convert to DNAbin
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+  }
+  if (!is(model, "PHMM")) {
+    stop("Model needs to be a PHMM object")
+  }
+  # Define PHMM function
 
-  filt_phmm <- function(s, model, minscore, minamplen, maxamplen){
+  filt_phmm <- function(s, model, minscore, minamplen, maxamplen) {
 
-    #.packages=c("aphid","insect","ape")
+    # .packages=c("aphid","insect","ape")
     s <- s[!s %in% as.raw(c(2, 4))]
-    vit <- aphid::Viterbi(model, s, odds = TRUE, type = "semiglobal",cpp=TRUE,residues="DNA")
+    vit <- aphid::Viterbi(model, s, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
 
-    if(vit$score < minscore) return(NULL)
+    if (vit$score < minscore) {
+      return(NULL)
+    }
     path <- vit$path
     match1 <- match(1, path)
     match2 <- match(1, rev(path))
 
-    if(is.na(match1) | is.na(match2)) return(NULL)
+    if (is.na(match1) | is.na(match2)) {
+      return(NULL)
+    }
 
-    if(shave==TRUE){
+    if (shave == TRUE) {
       ntoshavef <- match(c(0, 1), rev(vit$path)) - 1
       ntoshavef <- min(ntoshavef[!is.na(ntoshavef)])
       last <- length(s) - ntoshavef
@@ -58,28 +66,28 @@ clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0, cores = 
 
   nseq <- length(x)
 
-  if(cores == 1 && progress == TRUE){
+  if (cores == 1 && progress == TRUE) {
     x <- pbapply::pblapply(x, filt_phmm, model, minscore)
-    } else if(cores == 1 && progress == FALSE){
-      x <- lapply(x, filt_phmm, model, minscore)
-  } else if(cores > 1 && progress == TRUE){
+  } else if (cores == 1 && progress == FALSE) {
+    x <- lapply(x, filt_phmm, model, minscore)
+  } else if (cores > 1 && progress == TRUE) {
     stop("Progress bar currently not supported for multithreading")
-  }  else{
+  } else {
     navailcores <- parallel::detectCores()
-    if(identical(cores, "autodetect")) cores <- navailcores - 1
-    if(!(mode(cores) %in% c("numeric", "integer"))) stop("Invalid 'cores'")
-     if(cores > navailcores) stop("Number of cores is more than available")
+    if (identical(cores, "autodetect")) cores <- navailcores - 1
+    if (!(mode(cores) %in% c("numeric", "integer"))) stop("Invalid 'cores'")
+    if (cores > navailcores) stop("Number of cores is more than available")
 
-    if(cores > 1){
-      if(!quiet) cat("Multithreading with", cores, "cores\n")
+    if (cores > 1) {
+      if (!quiet) cat("Multithreading with", cores, "cores\n")
 
-      cores <- parallel::makeCluster(cores, outfile="out.txt")
-      #parallel::clusterExport(cores, c("model", "minscore"))
-      junk <- parallel::clusterEvalQ(cores, sapply(c("aphid","insect","ape"), require, character.only = TRUE)) #Discard result
+      cores <- parallel::makeCluster(cores, outfile = "out.txt")
+      # parallel::clusterExport(cores, c("model", "minscore"))
+      junk <- parallel::clusterEvalQ(cores, sapply(c("aphid", "insect", "ape"), require, character.only = TRUE)) # Discard result
 
-      x <- parallel::parLapply(cores,x, filt_phmm,  model, minscore)
+      x <- parallel::parLapply(cores, x, filt_phmm, model, minscore)
       parallel::stopCluster(cores)
-    }else{
+    } else {
       x <- lapply(x, filt_phmm, model, minscore)
     }
   }
@@ -87,24 +95,23 @@ clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0, cores = 
   discards <- sapply(x, is.null)
   nseq <- sum(!discards)
 
-  if(nseq > 0){
-    if(!quiet) cat("Retained", nseq, "sequences after alignment to PHMM\n")
+  if (nseq > 0) {
+    if (!quiet) cat("Retained", nseq, "sequences after alignment to PHMM\n")
     scores <- unlist(lapply(x, function(s) attr(s, "score")), use.names = FALSE)
     x <- x[!discards]
     x <- ape::as.DNAbin(ape::as.character.DNAbin(x))
-
-  }else{
-    if(!quiet) cat("None of the sequences met PHMM specificity criteria. Returning NULL\n")
+  } else {
+    if (!quiet) cat("None of the sequences met PHMM specificity criteria. Returning NULL\n")
     x <- NULL
   }
-  if(!quiet) cat("Filtering ambiguous sequences\n")
-  discards <- sapply(x, function(s) sum(s == 0xf0)/length(s)) > maxNs
+  if (!quiet) cat("Filtering ambiguous sequences\n")
+  discards <- sapply(x, function(s) sum(s == 0xf0) / length(s)) > maxNs
   x <- insect::subset.DNAbin(x, subset = !discards)
-  if(!quiet) cat(length(x), "sequences retained after applying ambiguity filter\n")
-  if(!quiet) cat("Bases overhanging PHMM shaved from alignment\n")
-  if(!quiet) cat("Done\n")
+  if (!quiet) cat(length(x), "sequences retained after applying ambiguity filter\n")
+  if (!quiet) cat("Bases overhanging PHMM shaved from alignment\n")
+  if (!quiet) cat("Done\n")
   time <- Sys.time() - time
-  if (!quiet) (message(paste0("finished in ", format(time, digits=2))))
+  if (!quiet) (message(paste0("finished in ", format(time, digits = 2))))
   return(x)
 }
 
@@ -122,24 +129,23 @@ clean_seqs <- function(x, model, minscore = 100, shave=TRUE, maxNs = 0, cores = 
 #'
 #' @import tidyverse
 #' @examples
-prune_groups <- function(x, maxGroupSize=5,dedup=TRUE,discardby="random", quiet=FALSE){
-
-  if (dedup){
+prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random", quiet = FALSE) {
+  if (dedup) {
     dup <- length(x)
     x <- insect::subset.DNAbin(x, subset = !insect::duplicated.DNAbin(x, point = TRUE))
-    if(!quiet) cat(paste0((dup - length(x)), " duplicate sequences removed \n"))
+    if (!quiet) cat(paste0((dup - length(x)), " duplicate sequences removed \n"))
   }
 
   groups <- names(x) %>%
-    str_split_fixed(";",n=2) %>%
+    str_split_fixed(";", n = 2) %>%
     as_tibble() %>%
-    separate(V1,into=c("acc","taxid"))%>%
+    separate(V1, into = c("acc", "taxid")) %>%
     pull(taxid)
   groupCounts <- table(groups) # Count number of seqs per group
-  u_groups <- names(groupCounts) #Get unique groups
+  u_groups <- names(groupCounts) # Get unique groups
 
   remove <- logical(length(x))
-  if(discardby=="random"){
+  if (discardby == "random") {
     for (i in which(groupCounts > maxGroupSize)) {
       index <- which(groups == u_groups[i])
       keep <- sample( # Take random sample
@@ -148,9 +154,8 @@ prune_groups <- function(x, maxGroupSize=5,dedup=TRUE,discardby="random", quiet=
       )
       remove[index[-keep]] <- TRUE
     }
-  }else if (discardby=="length"){
+  } else if (discardby == "length") {
     for (i in which(groupCounts > maxGroupSize)) {
-
       index <- which(groups == u_groups[i])
 
       rem <- lengths(x[index])
@@ -159,11 +164,10 @@ prune_groups <- function(x, maxGroupSize=5,dedup=TRUE,discardby="random", quiet=
 
       keep <- as.integer(names(rem[1:maxGroupSize]))
       remove[index[!index %in% keep]] <- TRUE
-
     }
   }
   x <- x[!remove]
-  if(!quiet) cat(paste0(sum(remove), " sequences pruned from over-represented groups"))
+  if (!quiet) cat(paste0(sum(remove), " sequences pruned from over-represented groups"))
   return(x)
 }
 
@@ -184,83 +188,97 @@ prune_groups <- function(x, maxGroupSize=5,dedup=TRUE,discardby="random", quiet=
 #'
 #' @import tidyverse
 #' @examples
-resolve_synonyms <- function(x, subspecies=FALSE,quiet=TRUE,missing="ignore",higherrank=FALSE,fuzzy=TRUE){
+resolve_synonyms <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ignore", higherrank = FALSE, fuzzy = TRUE) {
   time <- Sys.time() # get time
-  #Convert to DNAbin
-  if(!is(x,"DNAbin")){ x <- ape::as.DNAbin(x)}
-  if(quiet==TRUE){verbose=FALSE} else(verbose=TRUE)
+  # Convert to DNAbin
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+  }
+  if (quiet == TRUE) {
+    verbose <- FALSE
+  } else {
+    (verbose <- TRUE)
+  }
 
-  #first split names
+  # first split names
   query <- names(x) %>%
-    stringr::str_split_fixed(";",n=2) %>%
+    stringr::str_split_fixed(";", n = 2) %>%
     tibble::as_tibble() %>%
-    tidyr::separate(col=V1,into=c("acc","taxid"),sep="\\|") %>%
+    tidyr::separate(col = V1, into = c("acc", "taxid"), sep = "\\|") %>%
     dplyr::rename(query = V2)
 
-  #Need to make a better estimator
-  if(verbose==TRUE){message(paste0("resolving synonyms for ", length(unique(query$query)),
-                                  " Unique taxa, estimated time: ", signif((length(unique(query$query))*0.5)/3600,digits=3), " hours"))}
+  # Need to make a better estimator
+  if (verbose == TRUE) {
+    message(paste0(
+      "resolving synonyms for ", length(unique(query$query)),
+      " Unique taxa, estimated time: ", signif((length(unique(query$query)) * 0.5) / 3600, digits = 3), " hours"
+    ))
+  }
 
-  #out <- traitdataform::get_gbif_taxonomy(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
-  out <- get_gbif_taxonomy_edited(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
+  # out <- traitdataform::get_gbif_taxonomy(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
+  out <- get_gbif_taxonomy_edited(unique(query$query), subspecies = subspecies, verbose = verbose, higherrank = higherrank, fuzzy = fuzzy, resolve_synonyms = TRUE)
 
   out <- out %>%
-    dplyr::filter(synonym==TRUE) %>%
-    dplyr::filter(!scientificName=="Curculio bimaculatus") %>% # This taxa is breaking function
-    dplyr::mutate(taxidnew = taxizedb::name2taxid(scientificNameStd))%>%
+    dplyr::filter(synonym == TRUE) %>%
+    dplyr::filter(!scientificName == "Curculio bimaculatus") %>% # This taxa is breaking function
+    dplyr::mutate(taxidnew = taxizedb::name2taxid(scientificNameStd)) %>%
     dplyr::mutate(query = as.character(scientificName)) %>%
     dplyr::mutate(scientificNameStd = as.character(scientificNameStd)) %>%
     dplyr::mutate_all(as.character())
 
-  if(missing=="ignore"){ # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, update name but keep old taxid
+  if (missing == "ignore") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, update name but keep old taxid
 
     query <- query %>%
-    dplyr::left_join(out, by="query") %>%
-    dplyr::mutate(query = case_when(
-      !is.na(scientificNameStd) ~ scientificNameStd,
-      TRUE ~ query)) %>%   #Catch all for anything that is not above case
-    dplyr::mutate(taxid = case_when(
-      !is.na(taxidnew) ~ taxidnew,
-      TRUE ~ taxid)) %>%
-    dplyr::select(acc, taxid, query)
-
-  } else if(missing=="keepold"){ # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, keep old column
-
-    query <- query %>%
-      dplyr::left_join(out, by="query") %>%
+      dplyr::left_join(out, by = "query") %>%
       dplyr::mutate(query = case_when(
-        !is.na(scientificNameStd)  & !is.na(taxidnew) ~ scientificNameStd,
-        TRUE ~ query)) %>%    #Catch all for anything that is not above case
+        !is.na(scientificNameStd) ~ scientificNameStd,
+        TRUE ~ query
+      )) %>% # Catch all for anything that is not above case
       dplyr::mutate(taxid = case_when(
-        !is.na(scientificNameStd)  & !is.na(taxidnew) ~ taxidnew,
-        TRUE ~ taxid)) %>%
+        !is.na(taxidnew) ~ taxidnew,
+        TRUE ~ taxid
+      )) %>%
       dplyr::select(acc, taxid, query)
-
-  } else if(missing=="remove"){ # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, remvoe
+  } else if (missing == "keepold") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, keep old column
 
     query <- query %>%
-      dplyr::left_join(out, by="query") %>%
+      dplyr::left_join(out, by = "query") %>%
+      dplyr::mutate(query = case_when(
+        !is.na(scientificNameStd) & !is.na(taxidnew) ~ scientificNameStd,
+        TRUE ~ query
+      )) %>% # Catch all for anything that is not above case
+      dplyr::mutate(taxid = case_when(
+        !is.na(scientificNameStd) & !is.na(taxidnew) ~ taxidnew,
+        TRUE ~ taxid
+      )) %>%
+      dplyr::select(acc, taxid, query)
+  } else if (missing == "remove") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, remvoe
+
+    query <- query %>%
+      dplyr::left_join(out, by = "query") %>%
       dplyr::mutate(keepcol = case_when(
         !is.na(scientificNameStd) & is.na(taxidnew) ~ FALSE,
         !is.na(scientificNameStd) & !is.na(taxidnew) ~ TRUE,
         is.na(scientificNameStd) & !is.na(query) ~ TRUE,
-        TRUE ~ TRUE)) %>%   #Catch all for anything that is not above case
+        TRUE ~ TRUE
+      )) %>% # Catch all for anything that is not above case
       dplyr::filter(keepcol == TRUE) %>%
       dplyr::mutate(query = case_when(
         !is.na(scientificNameStd) ~ scientificNameStd,
-        TRUE ~ query)) %>%    #Catch all for anything that is not above case
+        TRUE ~ query
+      )) %>% # Catch all for anything that is not above case
       dplyr::mutate(taxid = case_when(
         !is.na(taxidnew) ~ taxidnew,
-        TRUE ~ taxid)) %>%
+        TRUE ~ taxid
+      )) %>%
       dplyr::select(acc, taxid, query)
-
-    }
+  }
   query <- query %>%
-    tidyr::unite(col=V1,c("acc","taxid"),sep="|")
+    tidyr::unite(col = V1, c("acc", "taxid"), sep = "|")
 
-  names(x) <- paste(query$V1,query$query,sep=";")
+  names(x) <- paste(query$V1, query$query, sep = ";")
   time <- Sys.time() - time
-  if (!quiet) (message(paste0("finished in ", format(time, digits=2))))
+  if (!quiet) (message(paste0("finished in ", format(time, digits = 2))))
   return(x)
 }
 
@@ -268,38 +286,39 @@ resolve_synonyms <- function(x, subspecies=FALSE,quiet=TRUE,missing="ignore",hig
 
 ### Get GBIF Taxonomy
 
-#modified from traitdataform pacakge https://github.com/EcologicalTraitData/traitdataform/issues/35
+# modified from traitdataform pacakge https://github.com/EcologicalTraitData/traitdataform/issues/35
 
-#COuld remove subspecies
+# COuld remove subspecies
 # COuld te
 
 get_gbif_taxonomy_edited <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALSE,
-                                        fuzzy = TRUE, conf_threshold = 90, resolve_synonyms = TRUE)
-{
-  matchtype = status = confidence = NULL
+                                     fuzzy = TRUE, conf_threshold = 90, resolve_synonyms = TRUE) {
+  matchtype <- status <- confidence <- NULL
 
   ## Get GBIF data - this needs to be sped up majorly, would be nice to move to taxize::db
-  #temp <- taxize::get_gbifid_(x, messages = verbose)
+  # temp <- taxize::get_gbifid_(x, messages = verbose)
 
   temp <- x %>%
-      purrr::map(safely(taxize::get_gbifid_)) %>%
-      purrr::map("result") %>%
-      flatten()
+    purrr::map(safely(taxize::get_gbifid_)) %>%
+    purrr::map("result") %>%
+    flatten()
 
-  ##Backup temp
+  ## Backup temp
   temp2 <- temp
-write_rds(temp,"temp.rds")
+  write_rds(temp, "temp.rds")
 
   temp <- temp2
-i=1
-#
+  i <- 1
+  #
   for (i in 1:length(temp)) {
-    warning_i = ""
-    synonym_i = FALSE
+    warning_i <- ""
+    synonym_i <- FALSE
     if (nrow(temp[[i]]) == 0) {
       warning_i <- paste("No matching species concept!")
-      temp[[i]] <- data.frame(scientificName = x[i], matchtype = "NONE",
-                              status = "NA", rank = "species")
+      temp[[i]] <- data.frame(
+        scientificName = x[i], matchtype = "NONE",
+        status = "NA", rank = "species"
+      )
     }
     if (!fuzzy & nrow(temp[[i]]) > 0) {
       temp[[i]] <- subset(temp[[i]], matchtype != "FUZZY")
@@ -310,133 +329,177 @@ i=1
     if (!is.null(conf_threshold) & nrow(temp[[i]]) > 0) {
       temp[[i]] <- subset(temp[[i]], confidence >= conf_threshold)
       if (nrow(temp[[i]]) == 0) {
-        temp[[i]] <- data.frame(scientificName = x[i],
-                                matchtype = "NONE", status = "NA", rank = "species")
+        temp[[i]] <- data.frame(
+          scientificName = x[i],
+          matchtype = "NONE", status = "NA", rank = "species"
+        )
         warning_i <- paste(warning_i, "No match! Check spelling or lower confidence threshold!")
       }
     }
     if (any(temp[[i]]$status == "ACCEPTED")) {
       temp[[i]] <- subset(temp[[i]], status == "ACCEPTED")
       temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
-                            max(temp[[i]]$confidence))
+        max(temp[[i]]$confidence))
       if (nrow(temp[[i]]) > 1) {
         temp[[i]] <- temp[[i]][1, ]
         warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
       }
     }
     if (!any(temp[[i]]$status == "ACCEPTED") & any(temp[[i]]$status ==
-                                                   "SYNONYM")) {
+      "SYNONYM")) {
       if (resolve_synonyms) {
         keep <- temp[i]
-        if(!is.null(temp[[i]]$species) && !is.na(temp[[i]]$species)){
+        if (!is.null(temp[[i]]$species) && !is.na(temp[[i]]$species)) {
           temp[i] <- taxize::get_gbifid_(temp[[i]]$species[which.max(temp[[i]]$confidence)],
-                                         messages = verbose)
-        } else if(is.null(temp[[i]]$species)){
-          newspp = str_split_fixed(names(temp[i]),pattern=" ", n=2)
-          temp[[i]]$species = paste(temp[[i]]$genus, newspp[1,2])
+            messages = verbose
+          )
+        } else if (is.null(temp[[i]]$species)) {
+          newspp <- str_split_fixed(names(temp[i]), pattern = " ", n = 2)
+          temp[[i]]$species <- paste(temp[[i]]$genus, newspp[1, 2])
           temp[i] <- taxize::get_gbifid_(temp[[i]]$species[which.max(temp[[i]]$confidence)],
-                                         messages = verbose)
-          if(nrow(temp[[i]]) <1){temp[i] <- keep}
+            messages = verbose
+          )
+          if (nrow(temp[[i]]) < 1) {
+            temp[i] <- keep
+          }
         }
 
         if (temp[[i]][1, ]$status == "ACCEPTED" & !temp[[i]][1, ]$matchtype == "HIGHERRANK") {
-        #if (temp[[i]][1, ]$status == "ACCEPTED") {
-          temp[[i]] <- subset(temp[[i]], status == "ACCEPTED") #, matchtype == "EXACT" &
+          # if (temp[[i]][1, ]$status == "ACCEPTED") {
+          temp[[i]] <- subset(temp[[i]], status == "ACCEPTED") # , matchtype == "EXACT" &
           temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
-                                max(temp[[i]]$confidence))
+            max(temp[[i]]$confidence))
           if (nrow(temp[[i]]) > 1) {
             temp[[i]] <- temp[[i]][1, ]
             warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
           }
           warning_i <- paste(warning_i, "A synonym was mapped to the accepted species concept!",
-                             sep = " ")
-          synonym_i = TRUE
-        }  else {
+            sep = " "
+          )
+          synonym_i <- TRUE
+        } else {
           status <- temp[[i]][1, ]$status
-          temp[i] <- keep #Putting it back to before the call?
+          temp[i] <- keep # Putting it back to before the call?
           if (nrow(temp[[i]]) > 1) {
             temp[[i]] <- temp[[i]][1, ]
             warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
           }
-          warning_i <- paste0(warning_i, " Resolved synonym '",
-                              temp[[i]]$species, "' is labelled '", status,
-                              "'. Clarification required!")
+          warning_i <- paste0(
+            warning_i, " Resolved synonym '",
+            temp[[i]]$species, "' is labelled '", status,
+            "'. Clarification required!"
+          )
         }
-      }   else {
+      } else {
         temp[[i]] <- subset(temp[[i]], status == "SYNONYM")
         temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
-                              max(temp[[i]]$confidence))
+          max(temp[[i]]$confidence))
         warning_i <- paste(warning_i, "The provided taxon seems to be a synonym of '",
-                           temp[[i]]$species, "'!", sep = "")
+          temp[[i]]$species, "'!",
+          sep = ""
+        )
       }
     }
     if (all(temp[[i]]$status == "DOUBTFUL")) {
       temp[[i]] <- subset(temp[[i]], status == "DOUBTFUL")
       warning_i <- paste(warning_i, "Mapped concept is labelled 'DOUBTFUL'!")
       temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
-                            max(temp[[i]]$confidence))
+        max(temp[[i]]$confidence))
       if (nrow(temp[[i]]) > 1) {
         temp[[i]] <- temp[[i]][1, ]
         warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
       }
     }
-    rankorder <- c("kingdom", "phylum", "order", "class",
-                   "family", "genus", "species", "subspecies")
+    rankorder <- c(
+      "kingdom", "phylum", "order", "class",
+      "family", "genus", "species", "subspecies"
+    )
     if (match(temp[[i]]$rank, rankorder) > 7 & !subspecies) {
-      if (length(strsplit(as.character(temp[[i]]$canonicalname),
-                          " ")[[1]]) > 2) {
-        temp[i] <- taxize::get_gbifid_(paste(strsplit(names(temp[i]),
-                                                      " ")[[1]][1:2], collapse = " "), messages = verbose)
+      if (length(strsplit(
+        as.character(temp[[i]]$canonicalname),
+        " "
+      )[[1]]) > 2) {
+        temp[i] <- taxize::get_gbifid_(paste(strsplit(
+          names(temp[i]),
+          " "
+        )[[1]][1:2], collapse = " "), messages = verbose)
         temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
-                              max(temp[[i]]$confidence))
+          max(temp[[i]]$confidence))
         warning_i <- paste(warning_i, "Subspecies has been remapped to species concept!",
-                           sep = " ")
+          sep = " "
+        )
       } else {
-        temp[[i]] <- data.frame(scientificName = x[i],
-                                matchtype = "NONE", rank = "subspecies")
+        temp[[i]] <- data.frame(
+          scientificName = x[i],
+          matchtype = "NONE", rank = "subspecies"
+        )
         warning_i <- paste(warning_i, "No mapping of subspecies name to species was possible!",
-                           sep = " ")
+          sep = " "
+        )
       }
     }
     if (temp[[i]]$matchtype == "HIGHERRANK") {
       if (higherrank) {
         temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
-                              max(temp[[i]]$confidence))
+          max(temp[[i]]$confidence))
         warning_i <- paste(warning_i, "No matching species concept! Entry has been mapped to higher taxonomic level.")
       }
       else {
-        temp[[i]] <- data.frame(scientificName = x[i],
-                                matchtype = "NONE", rank = "highertaxon")
-        warning_i <- paste("No matching species concept!",
-                           warning_i)
+        temp[[i]] <- data.frame(
+          scientificName = x[i],
+          matchtype = "NONE", rank = "highertaxon"
+        )
+        warning_i <- paste(
+          "No matching species concept!",
+          warning_i
+        )
       }
     }
     if (temp[[i]]$matchtype != "NONE") {
-      temp[[i]] <- data.frame(scientificName = x[i], synonym = synonym_i,
-                              scientificNameStd = temp[[i]]$canonicalname,
-                              author = sub(paste0(temp[[i]]$canonicalname,
-                                                  " "), "", temp[[i]]$scientificname), taxonRank = temp[[i]]$rank,
-                              confidence = temp[[i]]$confidence, kingdom = if (is.null(temp[[i]]$kingdom))
-                                NA
-                              else temp[[i]]$kingdom, phylum = if (is.null(temp[[i]]$phylum))
-                                NA
-                              else temp[[i]]$phylum, class = if (is.null(temp[[i]]$class))
-                                NA
-                              else temp[[i]]$class, order = if (is.null(temp[[i]]$order))
-                                NA
-                              else temp[[i]]$order, family = if (is.null(temp[[i]]$family))
-                                NA
-                              else temp[[i]]$family, genus = if (is.null(temp[[i]]$genus))
-                                NA
-                              else temp[[i]]$genus, taxonomy = "GBIF Backbone Taxonomy",
-                              taxonID = paste0("http://www.gbif.org/species/",
-                                               temp[[i]]$usagekey, ""), warnings = NA)
+      temp[[i]] <- data.frame(
+        scientificName = x[i], synonym = synonym_i,
+        scientificNameStd = temp[[i]]$canonicalname,
+        author = sub(paste0(
+          temp[[i]]$canonicalname,
+          " "
+        ), "", temp[[i]]$scientificname), taxonRank = temp[[i]]$rank,
+        confidence = temp[[i]]$confidence, kingdom = if (is.null(temp[[i]]$kingdom)) {
+          NA
+        } else {
+          temp[[i]]$kingdom
+        }, phylum = if (is.null(temp[[i]]$phylum)) {
+          NA
+        } else {
+          temp[[i]]$phylum
+        }, class = if (is.null(temp[[i]]$class)) {
+          NA
+        } else {
+          temp[[i]]$class
+        }, order = if (is.null(temp[[i]]$order)) {
+          NA
+        } else {
+          temp[[i]]$order
+        }, family = if (is.null(temp[[i]]$family)) {
+          NA
+        } else {
+          temp[[i]]$family
+        }, genus = if (is.null(temp[[i]]$genus)) {
+          NA
+        } else {
+          temp[[i]]$genus
+        }, taxonomy = "GBIF Backbone Taxonomy",
+        taxonID = paste0(
+          "http://www.gbif.org/species/",
+          temp[[i]]$usagekey, ""
+        ), warnings = NA
+      )
     } else {
       temp[[i]] <- data.frame(scientificName = x[i], warnings = NA) # FAILING HERE?
     }
     temp[[i]]$warnings <- warning_i
-    if (verbose & nchar(warning_i) >= 1)
+    if (verbose & nchar(warning_i) >= 1) {
       warning(warning_i)
+    }
   }
   out <- data.table::rbindlist(temp, fill = TRUE)
   class(out) <- c("data.frame", "taxonomy")
