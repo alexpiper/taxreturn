@@ -17,7 +17,6 @@
 #' @import biofiles
 #' @import Biostrings
 #' @import ape
-#' @import taxizedb
 #' @import stringr
 #' @import parallel
 #'
@@ -29,6 +28,11 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
 
   #function setup
   time <- Sys.time() # get time
+
+  #Check if taxizedb is installed
+  search_or_sql <-  "taxizedb" %in% rownames(installed.packages())
+  if(search_or_sql == FALSE) {message("taxizedb is not installed, using web queries instead")}
+
   if (!output %in% c("h","binom","gb","bold","gb-binom")){ stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))}
   if (marker=="COI-5P")  {if (!quiet) (cat("Using default marker 'COI-5P' \n"))}
   if(is.null(dir)){dir="bold"}
@@ -183,7 +187,6 @@ boldSearch <- function(x,marker="COI-5P",quiet=FALSE,output="h",file=NULL,compre
 #' @import biofiles
 #' @import Biostrings
 #' @import ape
-#' @import taxizedb
 #' @import stringr
 #' @import parallel
 #'
@@ -209,6 +212,10 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
 
   #function setup
   time <- Sys.time() # get time
+  #Check if taxizedb is installed
+  search_or_sql <-  "taxizedb" %in% rownames(installed.packages())
+  if(search_or_sql == FALSE) {message("taxizedb is not installed, using web queries instead")}
+
   if (!output %in% c("h","binom","gb","bold","gb-binom")){ stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))}
   if (marker=="COI")  {if (!quiet) (cat("Using default marker 'COI' \n"))}
   if (is.null(file)){
@@ -328,7 +335,6 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
 #' @import biofiles
 #' @import Biostrings
 #' @import ape
-#' @import taxizedb
 #' @import stringr
 #' @import parallel
 #'
@@ -338,6 +344,11 @@ gbSearch <- function(x, marker="COI", quiet=FALSE,output="h",minlength=1, maxlen
 #'
 #' @examples
 fetchSeqs <- function(x,database, marker="COI", downstream=FALSE,downto="family", quiet=TRUE, output="h", minlength=1, maxlength=2000,dir=NULL,compress=FALSE, cores=1){
+
+  #Check if taxizedb is installed
+  search_or_sql <-  "taxizedb" %in% rownames(installed.packages())
+  if(search_or_sql == FALSE) {stop("Error - taxizedb is not installed")}
+
   #Setup parallel
   if(inherits(cores, "cluster")){
     para <- TRUE
