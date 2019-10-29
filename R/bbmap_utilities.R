@@ -223,11 +223,11 @@ bbtools_demux <- function(install = NULL, fwds, revs = NULL, Fbarcodes = NULL, R
     }
 
     if (!is.null(Fbarcodes) & is.null(Rbarcodes)) {
-      writeLines(paste0(">Rep", seq(1:length(Fbarcodes)), " \n", Fbarcodes, " \n"), con = "Fprimers.fa")
+      writeLines(paste0(">Rep", seq(1:length(Fbarcodes)), "\n", Fbarcodes, "\n"), con = "Fprimers.fa")
       ref <- "ref=Fprimers.fa"
     } else if (!is.null(Fbarcodes) & !is.null(Rbarcodes)) {
-      writeLines(paste0(">Rep", seq(1:length(Fbarcodes)), " \n", Fbarcodes, "\n"), con = "Fprimers.fa", sep = "")
-      writeLines(paste0(">Rep", seq(1:length(Rbarcodes)), " \n", Rbarcodes, "\n"), con = "Rprimers.fa", sep = "")
+      writeLines(paste0(">Rep", seq(1:length(Fbarcodes)), "\n", Fbarcodes, "\n"), con = "Fprimers.fa", sep = "")
+      writeLines(paste0(">Rep", seq(1:length(Rbarcodes)), "\n", Rbarcodes, "\n"), con = "Rprimers.fa", sep = "")
       ref <- "ref=Fprimers.fa,Rprimers.fa"
     }
 
