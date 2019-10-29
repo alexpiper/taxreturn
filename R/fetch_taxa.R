@@ -1,13 +1,17 @@
 
 #' boldSearch
-#'
-#' @param x
-#' @param marker
+#' @param x A taxon name or vector of taxa to download sequences for
+#' @param marker the barcode marker used as a search term for the database
 #' @param quiet
-#' @param output
-#' @param file
-#' @param compress
-#' @param dir
+#' @param output the output format for the taxonomy in fasta headers.
+#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+#' "binom" for just genus species binomials (SeqID;Genus Species),
+#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
+#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' @param file The file to write to, if empty it defaults to the search term
+#' @param compress Option to compress output fasta files using gzip
+#' @param dir Output directory to write fasta files to
 #'
 #' @import bold
 #' @import tidyverse
@@ -186,15 +190,20 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file =
 
 #' Genbank search function
 #'
-#' @param x
-#' @param marker
+#' @param x A taxon name or vector of taxa to download sequences for
+#' @param marker The barcode marker used as a search term for the database
 #' @param quiet
-#' @param output
+#' @param output The output format for the taxonomy in fasta headers.
+#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+#' "binom" for just genus species binomials (SeqID;Genus Species),
+#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
+#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' @param minlength
 #' @param maxlength
-#' @param file
-#' @param compress
-#' @param dir
+#' @param file The file to write to, if empty it defaults to the search term
+#' @param compress  Option to compress output fasta files using gzip
+#' @param dir Output directory to write fasta files to
 #'
 #'
 #' @import bold
