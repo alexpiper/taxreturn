@@ -101,7 +101,7 @@ bbtools_trim <- function(install=NULL, fwd, rev=NULL, primers,
     } else if (ktrim=="r") {ktrim <- paste0("ktrim=r")}
 
     if (is.numeric(kmer)) {kmer <- paste0("k=", kmer)
-    }  else (kmer <- paste0("k=",nchar(sort(primers)[1])))
+    }  else (kmer <- paste0("k=",nchar(sort(primers,decreasing=TRUE)[1])))
 
     if (is.numeric(maxlength)) {maxlength <- paste0("maxlength=", maxlength)
     }  else (maxlength <- "")
@@ -111,7 +111,8 @@ bbtools_trim <- function(install=NULL, fwd, rev=NULL, primers,
     } else if (mink==FALSE) {mink <-""}
 
 
-    if(is.numeric(restrictleft)) {restrictleft <- paste0("restrictleft=", restrictleft)
+    if(is.numeric(restrictleft)) {
+      restrictleft <- paste0("restrictleft=", restrictleft)
     }  else (restrictleft <- paste0("restrictleft=", nchar(sort(primers,decreasing=FALSE)[1])+ 1))
 
     if (ordered==TRUE) {
@@ -137,20 +138,22 @@ bbtools_trim <- function(install=NULL, fwd, rev=NULL, primers,
       quality <- "bhist=bhist.txt qhist=qhist.txt gchist=gchist.txt aqhist=aqhist.txt lhist=lhist.txt gcbins=auto"
     } else (quality <- "")
 
-    args <- paste(" -cp ",install, in1, in2,literal, restrictleft,out, out1, out2, kmer,mink, hdist, ktrim, tpe, copyundefined, quality, maxlength, overwrite,"-da", collapse = " ")
+    args <- paste(" -cp ",install, in1, in2,literal, restrictleft, out, out1,
+                  out2, kmer,mink, hdist, ktrim, tpe, copyundefined, quality,
+                  maxlength, overwrite,"-da >> stdout.log 2>> stderr.log", collapse = " ")
 
     print(paste0(args," /n"))
     #Run bbduk
-    system2("java", args = args)
+    system2("java", args = args, wait=TRUE)
 
   }
   if (nsamples >1){
     for (i in 1:nsamples) {
-      bbduk(install=install, fwd=fwd[i], rev=rev[i], primers,restrictleft,outpath, ktrim, ordered, kmer, mink,tpe, hdist,copyundefined, quality, overwrite, maxlength)
+      bbduk(install=install, fwd=fwd[i], rev=rev[i], primers, restrictleft, outpath, ktrim, ordered, kmer, mink,tpe, hdist, copyundefined, quality, overwrite, maxlength)
     }
 
   } else if (nsamples == 1) {
-    bbduk(install, fwd, rev, primers,restrictleft,outpath, ktrim, ordered, kmer, mink,tpe, hdist,copyundefined, overwrite, quality, maxlength)
+    bbduk(install, fwd, rev, primers, restrictleft, outpath, ktrim, ordered, kmer, mink, tpe, hdist, copyundefined, overwrite, quality, maxlength)
   }
 }
 
@@ -231,13 +234,15 @@ bbtools_demux <- function(install=NULL, fwds, revs=NULL, Fbarcodes=NULL, Rbarcod
       mem <- paste0( "-Xmx", mem,"g")
       }  else (mem <- "")
 
-    args <- paste(" -cp ",paste0(install,"/current jgi.Seal"), mem, in1, in2, ref,restrictleft,pattern, kmer, hdist, copyundefined, overwrite, threads, "kpt=t",collapse = " ")
+    args <- paste(" -cp ",paste0(install,"/current jgi.Seal"), mem, in1, in2, ref,
+                  restrictleft, pattern, kmer, hdist,
+                  copyundefined, overwrite, threads, "kpt=t >> stdout.log 2>> stderr.log", collapse = " ")
 
-    print(paste0(args," /n"))
     #Run Seal
-    system2("java", args = args, stdout = "trim.txt", stderr = "trimerr.txt")
+    system2("java", args = args, wait=TRUE)
 
   }
+
 
   if(nsamples >1) {
     for (i in 1:nsamples) {
