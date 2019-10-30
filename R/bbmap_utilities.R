@@ -556,7 +556,18 @@ bbtools_split <- function(install = NULL, files, overwrite = FALSE) {
     }
 
     reformat_args <- paste(" -cp ", paste0(install, "/current jgi.ReformatReads "), file, out1, out2, overwrite, collapse = " ")
-    system2("java", args = reformat_args)
+
+    # Run Reformatreads
+    result <- system2(command="java",
+                      args = reformat_args,
+                      stdout="logs/stdout.log",
+                      stderr="logs/stderr.log",
+                      wait=TRUE)
+    now <- date()
+    cat(paste0("Executed: ", now, "\n"), file="logs/bbreformat.log", append=TRUE)
+    file.append("logs/bbreformat.log", "logs/stderr.log")
+    file.remove(c("logs/stdout.log", "logs/stderr.log"))
+
   }
 
   if (nsamples > 1) {
