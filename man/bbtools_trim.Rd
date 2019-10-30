@@ -50,7 +50,10 @@ Option to search for all possible primer combinations for degenerate primers}
 Option to overwrite existing output files.}
 
 \item{quality}{(Optional) Default FALSE
-Output quality statistics from trimming}
+Output quality statistics from trimming including:
+Base composition histogram by position, Quality histogram by position,
+Count of bases with each quality value, Histogram of average read quality,
+Read length histogram and Read GC content histogram.}
 
 \item{maxlength}{(Optional) Default FALSE
 Remove all reads above a maximum length. Useful for removing reads where no primers were found.}
@@ -60,7 +63,6 @@ Trim primers using BBDuk
 }
 \examples{
 path <- "run_test/"
-demuxpath <- file.path(path, "demux") # Filtered forward files go into the path/filtered/ subdirectory
 
 fastqFs <- sort(list.files(path, pattern="R1_001.*", full.names = TRUE))
 fastqRs <- sort(list.files(path, pattern="R2_001.*", full.names = TRUE))

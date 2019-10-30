@@ -381,15 +381,17 @@ gbSearch <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength =
 #'
 #'
 #' @import bold
-#' @import tidyverse
+#' @import dplyr
+#' @import tidyr
+#' @import stringr
 #' @import rentrez
+#' @import parallel
 #' @import aphid
 #' @import insect
 #' @import biofiles
 #' @import Biostrings
 #' @import ape
-#' @import stringr
-#' @import parallel
+
 #'
 #'
 #' @return
