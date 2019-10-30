@@ -9,7 +9,22 @@ gbSearch(x, marker = "COI", quiet = FALSE, output = "h",
   dir = NULL)
 }
 \arguments{
-\item{dir}{}
+\item{x}{A taxon name or vector of taxa to download sequences for}
+
+\item{marker}{The barcode marker used as a search term for the database}
+
+\item{output}{The output format for the taxonomy in fasta headers.
+Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+"binom" for just genus species binomials (SeqID;Genus Species),
+"bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+"gb" for genbank taxonomic ID (SeqID;GBTaxID),
+or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process}
+
+\item{file}{The file to write to, if empty it defaults to the search term}
+
+\item{compress}{Option to compress output fasta files using gzip}
+
+\item{dir}{Output directory to write fasta files to}
 }
 \description{
 Genbank search function

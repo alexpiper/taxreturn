@@ -7,7 +7,12 @@
 bbtools_split(install = NULL, files, overwrite = FALSE)
 }
 \arguments{
-\item{overwrite}{}
+\item{install}{(Required) Install location for bbmap}
+
+\item{files}{(Required) Vector of locations of interleaved read files to split}
+
+\item{overwrite}{(Optional) Default TRUE
+Option to overwrite existing output files.}
 }
 \description{
 Split interleaved reads

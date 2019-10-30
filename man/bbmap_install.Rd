@@ -7,7 +7,11 @@
 bbmap_install(url, destdir = "bin")
 }
 \arguments{
-\item{destdir}{}
+\item{url}{(Optional) Default = "https://downloads.sourceforge.net/project/bbmap/BBMap_38.57.tar.gz"
+URL to retrieve bbmap from.}
+
+\item{destdir}{(Optional)  Default "bin"
+Directory to install bbmap within.}
 }
 \description{
 BBMap Install

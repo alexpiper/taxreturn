@@ -1,7 +1,9 @@
 #' BBMap Install
 #'
-#' @param url
-#' @param destdir
+#' @param url (Optional) Default = "https://downloads.sourceforge.net/project/bbmap/BBMap_38.57.tar.gz"
+#' URL to retrieve bbmap from.
+#' @param destdir (Optional)  Default "bin"
+#' Directory to install bbmap within.
 #'
 #' @return
 #' @export
@@ -37,37 +39,62 @@ bbmap_install <- function(url, destdir = "bin") {
 
 #' Trim primers using BBDuk
 #'
-#' @param install
-#' @param fwd
-#' @param rev
-#' @param primers
-#' @param restrictleft
-#' @param outpath
-#' @param ktrim
-#' @param ordered
-#' @param kmer
-#' @param mink
-#' @param tpe
-#' @param hdist
-#' @param copyundefined
-#' @param overwrite
-#' @param quality
-#' @param maxlength
+#' @param install (Required) Install location for bbmap
+#' @param fwd (Required) Vector of locations of forward reads
+#' @param rev (Optional) Vector of locations of reverse reads
+#' @param primers (Required) Forward and reverse primers to trim
+#' @param restrictleft (Optional) Defaults to the size of the largest primer.
+#' Restricts the kmer search for primer sequences to just the left side of the molecule.
+#' @param outpath (Optional) Default "trimmed"
+#'  The path to write the output reads.
+#' @param trim.dir (Optional) Default is "left"
+#' End of the molecule to trim primers from. "left" will trim primers from the 3' end of both forward and reverse reads.
+#' Change to "right" only if the amplicon was too short and the sequencer has read into the other end of the molecule.
+#' @param ordered (Optional) Default TRUE
+#'  Set to TRUE to output reads in same order as input.
+#' @param kmer (Optional) default the size of the smallest primer will be used.
+#' The kmer size to use for primer searching.
+#' @param mink (optional) Default FALSE
+#' Look for shorter kmers at read tips down to this length
+#' @param hdist (Optional) Default 0. The hamming distance (number of substitution errors) allowed for mismatch to the query primer.
+#' @param tpe (Otional) Default TRUE
+#' Trim pairs evenly. When kmer right-trimming, trim both reads to the minimum length of either.
+#' @param degenerate (Optional) Default TRUE.
+#' Option to search for all possible primer combinations for degenerate primers
+#' @param overwrite (Optional) Default TRUE
+#' Option to overwrite existing output files.
+#' @param quality (Optional) Default FALSE
+#' Output quality statistics from trimming
+#' @param maxlength (Optional) Default FALSE
+#' Remove all reads above a maximum length. Useful for removing reads where no primers were found.
 #'
 #' @return
 #' @export
 #'
+#'@importFrom stringr str_replace
+#'
 #' @examples
+#' path <- "run_test/"
+#' demuxpath <- file.path(path, "demux") # Filtered forward files go into the path/filtered/ subdirectory
+#'
+#' fastqFs <- sort(list.files(path, pattern="R1_001.*", full.names = TRUE))
+#' fastqRs <- sort(list.files(path, pattern="R2_001.*", full.names = TRUE))
+#'
+#'bbtools_trim(install="bin/bbmap", fwd=fastqFs, rev=fastqRs,
+#' primers=c("GGDACWGGWTGAACWGTWTAYCCHCC","GTRATWGCHCCDGCTARWACWGG"),
+#'  degenerate=TRUE, outpath="trimmed", ktrim="left", ordered=TRUE,
+#'   mink=FALSE, hdist=2, maxlength=140, overwrite=TRUE)
+#'
 bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
-                         restrictleft = NULL, outpath = "bbduk", ktrim = "l", ordered = TRUE,
-                         kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, copyundefined = TRUE,
-                         overwrite = TRUE, quality = TRUE, maxlength = NULL) {
+                         restrictleft = NULL, outpath = "bbduk", trim.dir = "left", ordered = TRUE,
+                         kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
+                         overwrite = TRUE, quality = FALSE, maxlength = NULL) {
   nsamples <- length(fwd)
 
   bbduk <- function(install = NULL, fwd, rev = NULL, primers,
-                    restrictleft = NULL, outpath = "bbduk", ktrim = "l", ordered = TRUE,
-                    kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, copyundefined = TRUE,
-                    overwrite = TRUE, quality = TRUE, maxlength = NULL) {
+                    restrictleft = NULL, outpath = "bbduk", trim.dir = "left", ordered = TRUE,
+                    kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
+                    overwrite = TRUE, quality = FALSE, maxlength = NULL) {
     install <- paste0(install, "/current jgi.BBDuk")
 
     in1 <- paste0("in=", fwd)
@@ -87,34 +114,34 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
       out <- paste0(
         "out=", dirname(fwd), "/", outpath, "/", basename(fwd)
       ) %>%
-        str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
+        stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
       out1 <- ""
       out2 <- ""
     } else if (!is.null(rev)) {
       out <- ""
       out1 <- paste0("out1=", dirname(fwd), "/", outpath, "/", basename(fwd)) %>%
-        str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
+        stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
       out2 <- paste0("out2=", dirname(rev), "/", outpath, "/", basename(rev)) %>%
-        str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
+        stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
     }
 
 
-    if (ktrim == "l") {
-      ktrim <- paste0("ktrim=l")
-    } else if (ktrim == "r") {
-      ktrim <- paste0("ktrim=r")
+    if (trim.dir == "left") {
+      trim.dir <- paste0("ktrim=l")
+    } else if (trim.dir == "right") {
+      trim.dir <- paste0("ktrim=r")
     }
 
     if (is.numeric(kmer)) {
       kmer <- paste0("k=", kmer)
     } else {
-      (kmer <- paste0("k=", nchar(sort(primers, decreasing = TRUE)[1])))
+      kmer <- paste0("k=", nchar(sort(primers, decreasing = TRUE)[1]))
     }
 
     if (is.numeric(maxlength)) {
       maxlength <- paste0("maxlength=", maxlength)
     } else {
-      (maxlength <- "")
+      maxlength <- ""
     }
 
     if (is.numeric(mink)) {
@@ -142,10 +169,10 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
       hdist <- paste0("hdist=", hdist)
     }
 
-    if (copyundefined == TRUE) {
-      copyundefined <- "copyundefined"
+    if (degenerate == TRUE) {
+      degenerate <- "copyundefined"
     } else {
-      (copyundefined <- "")
+      (degenerate <- "")
     }
 
     if (overwrite == TRUE) {
@@ -167,7 +194,7 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
     }
 
     args <- paste(" -cp ", install, in1, in2, literal, restrictleft, out, out1,
-      out2, kmer, mink, hdist, ktrim, tpe, copyundefined, quality,
+      out2, kmer, mink, hdist, trim.dir, tpe, degenerate, quality,
       maxlength, overwrite, "-da >> stdout.log 2>> stderr.log",
       collapse = " "
     )
@@ -178,10 +205,10 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
   }
   if (nsamples > 1) {
     for (i in 1:nsamples) {
-      bbduk(install = install, fwd = fwd[i], rev = rev[i], primers, restrictleft, outpath, ktrim, ordered, kmer, mink, tpe, hdist, copyundefined, quality, overwrite, maxlength)
+      bbduk(install = install, fwd = fwd[i], rev = rev[i], primers, restrictleft, outpath, trim.dir, ordered, kmer, mink, tpe, hdist, degenerate, quality, overwrite, maxlength)
     }
   } else if (nsamples == 1) {
-    bbduk(install, fwd, rev, primers, restrictleft, outpath, ktrim, ordered, kmer, mink, tpe, hdist, copyundefined, overwrite, quality, maxlength)
+    bbduk(install, fwd, rev, primers, restrictleft, outpath, trim.dir, ordered, kmer, mink, tpe, hdist, degenerate, overwrite, quality, maxlength)
   }
 }
 
@@ -190,30 +217,58 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
 
 #' Demultiplex fusion primers using BBmap Seal
 #'
-#' @param install
-#' @param fwds
-#' @param revs
-#' @param Fbarcodes
-#' @param Rbarcodes
-#' @param restrictleft
-#' @param outpath
-#' @param kmer
-#' @param hdist
-#' @param copyundefined
-#' @param overwrite
-#' @param interleaved
+#' @param install (Required) Install location for bbmap
+#' @param fwd (Required) Vector of locations of forward reads
+#' @param rev (Optional) Vector of locations of reverse reads
+#' @param Fbarcodes (Required) Barcodes used in forward reads
+#' @param Rbarcodes (Optional) Barcodes used in reverse reads
+#' @param restrictleft (Optional) Defaults to the size of the largest primer.
+#' Restricts the kmer search for primer sequences to just the left side of the molecule.
+#' @param outpath (Optional) Default "demux"
+#'  The path to write the output reads.
+#' @param kmer (Optional) default the size of the smallest primer will be used.
+#' The kmer size to use for primer searching.
+#' @param hdist (Optional) Default = 0. The hamming distance (number of substitution errors) allowed for mismatch to the query primer.
+#' @param degenerate (Optional) Default TRUE.
+#' Option to search for all possible primer combinations for degenerate primers
+#' @param overwrite (Optional) Default TRUE
+#' Option to overwrite existing output files.
+#' @param interleaved (Optional) Default FALSE
+#' Option to input interleaved reads
+#' @param threads (Optional) Default autodetect
+#' Number of CPU threads to use
+#' WARNING: Thread detection can fail on cluster computing currently
+#' @param mem (Optional) Default autodetect
+#' GB of memory to use
+#' WARNING: mem detection can fail on cluster computing currently
 #'
 #' @return
 #' @export
 #'
+#' @import stringr str_split_fixed
+#' @import stringr str_replace
+#' @import tibble as_tibble
+#' @import dplyr pull
+#'
 #' @examples
-bbtools_demux <- function(install = NULL, fwds, revs = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
-                          restrictleft = NULL, outpath = "trimmed", kmer = NULL, hdist = 0, copyundefined = TRUE,
+#' path <- "run_test/"
+#' demuxpath <- file.path(path, "demux") # Filtered forward files go into the path/filtered/ subdirectory
+#'
+#' fastqFs <- sort(list.files(path, pattern="R1_001.*", full.names = TRUE))
+#' fastqRs <- sort(list.files(path, pattern="R2_001.*", full.names = TRUE))
+#'
+#' bbtools_demux(install="bin/bbmap", fwd=fastqFs, rev=fastqRs,Fbarcodes = c("GAGGDACW","TGTGGDAC","AGAAGGDAC"),
+#'               Rbarcodes = c("ACGTRATW","TCCGTRAT","CTGCGTRA"),
+#'               degenerate=TRUE, outpath=demuxpath, threads=1, mem=4,
+#'               hdist=0, overwrite=TRUE)
+#'
+bbtools_demux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
+                          restrictleft = NULL, outpath = "demux", kmer = NULL, hdist = 0, degenerate = TRUE,
                           overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE) {
-  nsamples <- length(fwds)
+  nsamples <- length(fwd)
 
   bbtools_seal <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
-                           restrictleft = NULL, outpath = "trimmed", kmer = NULL, hdist = 0, copyundefined = TRUE,
+                           restrictleft = NULL, outpath = "demux", kmer = NULL, hdist = 0, degenerate = TRUE,
                            overwrite = TRUE, mem = NULL, threads = NULL) {
     in1 <- paste0("in=", fwd)
     if (!is.null(rev)) {
@@ -232,9 +287,10 @@ bbtools_demux <- function(install = NULL, fwds, revs = NULL, Fbarcodes = NULL, R
     }
 
     pattern <- paste0("pattern=", outpath, "/", basename(fwd) %>%
-      str_split_fixed("\\.", n = 2) %>%
-      as_tibble() %>% pull(V1) %>%
-      str_replace(pattern = "_R1_", replacement = "_R1R2_"), "_%.fastq.gz")
+      stringr::str_split_fixed("\\.", n = 2) %>%
+      tibble::as_tibble() %>%
+      dplyr::pull(V1) %>%
+      stringr::str_replace(pattern = "_R1_", replacement = "_R1R2_"), "_%.fastq.gz")
 
     if (is.numeric(kmer)) {
       kmer <- paste0("k=", kmer)
@@ -252,10 +308,10 @@ bbtools_demux <- function(install = NULL, fwds, revs = NULL, Fbarcodes = NULL, R
     if (is.numeric(hdist)) {
       hdist <- paste0("hdist=", hdist)
     }
-    if (copyundefined == TRUE) {
-      copyundefined <- "copyundefined"
+    if (degenerate == TRUE) {
+      degenerate <- "copyundefined"
     } else {
-      (copyundefined <- "")
+      (degenerate <- "")
     }
 
     if (overwrite == TRUE) {
@@ -277,29 +333,44 @@ bbtools_demux <- function(install = NULL, fwds, revs = NULL, Fbarcodes = NULL, R
     }
 
     args <- paste(" -cp ", paste0(install, "/current jgi.Seal"), mem, in1, in2, ref,
-      restrictleft, pattern, kmer, hdist,
-      copyundefined, overwrite, threads, "kpt=t >> stdout.log 2>> stderr.log",
-      collapse = " "
+                     restrictleft, pattern, kmer, hdist,
+                     degenerate, overwrite, threads, "kpt=t",
+                     collapse = " "
     )
 
-    # Run Seal
-    system2("java", args = args, wait = TRUE)
+    if (!dir.exists("logs")) {
+      dir.create("logs")
+      }
+
+    if (exists("logs/bbdemux.log") | exists("logs/bbdemuxsterr.log")) {
+      file.remove(c("logs/bbdemux.log", "logs/bbdemuxsterr.log"))
+    }
+
+    result <- system2(command="java",
+                      args = args,
+                      stdout="logs/stdout.log",
+                      stderr="logs/stderr.log",
+                      wait=TRUE)
+    now <- date()
+    cat(paste0("Executed: ", now, "\n"), file="logs/bbdemux.log", append=TRUE)
+    file.append("logs/bbdemuxsterr.log", "logs/stderr.log")
+    file.remove(c("logs/stdout.log", "logs/stderr.log"))
   }
 
 
   if (nsamples > 1) {
     for (i in 1:nsamples) {
       bbtools_seal(
-        install = install, fwd = fwds[i], rev = revs[i], Fbarcodes = Fbarcodes, Rbarcodes = Rbarcodes,
-        restrictleft = restrictleft, outpath = outpath, kmer = kmer, hdist = hdist, copyundefined = copyundefined,
+        install = install, fwd = fwd[i], rev = rev[i], Fbarcodes = Fbarcodes, Rbarcodes = Rbarcodes,
+        restrictleft = restrictleft, outpath = outpath, kmer = kmer, hdist = hdist, degenerate = degenerate,
         overwrite = overwrite, threads = threads, mem = mem
       )
     }
   } else if (nsamples == 1) {
     bbtools_seal(install, fwd, rev,
-      Fbarcodes, Rbarcodes, restrictleft,
-      outpath, kmer, hdist, copyundefined, overwrite,
-      threads = threads, mem = mem
+      Fbarcodes = Fbarcodes, Rbarcodes = Rbarcodes, restrictleft = restrictleft,
+      outpath = outpath, kmer = kmer, hdist = hdist, degenerate = degenerate,
+      overwrite = overwrite, threads = threads, mem = mem
     )
   }
 }
@@ -309,9 +380,10 @@ bbtools_demux <- function(install = NULL, fwds, revs = NULL, Fbarcodes = NULL, R
 
 #' Split interleaved reads
 #'
-#' @param install
-#' @param files
-#' @param overwrite
+#' @param install (Required) Install location for bbmap
+#' @param files (Required) Vector of locations of interleaved read files to split
+#' @param overwrite (Optional) Default TRUE
+#' Option to overwrite existing output files.
 #'
 #' @return
 #' @export
