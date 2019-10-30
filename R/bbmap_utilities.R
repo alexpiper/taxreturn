@@ -5,9 +5,11 @@
 #' @param destdir (Optional)  Default "bin"
 #' Directory to install bbmap within.
 #'
+#'
 #' @return
 #' @export
 #'
+#' @importFrom httr GET
 #' @examples
 bbmap_install <- function(url, destdir = "bin") {
   if (missing(url)) {
@@ -23,14 +25,17 @@ bbmap_install <- function(url, destdir = "bin") {
     unlink(paste0(destdir, "/bbmap"), recursive = TRUE) # Remove old version
   }
 
-  destfile <- file.path(destdir, basename(url))
+  destfile <- paste0(file.path(destdir, basename(url)),".tar.gz")
   if (exists(destfile)) {
     file.remove(destfile) # Remove old zip file
   }
 
-  utils::download.file(url, destfile = destfile,
-                       method="curl",
-                       extra='-L')
+
+  httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
+
+  #utils::download.file(url, destfile = destfile,
+  #                     method="curl",
+  #                     extra='-L')
   utils::untar(destfile, exdir = destdir) ## check contents
   file.remove(destfile)
 }
