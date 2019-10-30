@@ -205,10 +205,20 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
   }
   if (nsamples > 1) {
     for (i in 1:nsamples) {
-      bbduk(install = install, fwd = fwd[i], rev = rev[i], primers, restrictleft, outpath, trim.dir, ordered, kmer, mink, tpe, hdist, degenerate, quality, overwrite, maxlength)
+      bbduk(install = install, fwd = fwd[i], rev = rev[i],
+            primers = primers, restrictleft = restrictleft,
+            outpath = outpath, trim.dir = trim.dir, ordered = ordered,
+            kmer = kmer, mink = mink, tpe = tpe, hdist = hdist,
+            degenerate = degenerate, quality = quality,
+            overwrite = overwrite, maxlength = maxlength)
     }
   } else if (nsamples == 1) {
-    bbduk(install, fwd, rev, primers, restrictleft, outpath, trim.dir, ordered, kmer, mink, tpe, hdist, degenerate, overwrite, quality, maxlength)
+    bbduk(install = install, fwd = fwd, rev = rev,
+          primers = primers, restrictleft = restrictleft,
+          outpath = outpath, trim.dir = trim.dir, ordered = ordered,
+          kmer = kmer, mink = mink, tpe = tpe, hdist = hdist,
+          degenerate = degenerate, quality = quality,
+          overwrite = overwrite, maxlength = maxlength)
   }
 }
 
@@ -245,10 +255,10 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
 #' @return
 #' @export
 #'
-#' @import stringr str_split_fixed
-#' @import stringr str_replace
-#' @import tibble as_tibble
-#' @import dplyr pull
+#' @importFrom stringr str_split_fixed
+#' @importFrom  stringr str_replace
+#' @importFrom tibble as_tibble
+#' @importFrom dplyr pull
 #'
 #' @examples
 #' path <- "run_test/"
