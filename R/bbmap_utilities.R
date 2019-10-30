@@ -9,7 +9,7 @@
 #' @return
 #' @export
 #'
-#' @importFrom httr GET
+#' @import httr
 #' @examples
 bbmap_install <- function(url, destdir = "bin") {
   if (missing(url)) {
