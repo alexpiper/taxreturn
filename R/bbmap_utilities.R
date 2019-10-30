@@ -46,39 +46,26 @@ bbmap_install <- function(url, destdir = "bin") {
 #' Demultiplex fusion primers using BBmap Seal
 #'
 #' @param install (Required) Install location for bbmap
-#'
 #' @param fwd (Required) Vector of locations of forward reads
-#'
 #' @param rev (Optional) Vector of locations of reverse reads
-#'
 #' @param Fbarcodes (Required) Barcodes used in forward reads
-#'
 #' @param Rbarcodes (Optional) Barcodes used in reverse reads
-#'
 #' @param restrictleft (Optional) Defaults to the size of the largest primer.
 #' Restricts the kmer search for primer sequences to just the left side of the molecule.
-#'
 #' @param outpath (Optional) Default "demux"
 #'  The path to write the output reads.
-#'
 #' @param kmer (Optional) default the size of the smallest primer will be used.
 #' The kmer size to use for primer searching.
-#'
 #' @param hdist (Optional) Default = 0. The hamming distance (number of substitution errors) allowed for mismatch to the query primer.
-#'
 #' @param degenerate (Optional) Default TRUE.
 #' Option to search for all possible primer combinations for degenerate primers
-#'
 #' @param overwrite (Optional) Default TRUE
 #' Option to overwrite existing output files.
-#'
 #' @param interleaved (Optional) Default FALSE
 #' Option to input interleaved reads
-#'
 #' @param threads (Optional) Default autodetect
 #' Number of CPU threads to use
 #' WARNING: Thread detection can fail on cluster computing currently
-#'
 #' @param mem (Optional) Default autodetect
 #' GB of memory to use
 #' WARNING: mem detection can fail on cluster computing currently
@@ -104,7 +91,7 @@ bbmap_install <- function(url, destdir = "bin") {
 #'
 bbtools_demux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
                           restrictleft = NULL, outpath = "demux", kmer = NULL, hdist = 0, degenerate = TRUE,
-                          overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE) {
+                          overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE, tidylog=TRUE) {
   nsamples <- length(fwd)
 
   bbtools_seal <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
@@ -193,6 +180,7 @@ bbtools_demux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rba
                       wait=TRUE)
     now <- date()
     cat(paste0("Executed: ", now, "\n"), file="logs/bbdemux.log", append=TRUE)
+    cat(paste0("Sample:\t", fwd, "\n"), file="logs/bbdemux.log", append=TRUE)
     file.append("logs/bbdemux.log", "logs/stderr.log")
     file.remove(c("logs/stdout.log", "logs/stderr.log"))
   }
@@ -216,6 +204,12 @@ bbtools_demux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rba
   #clean up
   file.remove("Fprimers.fa")
   file.remove("Rprimers.fa")
+
+  if (tidylog == TRUE) {
+    parsed <- parse_bbdemux("logs/bbdemux.log")
+    readr::write_tsv(parsed, "logs/bbdemux_tidy.tsv")
+    return(parsed)
+  } else (return(NULL))
 }
 
 
@@ -227,49 +221,34 @@ bbtools_demux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rba
 #' Trim primers using BBDuk
 #'
 #' @param install (Required) Install location for bbmap
-#'
 #' @param fwd (Required) Vector of locations of forward reads
-#'
 #' @param rev (Optional) Vector of locations of reverse reads
-#'
 #' @param primers (Required) Forward and reverse primers to trim
-#'
 #' @param restrictleft (Optional) Defaults to the size of the largest primer.
 #' Restricts the kmer search for primer sequences to just the left side of the molecule.
-#'
 #' @param outpath (Optional) Default "trimmed"
 #'  The path to write the output reads.
-#'
 #' @param trim.dir (Optional) Default is "left"
 #' End of the molecule to trim primers from. "left" will trim primers from the 3' end of both forward and reverse reads.
 #' Change to "right" only if the amplicon was too short and the sequencer has read into the other end of the molecule.
-#'
 #' @param ordered (Optional) Default TRUE
 #'  Set to TRUE to output reads in same order as input.
-#'
 #' @param kmer (Optional) default the size of the smallest primer will be used.
 #' The kmer size to use for primer searching.
-#'
 #' @param mink (optional) Default FALSE
 #' Look for shorter kmers at read tips down to this length
-#'
 #' @param hdist (Optional) Default 0. The hamming distance (number of substitution errors) allowed for mismatch to the query primer.
-#'
 #' @param tpe (Otional) Default TRUE
 #' Trim pairs evenly. When kmer right-trimming, trim both reads to the minimum length of either.
-#'
 #' @param degenerate (Optional) Default TRUE.
 #' Option to search for all possible primer combinations for degenerate primers
-#'
 #' @param overwrite (Optional) Default TRUE
 #' Option to overwrite existing output files.
-#'
 #' @param quality (Optional) Default FALSE
 #' Output quality statistics from trimming including:
 #' Base composition histogram by position, Quality histogram by position,
 #' Count of bases with each quality value, Histogram of average read quality,
 #' Read length histogram and Read GC content histogram.
-#'
 #' @param maxlength (Optional) Default FALSE
 #' Remove all reads above a maximum length. Useful for removing reads where no primers were found.
 #'
@@ -279,8 +258,8 @@ bbtools_demux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rba
 #' @import dplyr
 #' @import tidyr
 #' @import readr
+#' @import purrr
 #' @importFrom stringr str_replace
-#' @importFrom purrr map_dfr
 #'
 #'
 #' @examples
@@ -297,7 +276,7 @@ bbtools_demux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rba
 bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
                          restrictleft = NULL, outpath = "bbduk", trim.dir = "left", ordered = TRUE,
                          kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
-                         overwrite = TRUE, quality = FALSE, maxlength = NULL) {
+                         overwrite = TRUE, quality = FALSE, tidylog=TRUE, maxlength = NULL) {
   nsamples <- length(fwd)
 
       bbduk <- function(install = NULL, fwd, rev = NULL, primers,
@@ -430,6 +409,7 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
                           wait=TRUE)
         now <- date()
         cat(paste0("Executed: ", now, "\n"), file="logs/bbtrim.log", append=TRUE)
+        cat(paste0("Sample:\t", fwd, "\n"), file="logs/bbtrim.log", append=TRUE)
         file.append("logs/bbtrim.log", "logs/stderr.log")
         file.remove(c("logs/stdout.log", "logs/stderr.log"))
       }
@@ -452,9 +432,13 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
           overwrite = overwrite, maxlength = maxlength)
   }
       if (quality == TRUE) {
+        ## Turn these into separate parsing functions
+
+        ## Could return these in a list alongside the tidylog
+
         #Base composition histogram by position.
         bhist <- list.files(path="logs", pattern="_bhist.txt", full.names = TRUE) %>%
-          set_names()  %>%
+          purrr::set_names()  %>%
           purrr::map_dfr(readr::read_table2, .id = "Source", col_types = cols(
             `#Pos` = col_double(),
             A = col_double(),
@@ -469,7 +453,7 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
 
         #Quality histogram by position.
         qhist <- list.files(path="logs", pattern="_qhist.txt", full.names = TRUE) %>%
-          set_names()  %>%
+          purrr::set_names()  %>%
           purrr::map_dfr(readr::read_table2, .id = "Source", col_types = cols(
             `#BaseNum` = col_double(),
             Read1_linear = col_double(),
@@ -497,7 +481,7 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
 
         #Read GC content histogram. - is it worth just reading in the top 4 lines?
         gchist <- list.files(path="logs", pattern="_gchist.txt", full.names = TRUE) %>%
-          set_names()  %>%
+          purrr::set_names()  %>%
           purrr::map_dfr(readr::read_table2, .id = "Source", n_max=4, col_names = FALSE, col_types = cols(
             X1 = col_character(),
             X2 = col_double()
@@ -510,7 +494,7 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
 
         #Read length histogram.
         lhist <- list.files(path="logs", pattern="_lhist.txt", full.names = TRUE) %>%
-          set_names()  %>%
+          purrr::set_names()  %>%
           purrr::map_dfr(readr::read_table2, .id = "Source", col_types= cols(
             `#Length` = col_double(),
             Count = col_double()
@@ -521,10 +505,12 @@ bbtools_trim <- function(install = NULL, fwd, rev = NULL, primers,
 
       }
 
-
+      if (tidylog == TRUE) {
+       parsed <- parse_bbtrim("logs/bbtrim.log")
+       readr::write_tsv(parsed, "logs/bbtrim_tidy.tsv")
+       return(parsed)
+      } else (return(NULL))
 }
-
-
 
 # Split interleaved reads -------------------------------------------------
 
@@ -580,3 +566,84 @@ bbtools_split <- function(install = NULL, files, overwrite = FALSE) {
     file.remove(files)
   }
 }
+
+
+
+# Parse bbtrim logs ----------------------------------------------------------
+
+#' Parse appended bbtrim logs into tidy format
+#'
+#' @param x (Required) an appended bbtrim log file generated by bbtools_trim
+#'
+#' @return Returns a tidy data frame
+#'
+#' @export
+#'
+#' @examples
+parse_bbtrim <- function(x) {
+
+  lines <- readLines(x)
+
+  sample <- readr::read_tsv(lines[which(str_sub(lines, 1, 7) == 'Sample:' )], col_names = FALSE) %>%
+    tidyr::separate(X2, into="sample", sep="\\.", extra="drop") %>%
+    dplyr::select(sample)
+
+  input <- read_tsv(lines[which(str_sub(lines, 1, 6) == 'Input:' )], col_names = FALSE) %>%
+    tidyr::separate(X2, into="input_reads", sep=" ", extra="drop") %>%
+    tidyr::separate(X4, into="input_bases", sep=" ", extra="drop") %>%
+    dplyr::select(input_reads, input_bases) %>%
+    dplyr::mutate_if(is.character, as.numeric)
+
+  ktrimmed <- read_tsv(lines[which(str_sub(lines, 1, 9) == 'KTrimmed:' )], col_names = FALSE) %>%
+    tidyr::separate(X2, into="ktrimmed_reads", sep=" ", extra="drop") %>%
+    tidyr::separate(X3, into="ktrimmed_bases", sep=" ", extra="drop") %>%
+    dplyr::select(ktrimmed_reads, ktrimmed_bases) %>%
+    dplyr::mutate_if(is.character, as.numeric)
+
+  result <- read_tsv(lines[which(str_sub(lines, 1, 7) == 'Result:' )], col_names = FALSE) %>%
+    tidyr::separate(X2, into="reads_out", sep=" ", extra="drop") %>%
+    tidyr::separate(X3, into="bases_out", sep=" ", extra="drop") %>%
+    dplyr::select(reads_out, bases_out) %>%
+    dplyr::mutate_if(is.character, as.numeric)
+
+  out <- cbind(sample, input, ktrimmed, result)
+  return(out)
+
+}
+
+
+# Parse bbdemux logs -------------------------------------------------------
+
+#' Parse appended bbdemux logs into tidy format
+#'
+#' @param x (Required) an appended bbdemux log file generated by bbtools_demux
+#'
+#' @return Returns a tidy data frame
+#'
+#' @export
+#' @examples
+parse_bbdemux <- function(x) {
+
+  lines <- readLines(x)
+
+  sample <- readr::read_tsv(lines[which(str_sub(lines, 1, 7) == 'Sample:' )], col_names = FALSE) %>%
+    tidyr::separate(X2, into="sample", sep="\\.", extra="drop") %>%
+    dplyr::select(sample)
+
+  input <- readr::read_tsv(lines[which(str_sub(lines, 1, 6) == 'Input:' )], col_names = FALSE) %>%
+    tidyr::separate(X2, into="input_reads", sep=" ", extra="drop") %>%
+    tidyr::separate(X4, into="input_bases", sep=" ", extra="drop") %>%
+    dplyr::select(input_reads, input_bases) %>%
+    dplyr::mutate_if(is.character, as.numeric)
+
+  matched <- readr::read_tsv(lines[which(str_sub(lines, 1, 14) == 'Matched reads:' )], col_names = FALSE) %>%
+    tidyr::separate(X2, into="demulti_reads", sep=" ", extra="drop") %>%
+    tidyr::separate(X3, into="demulti_bases", sep=" ", extra="drop") %>%
+    dplyr::select(demulti_reads, demulti_bases) %>%
+    dplyr::mutate_if(is.character, as.numeric)
+
+ out <-  cbind(sample, input, matched )
+
+ return(out)
+}
+

@@ -8,7 +8,7 @@ bbtools_trim(install = NULL, fwd, rev = NULL, primers,
   restrictleft = NULL, outpath = "bbduk", trim.dir = "left",
   ordered = TRUE, kmer = NULL, mink = FALSE, tpe = TRUE,
   hdist = 0, degenerate = TRUE, overwrite = TRUE, quality = FALSE,
-  maxlength = NULL)
+  tidylog = TRUE, maxlength = NULL)
 }
 \arguments{
 \item{install}{(Required) Install location for bbmap}

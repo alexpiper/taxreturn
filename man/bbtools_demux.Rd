@@ -7,7 +7,7 @@
 bbtools_demux(install = NULL, fwd, rev = NULL, Fbarcodes = NULL,
   Rbarcodes = NULL, restrictleft = NULL, outpath = "demux",
   kmer = NULL, hdist = 0, degenerate = TRUE, overwrite = TRUE,
-  threads = NULL, mem = NULL, interleaved = FALSE)
+  threads = NULL, mem = NULL, interleaved = FALSE, tidylog = TRUE)
 }
 \arguments{
 \item{install}{(Required) Install location for bbmap}
