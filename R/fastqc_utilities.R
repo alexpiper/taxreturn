@@ -67,6 +67,11 @@ fastqc <- function(fq.dir,   qc.dir = NULL, threads = 1, fastqc.path = "bin/Fast
   if(is.null(qc.dir)) qc.dir <- file.path(fq.dir, "FASTQC")
    dir.create(file.path(qc.dir))
 
+   if (.Platform$OS.type == "unix") {
+     cmd <- paste0(fastqc.path, " ", fq.dir, "/*  --threads ", threads,  " --outdir ", qc.dir)
+     system(cmd)
+
+   } else{
   .fq.dir <- paste0(fq.dir, "/*")
   .threads <- paste0("--threads ", threads)
   .qc.dir <- paste0("--outdir ", qc.dir)
@@ -80,6 +85,6 @@ fastqc <- function(fq.dir,   qc.dir = NULL, threads = 1, fastqc.path = "bin/Fast
                           error_on_status = FALSE,
                           cleanup_tree = TRUE)
 
-
+}
   return(result)
 }
