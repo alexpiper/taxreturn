@@ -432,76 +432,32 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           overwrite = overwrite, maxlength = maxlength)
   }
       if (quality == TRUE) {
-        ## Turn these into separate parsing functions
-
         ## Could return these in a list alongside the tidylog
 
         #Base composition histogram by position.
-        bhist <- list.files(path="logs", pattern="_bhist.txt", full.names = TRUE) %>%
-          purrr::set_names()  %>%
-          purrr::map_dfr(readr::read_table2, .id = "Source", col_types = cols(
-            `#Pos` = col_double(),
-            A = col_double(),
-            C = col_double(),
-            G = col_double(),
-            T = col_double(),
-            N = col_double()
-          )) %>%
-          dplyr::rename(Pos = `#Pos`)
+        bhist <- parse_bhist("logs")
         readr::write_delim(bhist, path="logs/bhist.tsv")
-        file.remove(list.files(path="logs", pattern="_bhist.txt", full.names = TRUE))
+        #file.remove(list.files(path="logs", pattern="_bhist.txt", full.names = TRUE))
 
         #Quality histogram by position.
-        qhist <- list.files(path="logs", pattern="_qhist.txt", full.names = TRUE) %>%
-          purrr::set_names()  %>%
-          purrr::map_dfr(readr::read_table2, .id = "Source", col_types = cols(
-            `#BaseNum` = col_double(),
-            Read1_linear = col_double(),
-            Read1_log = col_double(),
-            Read2_linear = col_double(),
-            Read2_log = col_double()
-          )) %>%
-          dplyr::rename(Pos = `#BaseNum`)
+        qhist <- parse_qhist("logs")
         readr::write_delim(qhist, path="logs/qhist.tsv")
-        file.remove(list.files(path="logs", pattern="_qhist.txt", full.names = TRUE))
+        #file.remove(list.files(path="logs", pattern="_qhist.txt", full.names = TRUE))
 
         #Histogram of average read quality. - how does this work with binned qscores?
-        aqhist <- list.files(path="logs", pattern="_aqhist.txt", full.names = TRUE) %>%
-          set_names()  %>%
-          purrr::map_dfr(readr::read_table2, .id = "Source", col_types = cols(
-            `#Quality` = col_double(),
-            count1 = col_double(),
-            fraction1 = col_double(),
-            count2 = col_double(),
-            fraction2 = col_double()
-          ))%>%
-          dplyr::rename(avg_quality = `#Quality`)
+        aqhist <- parse_aqhist("logs")
         readr::write_delim(aqhist, path="logs/aqhist.tsv")
-        file.remove(list.files(path="logs", pattern="_aqhist.txt", full.names = TRUE))
+        #file.remove(list.files(path="logs", pattern="_aqhist.txt", full.names = TRUE))
 
         #Read GC content histogram. - is it worth just reading in the top 4 lines?
-        gchist <- list.files(path="logs", pattern="_gchist.txt", full.names = TRUE) %>%
-          purrr::set_names()  %>%
-          purrr::map_dfr(readr::read_table2, .id = "Source", n_max=4, col_names = FALSE, col_types = cols(
-            X1 = col_character(),
-            X2 = col_double()
-          ))  %>%
-          dplyr::mutate(X1 = stringr::str_replace(X1, pattern="#", replacement="")) %>%
-          dplyr::group_by(Source) %>%
-          tidyr::pivot_wider(names_from = X1, values_from = X2)
+        gchist <- parse_aqhist("logs")
         readr::write_delim(gchist, path="logs/gchist.tsv")
-        file.remove(list.files(path="logs", pattern="_gchist.txt", full.names = TRUE))
+        #file.remove(list.files(path="logs", pattern="_gchist.txt", full.names = TRUE))
 
         #Read length histogram.
-        lhist <- list.files(path="logs", pattern="_lhist.txt", full.names = TRUE) %>%
-          purrr::set_names()  %>%
-          purrr::map_dfr(readr::read_table2, .id = "Source", col_types= cols(
-            `#Length` = col_double(),
-            Count = col_double()
-          )) %>%
-          dplyr::rename(Length = `#Length`)
+        lhist <- parse_lhist("logs")
         readr::write_delim(lhist, path="logs/_lhist.tsv")
-        file.remove(list.files(path="logs", pattern="_lhist.txt", full.names = TRUE))
+        #file.remove(list.files(path="logs", pattern="_lhist.txt", full.names = TRUE))
 
       }
 
@@ -610,8 +566,13 @@ parse_bbtrim <- function(x) {
 
 }
 
+##################################################################################################
 
-# Parse bbdemux logs -------------------------------------------------------
+## PARSING FUNCTIONS
+
+
+
+# Parse bbdemux -----------------------------------------------------------
 
 #' Parse appended bbdemux logs into tidy format
 #'
@@ -619,7 +580,6 @@ parse_bbtrim <- function(x) {
 #'
 #' @return Returns a tidy data frame
 #'
-#' @export
 #' @examples
 parse_bbdemux <- function(x) {
 
@@ -646,3 +606,119 @@ parse_bbdemux <- function(x) {
  return(out)
 }
 
+
+# parse_bhist -------------------------------------------------------------
+
+#' parse base frequency histograms from bbtrim
+#'
+#' @param dir (Required) a directory containing base frequency (bhist) files from bbtrim
+#'
+#' @return a tidy data frame
+#'
+#' @examples
+parse_bhist <- function(dir) {
+  out <- list.files(path=dir, pattern="_bhist.txt", full.names = TRUE) %>%
+    purrr::set_names()  %>%
+    purrr::map_dfr(readr::read_table2, .id = "Source", col_types = cols(
+      `#Pos` = col_double(),
+      A = col_double(),
+      C = col_double(),
+      G = col_double(),
+      T = col_double(),
+      N = col_double()
+    )) %>%
+    dplyr::rename(Pos = `#Pos`)
+
+  return(out)
+}
+
+
+# parse_qhist -------------------------------------------------------------
+#' Parse quality score histograms from bbtrim
+#'
+#' @param dir (Required) a directory containing quality score (qhist) files from bbtrim
+#'
+#' @return a tidy data frame
+#'
+#' @examples
+parse_qhist <- function(dir) {
+  out  <- list.files(path=dir, pattern="_qhist.txt", full.names = TRUE) %>%
+    purrr::set_names()  %>%
+    purrr::map_dfr(readr::read_table2, .id = "Source", col_types = cols(
+      `#BaseNum` = col_double(),
+      Read1_linear = col_double(),
+      Read1_log = col_double(),
+      Read2_linear = col_double(),
+      Read2_log = col_double()
+    )) %>%
+    dplyr::rename(Pos = `#BaseNum`)
+
+  return(out)
+}
+
+
+# parse_aqhist ------------------------------------------------------------
+#' Parse average quality histograms from bbtrim
+#'
+#' @param dir (Required) a directory containing average quality (aqhist) files from bbtrim
+#'
+#' @return a tidy data frame
+#'
+#' @examples
+parse_aqhist <- function(dir) {
+  out  <- list.files(path=dir, pattern="_aqhist.txt", full.names = TRUE) %>%
+    purrr::set_names()  %>%
+    purrr::map_dfr(readr::read_table2, .id = "Source", col_types = cols(
+      `#Quality` = col_double(),
+      count1 = col_double(),
+      fraction1 = col_double(),
+      count2 = col_double(),
+      fraction2 = col_double()
+    ))%>%
+    dplyr::rename(avg_quality = `#Quality`)
+
+  return(out)
+}
+
+
+# parse_gchist ------------------------------------------------------------
+
+#' Parse GC content histograms from bbtrim
+#'
+#' @param dir (Required) a directory containing average quality (aqhist) files from bbtrim
+#'
+#' @return a tidy data frame
+#'
+#' @examples
+parse_gchist <- function(dir) {
+  out <- list.files(path=dir, pattern="_gchist.txt", full.names = TRUE) %>%
+    purrr::set_names()  %>%
+    purrr::map_dfr(readr::read_table2, .id = "Source", n_max=4, col_names = FALSE, col_types = cols(
+      X1 = col_character(),
+      X2 = col_double()
+    ))  %>%
+    dplyr::mutate(X1 = stringr::str_replace(`X1`, pattern="#", replacement="")) %>%
+    dplyr::group_by(Source) %>%
+    tidyr::pivot_wider(names_from = X1, values_from = X2)
+
+  return(out)
+}
+
+
+# parse_lhist -------------------------------------------------------------
+#' Parse sequence length histograms from bbtrim
+#'
+#' @param dir (Required) a directory containing length (lhist) files from bbtrim
+#'
+#' @return a tidy data frame
+#'
+#' @examples
+parse_lhist <- function(dir) {
+  out  <- list.files(path=dir, pattern="_lhist.txt", full.names = TRUE) %>%
+    purrr::set_names()  %>%
+    purrr::map_dfr(readr::read_table2, .id = "Source", col_types= cols(
+      `#Length` = col_double(),
+      Count = col_double()
+    )) %>%
+    dplyr::rename(Length = `#Length`)
+}

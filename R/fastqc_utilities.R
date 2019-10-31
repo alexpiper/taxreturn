@@ -69,7 +69,7 @@ fastqc <- function(fq.dir,   qc.dir = NULL, threads = 1, fastqc.path = "bin/Fast
 
    if (.Platform$OS.type == "unix") {
      cmd <- paste0(fastqc.path, " ", fq.dir, "/*  --threads ", threads,  " --outdir ", qc.dir)
-     system(cmd)
+     result <- system(cmd)
 
    } else{
   .fq.dir <- paste0(fq.dir, "/*")
