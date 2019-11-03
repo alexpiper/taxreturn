@@ -121,6 +121,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file =
           na.omit() %>%
           dplyr::mutate(species_name = trimws(species_name, which = "both")) %>%
           dplyr::mutate(gb = taxizedb::name2taxid(data$species_name)) %>%
+          #dplyr::mutate(gb = ncbi_taxid(data$species_name)) %>%
           tidyr::unite("name", c("sampleid", "gb"), sep = "|")
 
         # gb-binom
@@ -130,6 +131,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file =
           dplyr::mutate(species_name = trimws(species_name, which = "both"))
 
         ids <- taxizedb::name2taxid(data$species_name, out_type = "summary")
+        #ids <- ncbi_taxid(data$species_name)
         # Add exception handling for duplicated taxon names
         if (any(duplicated(ids$name_txt))) {
           dupname <- ids$name_txt[ duplicated(ids$name_txt)]
@@ -154,6 +156,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file =
         } else if (!any(duplicated(ids$name_txt))) {
           data <- data %>%
             dplyr::mutate(gb = taxizedb::name2taxid(data$species_name)) %>%
+            #dplyr::mutate(gb = ncbi_taxid(data$species_name)) %>%
             tidyr::unite("name", c("sampleid", "gb"), sep = "|") %>%
             tidyr::unite("name", c("name", "species_name"), sep = ";")
         }
@@ -391,7 +394,7 @@ gbSearch <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength =
 #' @import biofiles
 #' @import Biostrings
 #' @import ape
-
+#' @import taxize
 #'
 #'
 #' @return
@@ -440,7 +443,7 @@ fetchSeqs <- function(x, database, marker = "COI", downstream = FALSE, downto = 
 
   if (downstream == TRUE) {
     if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downto, "\n"))
-    taxlist <- dplyr::bind_rows(taxizedb::downstream(x, db = "ncbi")) %>%
+    taxlist <- dplyr::bind_rows(taxize::downstream(x, db = "ncbi", downto = downto)) %>%
       dplyr::filter(rank == stringr::str_to_lower(!!downto)) %>%
       dplyr::mutate(downloaded = FALSE)
 

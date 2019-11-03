@@ -9,17 +9,20 @@
 #' @export
 #'
 #' @examples
-get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE) {
+get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
   if (!identical(db, "NCBI")) {
     stop("Only the NCBI taxonomy database is available in this version\n")
   }
   tmp <- tempdir()
+  if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp"))) {
   fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
   download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
   message("Extracting data\n")
   test <- untar(tarfile = paste0(tmp, "/tmp.tar.gz"), exdir = tmp)
   if (!identical(test, 0L)) {
     stop(cat(test))
+  }
+  file.remove(paste0(tmp, "/tmp.tar.gz"))
   }
   message("Building data frame\n")
 
@@ -48,6 +51,30 @@ get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE) {
   message("Done\n")
   return(lin)
 }
+
+
+# ncbi_taxid --------------------------------------------------------------
+
+#' Get ncbi taxid's for a taxon name
+#'
+#' @param x
+#' @param db
+#'
+#' @return
+#' @export
+#'
+#' @examples
+ncbi_taxid <- function(x, db=NULL) {
+
+  if (is.null(db)) { db <- get_ranked_lineage()}
+  out <-  as.data.frame(x) %>%
+    magrittr::set_colnames("tax_name") %>%
+    dplyr::left_join (db, by = "tax_name") %>%
+    dplyr::pull(tax_id)
+
+  return(out)
+  }
+
 
 
 # taxonomy_to_newick ------------------------------------------------------
