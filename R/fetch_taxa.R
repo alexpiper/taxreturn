@@ -11,7 +11,7 @@
 #' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' @param file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
-#' @param dir Output directory to write fasta files to
+#' @param out.dir Output directory to write fasta files to
 #'
 #' @import bold
 #' @import tidyverse
@@ -28,7 +28,7 @@
 #' @export
 #'
 #' @examples
-boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file = NULL, compress = FALSE, dir = NULL) {
+boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -42,19 +42,20 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file =
   if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
     stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
-  if (marker == "COI-5P") {
+  if (is.null(marker)) {
+    marker <- "COI-5P"
     if (!quiet) (cat("Using default marker 'COI-5P' \n"))
   }
-  if (is.null(dir)) {
-    dir <- "bold"
+  if (is.null(out.dir)) {
+    out.dir <- "bold"
   }
-  if (!file.exists(dir)) {
-    dir.create(dir)
+  if (!file.exists(out.dir)) {
+    dir.create(out.dir)
   }
   if (is.null(file) & compress == FALSE) {
-    file <- paste0(getwd(), "/", dir, "/", x, "_", marker, "_bold.fa")
+    file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_bold.fa")
   } else if (is.null(file) & compress == TRUE) {
-    file <- paste0(getwd(), "/", dir, "/", x, "_", marker, "_bold.fa.gz")
+    file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_bold.fa.gz")
   }
   if (!quiet) (message(paste0("No input file given, saving output file to: ", file)))
 
@@ -206,7 +207,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file =
 #' @param maxlength
 #' @param file The file to write to, if empty it defaults to the search term
 #' @param compress  Option to compress output fasta files using gzip
-#' @param dir Output directory to write fasta files to
+#' @param out.dir Output directory to write fasta files to
 #'
 #'
 #' @import bold
@@ -221,7 +222,6 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file =
 #' @import parallel
 #'
 #' @return
-#' @export
 #'
 #' Some useful Entrez queries
 #'
@@ -238,7 +238,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h", file =
 #'
 #'
 #' @examples
-gbSearch <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, file = NULL, compress = FALSE, dir = NULL) {
+gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=NULL, file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -251,18 +251,19 @@ gbSearch <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength =
   if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
     stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
-  if (marker == "COI") {
-    if (!quiet) (cat("Using default marker 'COI' \n"))
+  if (is.null(marker)) {
+    marker <- "COI OR COI OR COX1 OR COXI"
+    if (!quiet) (cat("Using default marker 'COI OR COI OR COX1 OR COXI' \n"))
   }
   if (is.null(file)) {
-    if (!is.null(dir) & compress == FALSE) {
-      file <- paste0(getwd(), "/", dir, "/", x, "_", marker, "_gb.fa")
-    } else if (!is.null(dir) & compress == TRUE) {
-      file <- paste0(getwd(), "/", dir, "/", x, "_", marker, "_gb.fa.gz")
-    } else if (is.null(dir) & compress == FALSE) {
+    if (!is.null(out.dir) && compress == FALSE) {
+      file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa")
+    } else if (!is.null(out.dir) && compress == TRUE) {
+      file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa.gz")
+    } else if (is.null(out.dir) && compress == FALSE) {
       file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
-    } else if (is.null(dir) & compress == TRUE) {
-      file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
+    } else if (is.null(out.dir) && compress == TRUE) {
+      file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa.gz")
     }
     if (!quiet) (message(paste0("No input file given, saving output file to: ", file)))
     if (!file.exists("genbank")) {
@@ -363,9 +364,181 @@ gbSearch <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength =
 }
 
 
-# Fetchseqs wrapper function ----------------------------------------------
+# Genbank fetching function -----------------------------------------------
 
-# note - replace downtstream =TRUE and downto with just dowstream="Species" etc, convert everything to !null instead of If true
+#' Genbank subsampling
+#'
+#' @param x A taxon name or vector of taxa to download sequences for
+#' @param marker The barcode marker used as a search term for the database
+#' @param quiet
+#' @param output The output format for the taxonomy in fasta headers.
+#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+#' "binom" for just genus species binomials (SeqID;Genus Species),
+#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
+#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' @param minlength
+#' @param maxlength
+#' @param file The file to write to, if empty it defaults to the search term
+#' @param compress  Option to compress output fasta files using gzip
+#' @param out.dir Output directory to write fasta files to
+#'
+#'
+#' @import bold
+#' @import tidyverse
+#' @import rentrez
+#' @import aphid
+#' @import insect
+#' @import biofiles
+#' @import Biostrings
+#' @import ape
+#' @import stringr
+#' @import parallel
+#'
+#' @return
+#'
+#' Some useful Entrez queries
+#'
+#' all [filter] 	Retrieves everthing
+#' Specified [property] 	Formal binomial and trinomial
+#' at or below species level [property]
+#' family [rank] 	Rank-based query
+#' taxonomy genome [filter] 	Taxa with a direct link to a genome sequence
+#' 2009/10/21:2020 [date] 	Date-bounded query
+#' mammalia [subtree] 	All taxa within the Mammalia
+#' extinct [property] 	Extinct organisms
+#' Terminal [property] 	Terminal nodes in the tree
+#' loprovencyclife [filter] 	Entries with LinkOut links to the Encyclopedia of Life
+#'
+#'
+#' @examples
+gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=100, file = NULL, compress = FALSE, out.dir = NULL) {
+
+  # function setup
+  time <- Sys.time() # get time
+  # Check if taxizedb is installed
+  search_or_sql <- "taxizedb" %in% rownames(installed.packages())
+  if (search_or_sql == FALSE) {
+    message("taxizedb is not installed, using web queries instead")
+  }
+
+  if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
+  }
+  if (is.null(marker)) {
+    marker <- "COI OR COI OR COX1 OR COXI"
+    if (!quiet) (cat("Using default marker 'COI OR COI OR COX1 OR COXI' \n"))
+  }
+  if (is.null(file)) {
+    if (!is.null(out.dir) & compress == FALSE) {
+      file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa")
+    } else if (!is.null(out.dir) & compress == TRUE) {
+      file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa.gz")
+    } else if (is.null(out.dir) & compress == FALSE) {
+      file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
+    } else if (is.null(out.dir) & compress == TRUE) {
+      file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa.gz")
+    }
+    if (!quiet) (message(paste0("No input file given, saving output file to: ", file)))
+    if (!file.exists("genbank")) {
+      dir.create("genbank")
+    }
+  }
+  if (file.exists(file)) {
+    file.remove(file)
+  }
+  if (stringr::str_detect(file, ".gz")) {
+    compress <- TRUE
+  }
+
+  tryCatch(
+    {
+      # Genbank Search
+      searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
+      search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = TRUE)
+
+      if (search_results$count != 0 & !is.na(search_results$count)) {
+
+        if (!quiet) (message(paste0(subsample, " of: ", search_results$count, " sequences to be downloaded for: ", searchQ)))
+
+        ids <- sample(search_results$ids, subsample )
+        chunks <- split(ids, ceiling(seq_along(ids)/chunk_size))
+
+        l <- 1
+
+        for (l in 1:length(chunks)) {
+
+          #Upload ids
+          upload <- rentrez::entrez_post(db="nuccore", id=chunks[[l]])
+
+          # Fetch gb flat files
+          dl <- rentrez::entrez_fetch(db = "nuccore", web_history = upload, rettype = "gb", retmax = 10000)
+          gb <- biofiles::gbRecord(rcd = textConnection(dl))
+
+          # Hierarchial output
+          if (output == "h") {
+            lineage <- biofiles::getTaxonomy(gb) %>%
+              str_split_fixed(pattern = ";", n = Inf) %>%
+              trimws(which = "both") %>%
+              as_tibble() %>%
+              dplyr::mutate(Species = biofiles::getOrganism(gb)) %>%
+              dplyr::mutate(Genus = str_replace(V15, pattern = "[.]", replacement = "")) %>%
+              tidyr::unite("names", c("V1", "V2", "V4", "V6", "V10", "V14", "Genus", "Species"), sep = ";") %>%
+              dplyr::mutate(names = str_replace(names, pattern = " ", replacement = "_"))
+            names <- paste0(names(biofiles::getSequence(gb)), ";", lineage$names)
+
+            # Genbank taxID output
+          } else if (output == "gb") {
+            cat_acctax <- function(x) {
+              taxid <- purrr::map(x, biofiles::dbxref, "taxon")
+              tax_chr <- purrr::map_chr(taxid, function(y) {
+                as.character(y[1, 1])
+              })
+              attributes(tax_chr) <- NULL
+              taxout <- paste0(attributes(taxid)$names, "|", tax_chr)
+              return(taxout)
+            }
+            names <- cat_acctax(gb)
+          } else if (output == "binom") {
+            names <- paste0(names(biofiles::getSequence(gb)), ";", biofiles::getOrganism(gb))
+          } else if (output == "gb-binom") {
+            cat_acctax <- function(x) {
+              taxid <- purrr::map(x, biofiles::dbxref, "taxon")
+              tax_chr <- purrr::map_chr(taxid, function(y) {
+                as.character(y[1, 1])
+              })
+              attributes(tax_chr) <- NULL
+              taxout <- paste0(attributes(taxid)$names, "|", tax_chr)
+              return(taxout)
+            }
+            names <- paste0(cat_acctax(gb), ";", biofiles::getOrganism(gb))
+          }
+
+          # Output FASTA
+          seqs <- biofiles::getSequence(gb)
+          names(seqs) <- names
+          if (compress == TRUE) {
+            Biostrings::writeXStringSet(seqs, file, format = "fasta", compress = "gzip", width = 5000)
+          } else if (compress == FALSE) {
+            Biostrings::writeXStringSet(seqs, file, format = "fasta", width = 5000)
+          }
+
+          if (!quiet) (message("Chunk", l, " of ", length(chunks), " downloaded\r"))
+          Sys.sleep(2.5)
+          if (l >= length(chunks)) {
+            time <- Sys.time() - time
+            if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from Genbank ", " in ", format(time, digits = 2))))
+          }
+        }
+      }
+    },
+    error = function(e) NULL
+  )
+  invisible(NULL)
+}
+
+
+# Fetchseqs wrapper function ----------------------------------------------
 
 #' Fetchseqs wrapper function
 #'
@@ -373,12 +546,11 @@ gbSearch <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength =
 #' @param database
 #' @param marker
 #' @param downstream
-#' @param downto
 #' @param quiet
 #' @param output
 #' @param minlength
 #' @param maxlength
-#' @param dir
+#' @param out.dir
 #' @param compress
 #' @param cores
 #'
@@ -401,13 +573,16 @@ gbSearch <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength =
 #' @export
 #'
 #' @examples
-fetchSeqs <- function(x, database, marker = "COI", downstream = FALSE, downto = "family", quiet = TRUE, output = "h", minlength = 1, maxlength = 2000, dir = NULL, compress = FALSE, cores = 1) {
+fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TRUE, output = "h", minlength = 1, maxlength = 2000, subsample=FALSE, out.dir = NULL, compress = TRUE, cores = 1,...) {
 
   # Check if taxizedb is installed
   search_or_sql <- "taxizedb" %in% rownames(installed.packages())
   if (search_or_sql == FALSE) {
     stop("Error - taxizedb is not installed")
   }
+
+  #stop if subsample and BOLD is true
+  if (is.numeric(subsample ) & database=="bold"){ stop("Subsampling is currently not supported for BOLD")}
 
   # Setup parallel
   if (inherits(cores, "cluster")) {
@@ -432,19 +607,19 @@ fetchSeqs <- function(x, database, marker = "COI", downstream = FALSE, downto = 
     }
   }
 
-  if (is.null(dir)) {
-    dir <- database
-    if (!quiet) (message(paste0("No input dir given, saving output file to: ", dir)))
+  if (is.null(out.dir)) {
+    out.dir <- database
+    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
   }
-  if (!file.exists(dir)) {
-    dir.create(dir)
+  if (!file.exists(out.dir)) {
+    dir.create(out.dir)
   }
 
 
-  if (downstream == TRUE) {
-    if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downto, "\n"))
-    taxlist <- dplyr::bind_rows(taxize::downstream(x, db = "ncbi", downto = downto)) %>%
-      dplyr::filter(rank == stringr::str_to_lower(!!downto)) %>%
+  if (is.character(downstream)) {
+    if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
+    taxlist <- dplyr::bind_rows(taxize::downstream(x, db = "ncbi", downto = downstream)) %>%
+      dplyr::filter(rank == stringr::str_to_lower(!!downstream)) %>%
       dplyr::mutate(downloaded = FALSE)
 
     if (nrow(taxlist) > 0) {
@@ -457,18 +632,34 @@ fetchSeqs <- function(x, database, marker = "COI", downstream = FALSE, downto = 
     (taxon <- x)
   }
 
-  # If taxon is a vector of names
-  if (database == "genbank" && length(taxon) > 0) {
-    # Multithread
+  # If taxon is a vector of names - Multithread
+  if (database == "genbank" && length(taxon) > 1) {
     taxon <- if (para == TRUE) {
-      parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "dir", "output", "minlength", "maxlength", "compress"), envir = environment())
+      parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
 
-      parallel::parLapply(cores, taxon, gbSearch, marker, quiet, file = NULL, output, minlength, maxlength, compress)
+      if (subsample==FALSE){
+        parallel::parLapply(cores, taxon, gbSearch, marker = marker,
+                              quiet = quiet, file = NULL, output = output,
+                              minlength = minlength, maxlength = maxlength,
+                              compress = compress)
+
+      } else if (is.numeric(subsample)) {
+          parallel::parLapply(cores, taxon, gbSearch_subsample, marker = marker,
+                              quiet = quiet, file = NULL, subsample = subsample,
+                              output = output, minlength = minlength,
+                              maxlength = maxlength, compress = compress) }
+
     } else {
-      (lapply(taxon, gbSearch, marker, quiet, dir = dir, file = NULL, output, minlength, maxlength, compress))
-    } # Single core
-  } else if (database == "bold" && length(taxon) > 0) {
-    # Check taxon names exist on bold
+
+      if (subsample==FALSE){
+        lapply(taxon, gbSearch, marker, quiet, out.dir = out.dir, file = NULL, output, minlength, maxlength, compress, ...)
+      } else if (is.numeric(subsample)) {
+        lapply(taxon, gbSearch_subsample, marker = marker, quiet = quiet, out.dir = out.dir,
+               file = NULL, output = output, subsample = subsample,
+               minlength = minlength, maxlength = maxlength, compress = compress, ...)
+        }
+    }
+  } else if (database == "bold" && length(taxon) > 1) {
     if (!quiet) cat("Checking validity of taxon names for BOLD search\n")
     checks <- bold::bold_tax_name(taxon)
     bold_taxon <- checks$taxon[which(!is.na(checks$taxon))]
@@ -476,27 +667,30 @@ fetchSeqs <- function(x, database, marker = "COI", downstream = FALSE, downto = 
 
     # Multithread
     bold_taxon <- if (para == TRUE) {
-      parallel::parLapply(cores, bold_taxon, boldSearch, marker, quiet, file = NULL, output, compress)
+      parallel::parLapply(cores, bold_taxon, boldSearch, marker = marker, quiet = quiet, file = NULL, output = output, compress = compress)
     } else {
-      (lapply(bold_taxon, boldSearch, marker, quiet, dir = dir, file = NULL, output, compress))
+      (lapply(bold_taxon, boldSearch, marker = marker, quiet = quiet, out.dir = out.dir, file = NULL, output = output, compress = compress))
     } # Single core
 
     # If taxon is a single name
-  } else if (database == "genbank" && length(taxon) == 0) {
-    taxreturn::gbSearch(taxon, marker, quiet = quiet, dir = dir, file = NULL, output = output, compress = compress)
-  } else if (database == "bold" && length(taxon) == 0) {
-    bold::boldSearch(taxon = taxon, marker = marker, quiet = quiet, dir = dir, file = NULL, output = output, compress = compress)
+  } else if (database == "genbank" && length(taxon) == 1) {
+
+    if (subsample==FALSE){
+      gbSearch(taxon, marker = marker, quiet = quiet, out.dir = out.dir, file = NULL , output = output, compress = compress, ...)
+    } else if (is.numeric(subsample)) {
+      gbSearch_subsample(taxon, marker = marker, quiet = quiet, out.dir, file = NULL, output = output, subsample = subsample, compress = compress, ...)
+    }
+
+  } else if (database == "bold" && length(taxon) == 1) {
+    bold::boldSearch(taxon = taxon, marker = marker, quiet = quiet, out.dir = out.dir, file = NULL, output = output, compress = compress)
   }
 
   # Close clusters
   if (para & stopclustr) parallel::stopCluster(cores)
   if (!quiet) message("Done\n")
 
-
-  # invisible(NULL)
-
   # Check if all downloaded
-  done <- list.files(path = database, pattern = ".fa") %>%
+  done <- list.files(path = out.dir, pattern = ".fa") %>%
     stringr::str_split_fixed(pattern = "_", n = 2) %>%
     dplyr::as_tibble() %>%
     dplyr::pull(V1)
@@ -505,6 +699,6 @@ fetchSeqs <- function(x, database, marker = "COI", downstream = FALSE, downto = 
     taxlist$downloaded[which(taxlist$childtaxa_name %in% done)] <- TRUE
     return(taxlist)
   } else {
-    return(x)
+    return(done)
   }
 }

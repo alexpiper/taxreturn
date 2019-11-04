@@ -397,8 +397,8 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           collapse = " "
         )
 
-        if (exists("logs/bbdemux.log")) {
-          file.remove(c("logs/bbdemux.log"))
+        if (exists("logs/bbtrim.log")) {
+          file.remove(c("logs/bbtrim.log"))
         }
 
         # Run bbduk
