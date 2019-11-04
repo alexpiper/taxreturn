@@ -121,13 +121,13 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
     if (is.numeric(kmer)) {
       kmer <- paste0("k=", kmer)
     } else {
-      (kmer <- paste0("k=", nchar(sort(c(Fbarcodes, Rbarcodes), decreasing = TRUE)[1])))
+      kmer <- paste0("k=", sort(nchar(c(Fbarcodes, Rbarcodes)), decreasing = FALSE)[1])
     }
 
     if (is.numeric(restrictleft)) {
       restrictleft <- paste0("restrictleft=", restrictleft)
     } else {
-      (restrictleft <- paste0("restrictleft=", nchar(sort(c(Fbarcodes, Rbarcodes))[1])))
+      restrictleft <- paste0("restrictleft=", sort(nchar(c(Fbarcodes, Rbarcodes)), decreasing = TRUE)[1])
     }
 
 
@@ -323,7 +323,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
         if (is.numeric(kmer)) {
           kmer <- paste0("k=", kmer)
         } else {
-          kmer <- paste0("k=", nchar(sort(primers, decreasing = TRUE)[1]))
+          (kmer <- paste0("k=", sort(nchar(primers), decreasing = FALSE)[1]))
         }
 
         if (is.numeric(maxlength)) {
@@ -335,7 +335,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
         if (is.numeric(mink)) {
           mink <- paste0("mink=", mink) # Note - mink makes it noticibly slower
         } else if (mink == TRUE) {
-          mink <- paste0("mink=", (ceiling(nchar(sort(primers, decreasing = TRUE)[1]) / 2)))
+          mink <- paste0("mink=", (sort(nchar(primers), decreasing = FALSE)[1] / 2))
         } else if (mink == FALSE) {
           mink <- ""
         }
@@ -344,7 +344,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
         if (is.numeric(restrictleft)) {
           restrictleft <- paste0("restrictleft=", restrictleft)
         } else {
-          (restrictleft <- paste0("restrictleft=", nchar(sort(primers, decreasing = FALSE)[1]) + 1))
+          restrictleft <- paste0("restrictleft=", sort(nchar(primers), decreasing = TRUE)[1])
         }
 
         if (ordered == TRUE) {
