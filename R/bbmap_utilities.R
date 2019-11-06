@@ -397,10 +397,13 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           collapse = " "
         )
 
+<<<<<<< HEAD
         if (!dir.exists("logs")) {
           dir.create("logs")
         }
 
+=======
+>>>>>>> aca6d966486c0368bb4c387a6e309bc87d47f93c
         if (exists("logs/bbtrim.log")) {
           file.remove(c("logs/bbtrim.log"))
         }
