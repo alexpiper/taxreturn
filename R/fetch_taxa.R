@@ -412,7 +412,7 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
 #'
 #'
 #' @examples
-gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=100, file = NULL, compress = FALSE, out.dir = NULL) {
+gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=300, file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -518,9 +518,9 @@ gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", m
           seqs <- biofiles::getSequence(gb)
           names(seqs) <- names
           if (compress == TRUE) {
-            Biostrings::writeXStringSet(seqs, file, format = "fasta", compress = "gzip", width = 5000)
+            Biostrings::writeXStringSet(seqs, file, format = "fasta", compress = "gzip", width = 5000, append = TRUE)
           } else if (compress == FALSE) {
-            Biostrings::writeXStringSet(seqs, file, format = "fasta", width = 5000)
+            Biostrings::writeXStringSet(seqs, file, format = "fasta", width = 5000, append = TRUE)
           }
 
           if (!quiet) (message("Chunk", l, " of ", length(chunks), " downloaded\r"))
@@ -584,29 +584,23 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
   #stop if subsample and BOLD is true
   if (is.numeric(subsample ) & database=="bold"){ stop("Subsampling is currently not supported for BOLD")}
 
-  # Setup parallel
-  if (inherits(cores, "cluster")) {
-    para <- TRUE
-    stopclustr <- FALSE
-  } else if (cores == 1) {
+  #Setup parralel
+  if (cores == 1) {
     para <- FALSE
     stopclustr <- FALSE
-  } else {
-    navailcores <- parallel::detectCores()
-    if (identical(cores, "autodetect")) cores <- navailcores - 1
-    if (cores > 1) {
-      # if(cores > navailcores) stop("Number of cores is more than number available")
+  } else if (cores > 1) {
+    #check that cores are available
+      navailcores <- parallel::detectCores()
+      if(cores > navailcores) stop("Number of cores is more than number available")
+
       if (!quiet) cat("Multithreading with", cores, "cores\n")
       cores <- parallel::makeCluster(cores, outfile = "out.txt")
-      junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "taxizedb", "tidyverse", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE)) # Discard result
+      junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "taxizedb", "tidyverse", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
       para <- TRUE
       stopclustr <- TRUE
-    } else {
-      para <- FALSE
-      stopclustr <- FALSE
     }
-  }
 
+  #Define directories
   if (is.null(out.dir)) {
     out.dir <- database
     if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
@@ -615,7 +609,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
     dir.create(out.dir)
   }
 
-
+  #Evaluate downstream
   if (is.character(downstream)) {
     if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
     taxlist <- dplyr::bind_rows(taxize::downstream(x, db = "ncbi", downto = downstream)) %>%
@@ -632,34 +626,41 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
     (taxon <- x)
   }
 
-  # If taxon is a vector of names - Multithread
-  if (database == "genbank" && length(taxon) > 1) {
-    taxon <- if (para == TRUE) {
+  #If taxon is a vector
+  # Genbank Multithread If possible
+  if (database == "genbank") {
+    taxon <- if (para == TRUE && subsample==FALSE) {
+      message("Multithreading with genbank - No subsampling")
       parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
+      parallel::parLapply(cores, taxon, gbSearch, marker = marker,
+                          quiet = quiet, file = NULL, output = output,
+                          minlength = minlength, maxlength = maxlength,
+                          compress = compress)
 
-      if (subsample==FALSE){
-        parallel::parLapply(cores, taxon, gbSearch, marker = marker,
-                              quiet = quiet, file = NULL, output = output,
-                              minlength = minlength, maxlength = maxlength,
-                              compress = compress)
-
-      } else if (is.numeric(subsample)) {
-          parallel::parLapply(cores, taxon, gbSearch_subsample, marker = marker,
-                              quiet = quiet, file = NULL, subsample = subsample,
-                              output = output, minlength = minlength,
-                              maxlength = maxlength, compress = compress) }
-
-    } else {
-
-      if (subsample==FALSE){
-        lapply(taxon, gbSearch, marker, quiet, out.dir = out.dir, file = NULL, output, minlength, maxlength, compress, ...)
-      } else if (is.numeric(subsample)) {
-        lapply(taxon, gbSearch_subsample, marker = marker, quiet = quiet, out.dir = out.dir,
-               file = NULL, output = output, subsample = subsample,
-               minlength = minlength, maxlength = maxlength, compress = compress, ...)
+      } else if (para == TRUE && is.numeric(subsample)){
+        message("Multithreading with genbank - With subsampling")
+        parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
+        parallel::parLapply(cores, taxon, gbSearch_subsample, marker = marker,
+                          quiet = quiet, file = NULL, subsample = subsample,
+                          output = output, minlength = minlength,
+                          maxlength = maxlength, compress = compress)
+    } else if(para == FALSE && subsample==FALSE){
+      message("Sequential processing with genbank - No subsampling")
+      lapply(taxon, gbSearch, marker = marker,
+             quiet = quiet, out.dir = out.dir,
+             file = NULL, output = output,
+             minlength = minlength, maxlength = maxlength,
+             compress = compress)
+    } else if(para == FALSE && is.numeric(subsample)){
+      message("Sequential processing with genbank - With subsampling")
+      lapply(taxon, gbSearch_subsample, marker = marker, quiet = quiet, out.dir = out.dir,
+            file = NULL, output = output, subsample = subsample,
+            minlength = minlength, maxlength = maxlength, compress = compress)
         }
-    }
-  } else if (database == "bold" && length(taxon) > 1) {
+
+  }
+  # BOLD Multithread If possible
+  if (database == "bold") {
     if (!quiet) cat("Checking validity of taxon names for BOLD search\n")
     checks <- bold::bold_tax_name(taxon)
     bold_taxon <- checks$taxon[which(!is.na(checks$taxon))]
@@ -667,38 +668,22 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
 
     # Multithread
     bold_taxon <- if (para == TRUE) {
+      message("Multithreading with BOLD")
       parallel::parLapply(cores, bold_taxon, boldSearch, marker = marker, quiet = quiet, file = NULL, output = output, compress = compress)
     } else {
-      (lapply(bold_taxon, boldSearch, marker = marker, quiet = quiet, out.dir = out.dir, file = NULL, output = output, compress = compress))
-    } # Single core
-
-    # If taxon is a single name
-  } else if (database == "genbank" && length(taxon) == 1) {
-
-    if (subsample==FALSE){
-      gbSearch(taxon, marker = marker, quiet = quiet, out.dir = out.dir, file = NULL , output = output, compress = compress, ...)
-    } else if (is.numeric(subsample)) {
-      gbSearch_subsample(taxon, marker = marker, quiet = quiet, out.dir, file = NULL, output = output, subsample = subsample, compress = compress, ...)
+      message("Sequential processing with BOLD")
+      lapply(bold_taxon, boldSearch, marker = marker, quiet = quiet, out.dir = out.dir, file = NULL, output = output, compress = compress)
     }
-
-  } else if (database == "bold" && length(taxon) == 1) {
-    bold::boldSearch(taxon = taxon, marker = marker, quiet = quiet, out.dir = out.dir, file = NULL, output = output, compress = compress)
   }
 
   # Close clusters
   if (para & stopclustr) parallel::stopCluster(cores)
   if (!quiet) message("Done\n")
 
-  # Check if all downloaded
-  done <- list.files(path = out.dir, pattern = ".fa") %>%
-    stringr::str_split_fixed(pattern = "_", n = 2) %>%
-    dplyr::as_tibble() %>%
-    dplyr::pull(V1)
-
   if (downstream == TRUE) {
     taxlist$downloaded[which(taxlist$childtaxa_name %in% done)] <- TRUE
     return(taxlist)
   } else {
-    return(done)
+    return(x)
   }
 }
