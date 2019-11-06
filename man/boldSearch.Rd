@@ -4,8 +4,8 @@
 \alias{boldSearch}
 \title{boldSearch}
 \usage{
-boldSearch(x, marker = "COI-5P", quiet = FALSE, output = "h",
-  file = NULL, compress = FALSE, dir = NULL)
+boldSearch(x, marker = NULL, quiet = FALSE, output = "h",
+  out.file = NULL, compress = FALSE, out.dir = NULL)
 }
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
@@ -19,11 +19,11 @@ Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Ord
 "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process}
 
-\item{file}{The file to write to, if empty it defaults to the search term}
+\item{out.file}{The file to write to, if empty it defaults to the search term}
 
 \item{compress}{Option to compress output fasta files using gzip}
 
-\item{dir}{Output directory to write fasta files to}
+\item{out.dir}{Output directory to write fasta files to}
 }
 \description{
 boldSearch

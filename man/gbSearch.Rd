@@ -4,14 +4,14 @@
 \alias{gbSearch}
 \title{Genbank search function}
 \usage{
-gbSearch(x, marker = "COI", quiet = FALSE, output = "h",
-  minlength = 1, maxlength = 2000, file = NULL, compress = FALSE,
-  dir = NULL)
+gbSearch(x, marker = NULL, quiet = FALSE, output = "h",
+  minlength = 1, maxlength = 2000, subsample = NULL,
+  out.file = NULL, compress = FALSE, out.dir = NULL)
 }
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
 
-\item{marker}{The barcode marker used as a search term for the database}
+\item{marker}{The barcode marker used as a search term for the database. If this is set to "mitochondria" it will download full mitochondrial genomes.}
 
 \item{output}{The output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -20,11 +20,25 @@ Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Ord
 "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process}
 
-\item{file}{The file to write to, if empty it defaults to the search term}
+\item{out.file}{The file to write to, if empty it defaults to the search term}
 
 \item{compress}{Option to compress output fasta files using gzip}
 
-\item{dir}{Output directory to write fasta files to}
+\item{out.dir}{Output directory to write fasta files to}
+}
+\value{
+Some useful Entrez queries
+
+all \link{filter} 	Retrieves everthing
+Specified \link{property} 	Formal binomial and trinomial
+at or below species level \link{property}
+family \link{rank} 	Rank-based query
+taxonomy genome \link{filter} 	Taxa with a direct link to a genome sequence
+2009/10/21:2020 \link{date} 	Date-bounded query
+mammalia \link{subtree} 	All taxa within the Mammalia
+extinct \link{property} 	Extinct organisms
+Terminal \link{property} 	Terminal nodes in the tree
+loprovencyclife \link{filter} 	Entries with LinkOut links to the Encyclopedia of Life
 }
 \description{
 Genbank search function

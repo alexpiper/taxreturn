@@ -26,9 +26,11 @@
 clean_seqs <- function(x, model, minscore = 100, shave = TRUE, maxNs = 0, cores = 1,
                        quiet = FALSE, progress = FALSE) {
   time <- Sys.time() # get time
+
   # Convert to DNAbin
   if (!is(x, "DNAbin")) {
     x <- ape::as.DNAbin(x)
+    if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
   }
   if (!is(model, "PHMM")) {
     stop("Model needs to be a PHMM object")

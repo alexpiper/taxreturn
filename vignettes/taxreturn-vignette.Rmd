@@ -36,15 +36,30 @@ Finally, the cores option determines how many cores to use when downloading sequ
 
 Depending on the amount of sequences you are downloading, and the speed of your internet connection this step can take from minutes to hours, i suggest running this overnight for large searches.
 
+## Download sequences from NCBI GenBank
+
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank 
-genbank <- fetchSeqs("Scaptodrosophila", database="genbank",dir="genbank",downstream=TRUE, quiet=FALSE, downto="species", marker="COI OR COI OR COX1 OR COXI", output = "gb-binom",compress=TRUE, cores=1)
+fetchSeqs("Scaptodrosophila", database="genbank", dir="genbank", downstream="species", quiet=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", compress=TRUE, cores=1)
+```
 
 
+## Download sequences from BOLD
+
+```{r Download BOLD Sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from BOLD
-bold <- fetchSeqs("Scaptodrosophila", database="bold", dir="bold", downstream=TRUE,quiet=FALSE, downto="species", marker="COI-5P", output = "gb-binom",compress=TRUE, cores=1)
+fetchSeqs("Scaptodrosophila", database="bold", dir="bold", downstream="species", quiet=FALSE, marker="COI-5P", output = "gb-binom",compress=TRUE, cores=1)
 
 ```
+
+## Download mitochondrial genomes from GenBank
+
+We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region
+```{r Download mitochondria, eval=FALSE, include=TRUE}
+# Fetch mitochondria from genbank
+fetchSeqs("Drosophila", database="genbank", dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE, cores=1)
+```
+
 
 # Curating public reference sequences
 
@@ -290,3 +305,5 @@ plot(trainingSet)
 #Write out training set
 saveRDS(trainingSet, file="reference/idtaxa.rds")
 ```
+
+## Output BLAST database

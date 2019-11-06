@@ -9,7 +9,7 @@
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
-#' @param file The file to write to, if empty it defaults to the search term
+#' @param out.file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
 #' @param out.dir Output directory to write fasta files to
 #'
@@ -28,7 +28,7 @@
 #' @export
 #'
 #' @examples
-boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", file = NULL, compress = FALSE, out.dir = NULL) {
+boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -52,17 +52,17 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", file = NUL
   if (!file.exists(out.dir)) {
     dir.create(out.dir)
   }
-  if (is.null(file) & compress == FALSE) {
-    file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_bold.fa")
-  } else if (is.null(file) & compress == TRUE) {
-    file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_bold.fa.gz")
+  if (is.null(out.file) & compress == FALSE) {
+    out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_bold.fa")
+  } else if (is.null(out.file) & compress == TRUE) {
+    out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_bold.fa.gz")
   }
-  if (!quiet) (message(paste0("No input file given, saving output file to: ", file)))
+  if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
 
-  if (file.exists(file)) {
-    file.remove(file)
+  if (file.exists(out.file)) {
+    file.remove(out.file)
   }
-  if (stringr::str_detect(file, ".gz")) {
+  if (stringr::str_detect(out.file, ".gz")) {
     compress <- TRUE
   }
 
@@ -173,9 +173,9 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", file = NUL
       seqs <- Biostrings::DNAStringSet(data$nucleotides)
       names(seqs) <- data$name
       if (compress == TRUE) {
-        Biostrings::writeXStringSet(seqs, file, format = "fasta", compress = "gzip", width = 5000)
+        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000)
       } else if (compress == FALSE) {
-        Biostrings::writeXStringSet(seqs, file, format = "fasta", width = 5000)
+        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000)
       }
 
       # Done message
@@ -195,7 +195,7 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", file = NUL
 #' Genbank search function
 #'
 #' @param x A taxon name or vector of taxa to download sequences for
-#' @param marker The barcode marker used as a search term for the database
+#' @param marker The barcode marker used as a search term for the database. If this is set to "mitochondria" it will download full mitochondrial genomes.
 #' @param quiet
 #' @param output The output format for the taxonomy in fasta headers.
 #' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -205,7 +205,7 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", file = NUL
 #' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' @param minlength
 #' @param maxlength
-#' @param file The file to write to, if empty it defaults to the search term
+#' @param out.file The file to write to, if empty it defaults to the search term
 #' @param compress  Option to compress output fasta files using gzip
 #' @param out.dir Output directory to write fasta files to
 #'
@@ -238,7 +238,7 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", file = NUL
 #'
 #'
 #' @examples
-gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=NULL, file = NULL, compress = FALSE, out.dir = NULL) {
+gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=NULL, out.file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -255,32 +255,39 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
     marker <- "COI OR COI OR COX1 OR COXI"
     if (!quiet) (cat("Using default marker 'COI OR COI OR COX1 OR COXI' \n"))
   }
-  if (is.null(file)) {
+  if (is.null(out.file)) {
     if (!is.null(out.dir) && compress == FALSE) {
-      file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa")
+      out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa")
     } else if (!is.null(out.dir) && compress == TRUE) {
-      file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa.gz")
+      out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa.gz")
     } else if (is.null(out.dir) && compress == FALSE) {
-      file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
+      out.file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
     } else if (is.null(out.dir) && compress == TRUE) {
-      file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa.gz")
+      out.file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa.gz")
     }
-    if (!quiet) (message(paste0("No input file given, saving output file to: ", file)))
+    if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
     if (!file.exists("genbank")) {
       dir.create("genbank")
     }
   }
-  if (file.exists(file)) {
-    file.remove(file)
+  if (file.exists(out.file)) {
+    file.remove(out.file)
   }
-  if (stringr::str_detect(file, ".gz")) {
+  if (stringr::str_detect(out.file, ".gz")) {
     compress <- TRUE
   }
 
   tryCatch(
     {
       # Genbank Search
-      searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
+      if (!marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")) {
+        searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
+
+      } else if (marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")) {
+        message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
+        searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
+        }
+
       search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = TRUE)
 
       if (search_results$count != 0 & !is.na(search_results$count)) {
@@ -338,14 +345,18 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
             }
             names <- paste0(cat_acctax(gb), ";", biofiles::getOrganism(gb))
           }
-
           # Output FASTA
-          seqs <- biofiles::getSequence(gb)
-          names(seqs) <- names
+          seqs <- biofiles::getSequence(gb) # Something failing here - getting much less than the proper amount
+
+          #Check if names match
+          names(seqs) <- names[names %>%
+                                 str_replace(pattern="(?<=\\|)(?s)(.*$)", replacement="") %>%
+                                 str_replace(pattern="\\|", replacement="")
+                               %in% names(seqs)]
           if (compress == TRUE) {
-            Biostrings::writeXStringSet(seqs, file, format = "fasta", compress = "gzip", width = 5000)
+            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000)
           } else if (compress == FALSE) {
-            Biostrings::writeXStringSet(seqs, file, format = "fasta", width = 5000)
+            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000)
           }
 
           if (!quiet) (message("Chunk", l, " of ", chunks, " downloaded\r"))
@@ -379,7 +390,7 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
 #' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' @param minlength
 #' @param maxlength
-#' @param file The file to write to, if empty it defaults to the search term
+#' @param out.file The file to write to, if empty it defaults to the search term
 #' @param compress  Option to compress output fasta files using gzip
 #' @param out.dir Output directory to write fasta files to
 #'
@@ -412,7 +423,7 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
 #'
 #'
 #' @examples
-gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=300, file = NULL, compress = FALSE, out.dir = NULL) {
+gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=300, out.file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -429,33 +440,38 @@ gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", m
     marker <- "COI OR COI OR COX1 OR COXI"
     if (!quiet) (cat("Using default marker 'COI OR COI OR COX1 OR COXI' \n"))
   }
-  if (is.null(file)) {
+  if (is.null(out.file)) {
     if (!is.null(out.dir) & compress == FALSE) {
-      file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa")
+      out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa")
     } else if (!is.null(out.dir) & compress == TRUE) {
-      file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa.gz")
+      out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa.gz")
     } else if (is.null(out.dir) & compress == FALSE) {
-      file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
+      out.file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
     } else if (is.null(out.dir) & compress == TRUE) {
-      file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa.gz")
+      out.file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa.gz")
     }
-    if (!quiet) (message(paste0("No input file given, saving output file to: ", file)))
+    if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
     if (!file.exists("genbank")) {
       dir.create("genbank")
     }
   }
-  if (file.exists(file)) {
-    file.remove(file)
+  if (file.exists(out.file)) {
+    file.remove(out.file)
   }
-  if (stringr::str_detect(file, ".gz")) {
+  if (stringr::str_detect(out.file, ".gz")) {
     compress <- TRUE
   }
 
   tryCatch(
     {
       # Genbank Search
-      searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
-      search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = TRUE)
+      if (!marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")) {
+        searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
+
+      } else if (marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")) {
+        message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
+        searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
+      }
 
       if (search_results$count != 0 & !is.na(search_results$count)) {
 
@@ -518,9 +534,9 @@ gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", m
           seqs <- biofiles::getSequence(gb)
           names(seqs) <- names
           if (compress == TRUE) {
-            Biostrings::writeXStringSet(seqs, file, format = "fasta", compress = "gzip", width = 5000, append = TRUE)
+            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
           } else if (compress == FALSE) {
-            Biostrings::writeXStringSet(seqs, file, format = "fasta", width = 5000, append = TRUE)
+            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000, append = TRUE)
           }
 
           if (!quiet) (message("Chunk", l, " of ", length(chunks), " downloaded\r"))
@@ -542,19 +558,28 @@ gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", m
 
 #' Fetchseqs wrapper function
 #'
-#' @param x
+#' @param x A taxon name or vector of taxa to download sequences for
 #' @param database
-#' @param marker
+#' @param marker The barcode marker used as a search term for the database.
+#' The default for Genbank is 'COI OR COI OR COX1 OR COXI', while the default for BOLD is 'COI-5P'.
+#' If this is set to "mitochondria" and database = "genbank" it will download full mitochondrial genomes.
 #' @param downstream
-#' @param quiet
-#' @param output
-#' @param minlength
-#' @param maxlength
-#' @param out.dir
-#' @param compress
-#' @param cores
+#' @param quiet (Optional) Print text output
+#' @param output The output format for the taxonomy in fasta headers.
+#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+#' "binom" for just genus species binomials (SeqID;Genus Species),
+#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
+#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' @param minlength The maximum length of the query sequence to return. Default 1.
+#' @param maxlength The maximum length of the query sequence to return.
+#' This can be useful for ensuring no off-target sequences are returned. Default 2000.
+#' @param out.dir Output directory to write fasta files to
+#' @param compress Option to compress output fasta files using gzip
+#' @param cores Number of cores to use
 #'
-#'
+
+
 #' @import bold
 #' @import dplyr
 #' @import tidyr
@@ -633,7 +658,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
       message("Multithreading with genbank - No subsampling")
       parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
       parallel::parLapply(cores, taxon, gbSearch, marker = marker,
-                          quiet = quiet, file = NULL, output = output,
+                          quiet = quiet, out.file = NULL, output = output,
                           minlength = minlength, maxlength = maxlength,
                           compress = compress)
 
@@ -641,20 +666,20 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
         message("Multithreading with genbank - With subsampling")
         parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
         parallel::parLapply(cores, taxon, gbSearch_subsample, marker = marker,
-                          quiet = quiet, file = NULL, subsample = subsample,
+                          quiet = quiet, out.file = NULL, subsample = subsample,
                           output = output, minlength = minlength,
                           maxlength = maxlength, compress = compress)
     } else if(para == FALSE && subsample==FALSE){
       message("Sequential processing with genbank - No subsampling")
       lapply(taxon, gbSearch, marker = marker,
              quiet = quiet, out.dir = out.dir,
-             file = NULL, output = output,
+             out.file = NULL, output = output,
              minlength = minlength, maxlength = maxlength,
              compress = compress)
     } else if(para == FALSE && is.numeric(subsample)){
       message("Sequential processing with genbank - With subsampling")
       lapply(taxon, gbSearch_subsample, marker = marker, quiet = quiet, out.dir = out.dir,
-            file = NULL, output = output, subsample = subsample,
+            out.file = NULL, output = output, subsample = subsample,
             minlength = minlength, maxlength = maxlength, compress = compress)
         }
 
@@ -669,10 +694,10 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
     # Multithread
     bold_taxon <- if (para == TRUE) {
       message("Multithreading with BOLD")
-      parallel::parLapply(cores, bold_taxon, boldSearch, marker = marker, quiet = quiet, file = NULL, output = output, compress = compress)
+      parallel::parLapply(cores, bold_taxon, boldSearch, marker = marker, quiet = quiet, out.file = NULL, output = output, compress = compress)
     } else {
       message("Sequential processing with BOLD")
-      lapply(bold_taxon, boldSearch, marker = marker, quiet = quiet, out.dir = out.dir, file = NULL, output = output, compress = compress)
+      lapply(bold_taxon, boldSearch, marker = marker, quiet = quiet, out.dir = out.dir, out.file = NULL, output = output, compress = compress)
     }
   }
 
