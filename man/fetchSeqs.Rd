@@ -4,12 +4,37 @@
 \alias{fetchSeqs}
 \title{Fetchseqs wrapper function}
 \usage{
-fetchSeqs(x, database, marker = "COI", downstream = FALSE,
-  downto = "family", quiet = TRUE, output = "h", minlength = 1,
-  maxlength = 2000, dir = NULL, compress = FALSE, cores = 1)
+fetchSeqs(x, database, marker = NULL, downstream = FALSE,
+  quiet = TRUE, output = "h", minlength = 1, maxlength = 2000,
+  subsample = FALSE, out.dir = NULL, compress = TRUE, cores = 1,
+  ...)
 }
 \arguments{
-\item{cores}{}
+\item{x}{A taxon name or vector of taxa to download sequences for}
+
+\item{marker}{The barcode marker used as a search term for the database.
+The default for Genbank is 'COI OR COI OR COX1 OR COXI', while the default for BOLD is 'COI-5P'.
+If this is set to "mitochondria" and database = "genbank" it will download full mitochondrial genomes.}
+
+\item{quiet}{(Optional) Print text output}
+
+\item{output}{The output format for the taxonomy in fasta headers.
+Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+"binom" for just genus species binomials (SeqID;Genus Species),
+"bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+"gb" for genbank taxonomic ID (SeqID;GBTaxID),
+or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process}
+
+\item{minlength}{The maximum length of the query sequence to return. Default 1.}
+
+\item{maxlength}{The maximum length of the query sequence to return.
+This can be useful for ensuring no off-target sequences are returned. Default 2000.}
+
+\item{out.dir}{Output directory to write fasta files to}
+
+\item{compress}{Option to compress output fasta files using gzip}
+
+\item{cores}{Number of cores to use}
 }
 \description{
 Fetchseqs wrapper function

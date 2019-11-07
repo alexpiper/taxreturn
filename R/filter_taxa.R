@@ -24,7 +24,7 @@
 #'
 #' @examples
 clean_seqs <- function(x, model, minscore = 100, shave = TRUE, maxNs = 0, cores = 1,
-                       quiet = FALSE, progress = FALSE) {
+                       quiet = FALSE, progress = FALSE, ...) {
   time <- Sys.time() # get time
 
   # Convert to DNAbin
@@ -37,9 +37,8 @@ clean_seqs <- function(x, model, minscore = 100, shave = TRUE, maxNs = 0, cores 
   }
   # Define PHMM function
 
-  filt_phmm <- function(s, model, minscore, minamplen, maxamplen) {
+  filt_phmm <- function(s, model, minscore, minamplen, maxamplen, ...) {
 
-    # .packages=c("aphid","insect","ape")
     s <- s[!s %in% as.raw(c(2, 4))]
     vit <- aphid::Viterbi(model, s, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
 
@@ -505,5 +504,68 @@ get_gbif_taxonomy_edited <- function(x, subspecies = TRUE, higherrank = TRUE, ve
   }
   out <- data.table::rbindlist(temp, fill = TRUE)
   class(out) <- c("data.frame", "taxonomy")
+  return(out)
+}
+
+
+# Get Reading frame ---------------------------------------------------------------
+
+#' Get Reading frame of sequences
+#'
+#' @param x
+#' @param genetic.code
+#' @param forward
+#' @param reverse
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE) {
+  # Convert to DNAbin
+  if (is(x, "DNAbin")) {
+    x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
+  }
+  if(forward==TRUE) {
+    F_frames <- lapply(1:3, function(pos) subseq(x, start=pos))
+  }
+  if(reverse==TRUE) {
+    R_frames <- lapply(1:3, function(pos) subseq(reverseComplement(x), start=pos))
+  }
+  #Translate all reading frames
+  translated <- lapply(F_frames, translate, genetic.code = getGeneticCode(genetic.code))
+  #select the reading frames that contain 0 stop codons, or return NA
+  reading_frame <- vector("integer", length=length(x))
+  for (i in 1:length(x)){
+    fvec = c(str_count(as.character(translated[[1]][i]), "\\*"),
+             str_count(as.character(translated[[2]][i]), "\\*"),
+             str_count(as.character(translated[[3]][i]), "\\*"))
+    if(any(fvec==0)){
+      reading_frame[i] <- which(fvec==0)
+    } else (reading_frame[i] <- NA)
+  }
+  return(reading_frame)
+}
+
+
+# Codon_filter ------------------------------------------------------------
+
+#' Filter sequences containing stop codons
+#'
+#' @param x
+#' @param genetic.code
+#' @param forward
+#' @param reverse
+#'
+#' @return
+#' @export
+#'
+#' @examples
+codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE){
+  #Get reading frames
+  frames <- get_reading_frame(x, genetic.code = genetic.code, forward = forward, reverse = reverse)
+
+  out <- x[!is.na(frames)]
+  message(paste0(length(x) - length(out), " Sequences containing stop codons removed"))
   return(out)
 }

@@ -5,7 +5,7 @@
 \title{Clean Sequences with PHMM}
 \usage{
 clean_seqs(x, model, minscore = 100, shave = TRUE, maxNs = 0,
-  cores = 1, quiet = FALSE, progress = FALSE)
+  cores = 1, quiet = FALSE, progress = FALSE, ...)
 }
 \arguments{
 \item{quiet}{}

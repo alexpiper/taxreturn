@@ -408,20 +408,6 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
 #'
 #' @return
 #'
-#' Some useful Entrez queries
-#'
-#' all [filter] 	Retrieves everthing
-#' Specified [property] 	Formal binomial and trinomial
-#' at or below species level [property]
-#' family [rank] 	Rank-based query
-#' taxonomy genome [filter] 	Taxa with a direct link to a genome sequence
-#' 2009/10/21:2020 [date] 	Date-bounded query
-#' mammalia [subtree] 	All taxa within the Mammalia
-#' extinct [property] 	Extinct organisms
-#' Terminal [property] 	Terminal nodes in the tree
-#' loprovencyclife [filter] 	Entries with LinkOut links to the Encyclopedia of Life
-#'
-#'
 #' @examples
 gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=300, out.file = NULL, compress = FALSE, out.dir = NULL) {
 
@@ -472,6 +458,8 @@ gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", m
         message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
       }
+
+      search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = TRUE)
 
       if (search_results$count != 0 & !is.na(search_results$count)) {
 
