@@ -512,8 +512,9 @@ get_gbif_taxonomy_edited <- function(x, subspecies = TRUE, higherrank = TRUE, ve
 
 #' Get Reading frame of sequences
 #'
-#' @param x
-#' @param genetic.code
+#' @param x Sequences in DNAStringset or DNAbin format
+#' @param genetic.code A genetic code for the Amino acid translation. See all known codes at GENETIC_CODE_TABLE
+#' Default is the invertebrate mitochondrial code 'SGC4'
 #' @param forward
 #' @param reverse
 #'
@@ -552,8 +553,9 @@ get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FA
 
 #' Filter sequences containing stop codons
 #'
-#' @param x
-#' @param genetic.code
+#' @param x Sequences in DNAStringset or DNAbin format
+#' @param genetic.code A genetic code for the Amino acid translation. See all known codes at GENETIC_CODE_TABLE
+#' Default is the invertebrate mitochondrial code 'SGC4'
 #' @param forward
 #' @param reverse
 #'
@@ -568,4 +570,47 @@ codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE){
   out <- x[!is.na(frames)]
   message(paste0(length(x) - length(out), " Sequences containing stop codons removed"))
   return(out)
+}
+
+
+
+# Codon entropy  -----------------------------------------------------------
+
+#' Codon entropy
+#'
+#' @param x
+#' @param genetic.code
+#' @param forward
+#' @param reverse
+#' @param codon.filter
+#'
+#' @return
+#' @export
+#'
+#' @examples
+codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, codon.filter = TRUE, method="ML") {
+  if (is(x, "DNAbin")) {
+    x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
+  }
+  #Filter out sequences with stop codons
+  if(codon.filter == TRUE){
+  x <- codon_filter(x, genetic.code = genetic.code, forward = forward, reverse = reverse)
+  }
+
+  #subset to the reading frame
+  pos <- get_reading_frame(x, genetic.code = genetic.code, forward = forward, reverse = reverse)
+
+  F_frames <-  as.character(subseq(x, start= pos))
+
+  ent <- vector("list", length=length(F_frames))
+  for (l in 1:length(F_frames)){
+    ent[[l]] <- c(
+      entropy::entropy(table(purrr::map_chr(seq(1, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method),
+      entropy::entropy(table(purrr::map_chr(seq(2, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method),
+      entropy::entropy(table(purrr::map_chr(seq(3, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method)
+      )
+    names(ent[[l]]) <- c("pos1", "pos2", "pos3")
+  }
+  names(ent) <- names(x)
+ return(ent)
 }

@@ -8,6 +8,11 @@ codon_filter(x, genetic.code = "SGC4", forward = TRUE,
   reverse = FALSE)
 }
 \arguments{
+\item{x}{Sequences in DNAStringset or DNAbin format}
+
+\item{genetic.code}{A genetic code for the Amino acid translation. See all known codes at GENETIC_CODE_TABLE
+Default is the invertebrate mitochondrial code 'SGC4'}
+
 \item{reverse}{}
 }
 \description{
