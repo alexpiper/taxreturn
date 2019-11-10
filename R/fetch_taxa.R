@@ -700,3 +700,101 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
     return(x)
   }
 }
+
+
+
+# Fetch_outgroups ---------------------------------------------------------
+
+#get_outgroups function - Get other taxa in that tax_rank,
+#(ie for insecta, get other arthropod families, then get other taxa in the above ranks, until all ranks are covered?
+#Then pick a random subset of taxa
+#Include Wolbachia
+
+#fetchOutgroups <- function(x, database, upto="Phylum", marker = NULL, quiet = TRUE, output = "h", minlength = 1, maxlength = 2000, subsample=10, out.dir = NULL, compress = TRUE, cores = 1,...) {
+#
+#  # Check if taxizedb is installed
+#  search_or_sql <- "taxizedb" %in% rownames(installed.packages())
+#  if (search_or_sql == FALSE) {
+#    stop("Error - taxizedb is not installed")
+#  }
+#
+#  #stop if subsample and BOLD is true
+#  if (database=="bold"){ stop("BOLD is currently not supported")}
+#
+#  #Setup parralel
+#  if (cores == 1) {
+#    para <- FALSE
+#    stopclustr <- FALSE
+#  } else if (cores > 1) {
+#    #check that cores are available
+#    navailcores <- parallel::detectCores()
+#    if(cores > navailcores) stop("Number of cores is more than number available")
+#
+#    if (!quiet) cat("Multithreading with", cores, "cores\n")
+#    cores <- parallel::makeCluster(cores, outfile = "out.txt")
+#    junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "taxizedb", "tidyverse", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
+#    para <- TRUE
+#    stopclustr <- TRUE
+#  }
+#
+#  #Define directories
+#  if (is.null(out.dir)) {
+#    out.dir <- database
+#    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
+#  }
+#  if (!file.exists(out.dir)) {
+#    dir.create(out.dir)
+#  }
+#
+#  #Evaluate Upstream
+#  if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
+#
+#  #Get upstream taxa for each rank above
+#  cleaned_rank_ref <- rank_ref %>%
+#    mutate(ranks = str_replace(ranks, pattern=",division", replacement="")) %>%
+#    mutate(ranks = str_replace(ranks, pattern=",subdivision", replacement="")) %>%
+#    mutate(ranks = str_replace(ranks, pattern="infrakingdom,", replacement="")) %>%
+#    mutate(rankid = as.numeric(rankid))
+#
+#  search_rank <- unlist(taxize::tax_rank(x, db="itis"))
+#  search_rank_id <- cleaned_rank_ref$rankid[cleaned_rank_ref$ranks == search_rank]
+#
+#  up_ranks <- cleaned_rank_ref$ranks[cleaned_rank_ref$rankid < search_rank_id]
+#
+#
+#  taxon <- dplyr::bind_rows(taxize::upstream(x, db="col", upto=up_ranks[2])) %>%
+#    pull(taxonname)
+#
+#  if(length(taxon) == 0 ) {stop("No upstream taxa found at that rank")}
+#  if (!quiet) cat(paste0(length(taxon), " downstream taxa found\n"))
+#
+#  #If taxon is a vector
+#  # Genbank Multithread If possible
+#  if (para == TRUE ){
+#      message("Multithreading with genbank - With subsampling")
+#      parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
+#      parallel::parLapply(cores, taxon, gbSearch_subsample, marker = marker,
+#                          quiet = quiet, out.file = NULL, subsample = subsample,
+#                          output = output, minlength = minlength,
+#                          maxlength = maxlength, compress = compress)
+#      } else if(para == FALSE ){
+#      message("Sequential processing with genbank - With subsampling")
+#      lapply(taxon, gbSearch_subsample, marker = marker, quiet = quiet, out.dir = out.dir,
+#             out.file = NULL, output = output, subsample = subsample,
+#             minlength = minlength, maxlength = maxlength, compress = compress)
+#    }
+#
+#}
+#
+#  # Close clusters
+#  if (para & stopclustr) parallel::stopCluster(cores)
+#  if (!quiet) message("Done\n")
+#
+#  if (downstream == TRUE) {
+#    taxlist$downloaded[which(taxlist$childtaxa_name %in% done)] <- TRUE
+#    return(taxlist)
+#  } else {
+#    return(x)
+#}
+#
+#

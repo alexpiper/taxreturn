@@ -40,7 +40,7 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank 
-fetchSeqs("Scaptodrosophila", database="genbank", dir="genbank", downstream="species", quiet=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", compress=TRUE, cores=1)
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream="species", quiet=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", compress=TRUE, cores=1)
 ```
 
 
@@ -48,7 +48,7 @@ fetchSeqs("Scaptodrosophila", database="genbank", dir="genbank", downstream="spe
 
 ```{r Download BOLD Sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from BOLD
-fetchSeqs("Scaptodrosophila", database="bold", dir="bold", downstream="species", quiet=FALSE, marker="COI-5P", output = "gb-binom",compress=TRUE, cores=1)
+fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream="species", quiet=FALSE, marker="COI-5P", output = "gb-binom",compress=TRUE, cores=1)
 
 ```
 
@@ -57,7 +57,21 @@ fetchSeqs("Scaptodrosophila", database="bold", dir="bold", downstream="species",
 We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region
 ```{r Download mitochondria, eval=FALSE, include=TRUE}
 # Fetch mitochondria from genbank
-fetchSeqs("Drosophila", database="genbank", dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE, cores=1)
+fetchSeqs("Drosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE, cores=1)
+```
+
+# Get some outgroups using random subsampling of search
+```{r outgroups}
+outgroup_classes <- dplyr::bind_rows(taxize::downstream("Arthropoda", db="itis", downto="Class")) %>%
+  filter(!taxonname=="Insecta") %>%
+  pull(taxonname)
+outgroup_phyla <- dplyr::bind_rows(taxize::upstream("Insecta", db="itis", upto="Phylum")) %>%
+  pull(taxonname)
+outgroup_kingdoms <- c("Bacteria", "Fungi")
+
+outgroups <- c(outgroup_classes, outgroup_phyla, outgroup_kingdoms)
+
+fetchSeqs(outgroups, database="genbank", out.dir="outgroups", quiet=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", subsample = 100, compress=TRUE, cores=1)
 ```
 
 
@@ -238,7 +252,7 @@ groups <- names(seqs) # sequence names
 names(seqs) <- names(seqs) %>% str_replace(pattern="Metazoa", replacement="Root")
 
 # assume the taxonomy begins with 'Root;' 
-groups <- gsub("(.*)(Root;)", "\\2", groups) # extract the group label - May need to use a wild card for the root label as its split by 3 genes!
+groups <- gsub("(.*)(Root;)", "\\2", groups) # extract the group label
 groupCounts <- table(groups)
 u_groups <- names(groupCounts) # unique groups
 length(u_groups) # number of groups
