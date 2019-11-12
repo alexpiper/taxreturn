@@ -222,6 +222,7 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
 #' @import parallel
 #'
 #' @return
+#' @export
 #'
 #' Some useful Entrez queries
 #'
@@ -412,6 +413,7 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
 #' @import parallel
 #'
 #' @return
+#' @export
 #'
 #' @examples
 gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=300, out.file = NULL, compress = FALSE, out.dir = NULL) {

@@ -4,8 +4,8 @@
 \alias{gbSearch}
 \title{Genbank search function}
 \usage{
-gbSearch(x, marker = NULL, quiet = FALSE, output = "h",
-  minlength = 1, maxlength = 2000, subsample = NULL,
+gbSearch(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE,
+  output = "h", minlength = 1, maxlength = 2000, subsample = NULL,
   out.file = NULL, compress = FALSE, out.dir = NULL)
 }
 \arguments{
@@ -25,20 +25,6 @@ or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomi
 \item{compress}{Option to compress output fasta files using gzip}
 
 \item{out.dir}{Output directory to write fasta files to}
-}
-\value{
-Some useful Entrez queries
-
-all \link{filter} 	Retrieves everthing
-Specified \link{property} 	Formal binomial and trinomial
-at or below species level \link{property}
-family \link{rank} 	Rank-based query
-taxonomy genome \link{filter} 	Taxa with a direct link to a genome sequence
-2009/10/21:2020 \link{date} 	Date-bounded query
-mammalia \link{subtree} 	All taxa within the Mammalia
-extinct \link{property} 	Extinct organisms
-Terminal \link{property} 	Terminal nodes in the tree
-loprovencyclife \link{filter} 	Entries with LinkOut links to the Encyclopedia of Life
 }
 \description{
 Genbank search function

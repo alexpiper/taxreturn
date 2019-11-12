@@ -4,8 +4,8 @@
 \alias{gbSearch_subsample}
 \title{Genbank subsampling}
 \usage{
-gbSearch_subsample(x, marker = "COI", quiet = FALSE, output = "h",
-  minlength = 1, maxlength = 2000, subsample = 1000,
+gbSearch_subsample(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE,
+  output = "h", minlength = 1, maxlength = 2000, subsample = 1000,
   chunk_size = 300, out.file = NULL, compress = FALSE,
   out.dir = NULL)
 }
