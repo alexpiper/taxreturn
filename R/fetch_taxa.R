@@ -53,9 +53,9 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
     dir.create(out.dir)
   }
   if (is.null(out.file) & compress == FALSE) {
-    out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_bold.fa")
+    out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, ".fa")
   } else if (is.null(out.file) & compress == TRUE) {
-    out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_bold.fa.gz")
+    out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, ".fa.gz")
   }
   if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
 
@@ -238,7 +238,7 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
 #'
 #'
 #' @examples
-gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=NULL, out.file = NULL, compress = FALSE, out.dir = NULL) {
+gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=NULL, out.file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -252,18 +252,23 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
     stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
   if (is.null(marker)) {
-    marker <- "COI OR COI OR COX1 OR COXI"
-    if (!quiet) (cat("Using default marker 'COI OR COI OR COX1 OR COXI' \n"))
-  }
+    marker <- "COI[GENE] OR CO1[GENE] OR COX1[GENE]"
+    if (!quiet) (cat("Using default marker 'COI[GENE] OR CO1[GENE] OR COX1[GENE]' \n"))
+  } else (marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]"))
   if (is.null(out.file)) {
+    name <- marker %>%
+      str_replace_all(pattern="\\[GENE]", replacement ="") %>%
+      str_replace_all(pattern="OR ", replacement ="") %>%
+      str_replace_all(pattern=" ", replacement ="_")
+
     if (!is.null(out.dir) && compress == FALSE) {
-      out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa")
+      out.file <- paste0(getwd(), "/", out.dir, "/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa")
     } else if (!is.null(out.dir) && compress == TRUE) {
-      out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa.gz")
+      out.file <- paste0(getwd(), "/", out.dir, "/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
     } else if (is.null(out.dir) && compress == FALSE) {
-      out.file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
+      out.file <- paste0(getwd(), "/", "genbank/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa")
     } else if (is.null(out.dir) && compress == TRUE) {
-      out.file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa.gz")
+      out.file <- paste0(getwd(), "/", "genbank/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
     }
     if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
     if (!file.exists("genbank")) {
@@ -354,9 +359,9 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
                                  str_replace(pattern="\\|", replacement="")
                                %in% names(seqs)]
           if (compress == TRUE) {
-            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000)
+            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
           } else if (compress == FALSE) {
-            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000)
+            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000, append = TRUE)
           }
 
           if (!quiet) (message("Chunk", l, " of ", chunks, " downloaded\r"))
@@ -409,7 +414,7 @@ gbSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", minlength = 
 #' @return
 #'
 #' @examples
-gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=300, out.file = NULL, compress = FALSE, out.dir = NULL) {
+gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=1000, chunk_size=300, out.file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -423,18 +428,24 @@ gbSearch_subsample <- function(x, marker = "COI", quiet = FALSE, output = "h", m
     stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
   if (is.null(marker)) {
-    marker <- "COI OR COI OR COX1 OR COXI"
-    if (!quiet) (cat("Using default marker 'COI OR COI OR COX1 OR COXI' \n"))
-  }
+    marker <- "COI[GENE] OR CO1[GENE] OR COX1[GENE]"
+    if (!quiet) (cat("Using default marker 'COI[GENE] OR CO1[GENE] OR COX1[GENE]' \n"))
+  } else (marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]"))
+
   if (is.null(out.file)) {
+    name <- marker %>%
+      str_replace_all(pattern="\\[GENE]", replacement ="") %>%
+      str_replace_all(pattern="OR ", replacement ="") %>%
+      str_replace_all(pattern=" ", replacement ="_")
+
     if (!is.null(out.dir) & compress == FALSE) {
-      out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa")
+      out.file <- paste0(getwd(), "/", out.dir, "/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa")
     } else if (!is.null(out.dir) & compress == TRUE) {
-      out.file <- paste0(getwd(), "/", out.dir, "/", x, "_", marker, "_gb.fa.gz")
+      out.file <- paste0(getwd(), "/", out.dir, "/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
     } else if (is.null(out.dir) & compress == FALSE) {
-      out.file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa")
+      out.file <- paste0(getwd(), "/", "genbank/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa")
     } else if (is.null(out.dir) & compress == TRUE) {
-      out.file <- paste0(getwd(), "/", "genbank/", x, "_", marker, "_gb.fa.gz")
+      out.file <- paste0(getwd(), "/", "genbank/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
     }
     if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
     if (!file.exists("genbank")) {

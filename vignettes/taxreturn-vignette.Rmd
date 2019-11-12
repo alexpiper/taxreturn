@@ -40,7 +40,7 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank 
-fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream="species", quiet=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", compress=TRUE, cores=1)
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream="species", quiet=FALSE, output = "gb-binom", compress=TRUE, cores=1)
 ```
 
 
@@ -71,7 +71,7 @@ outgroup_kingdoms <- c("Bacteria", "Fungi")
 
 outgroups <- c(outgroup_classes, outgroup_phyla, outgroup_kingdoms)
 
-fetchSeqs(outgroups, database="genbank", out.dir="outgroups", quiet=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", subsample = 100, compress=TRUE, cores=1)
+fetchSeqs(outgroups, database="genbank", out.dir="outgroups", quiet=FALSE, marker="COI[GENE] OR CO1[GENE] OR COX1[GENE]", output = "gb-binom", subsample = 100, compress=TRUE, cores=1)
 ```
 
 
