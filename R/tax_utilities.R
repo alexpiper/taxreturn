@@ -76,42 +76,78 @@ ncbi_taxid <- function(x, db=NULL) {
   }
 
 
+# Propagate taxonomic assignments to species level ------------------------
+
+#' Propagate taxonomy
+#'
+#' @param tax
+#' @param from
+#'
+#' @return
+#' @export
+#'
+#' @examples
+propagate_tax <- function(tax, from = "Family") {
+  col.prefix <- substr(colnames(tax), 1, 1) # Assumes named Kingdom, ...
+
+  # Highest level to propagate from
+  if (from == "Phylum") (start <- 2)
+  if (from == "Class") (start <- 3)
+  if (from == "Order") (start <- 4)
+  if (from == "Family") (start <- 5)
+  if (from == "Genus") (start <- 6)
+  if (from == "Species") (start <- 7)
+
+  # Propagate
+  for (col in seq(start, ncol(tax))) {
+    prop <- is.na(tax[, col]) & !is.na(tax[, col - 1])
+    newtax <- tax[prop, col - 1]
+    needs.prefix <- !grepl("^[A-z]__", newtax)
+    newtax[needs.prefix] <- paste(col.prefix[col - 1], newtax[needs.prefix], sep = "__")
+    tax[prop, col] <- newtax
+  }
+  tax
+}
+
 
 # taxonomy_to_newick ------------------------------------------------------
 
 
 ## data frame to newick
 
-## recursion function
-traverse <- function(a, i, innerl) {
-  if (i < (ncol(df))) {
-    alevelinner <- as.character(unique(df[which(as.character(df[, i]) == a), i + 1]))
-    desc <- NULL
-    if (length(alevelinner) == 1) {
-      (newickout <- traverse(alevelinner, i + 1, innerl))
-    } else {
-      for (b in alevelinner) desc <- c(desc, traverse(b, i + 1, innerl))
-      il <- NULL
-      if (innerl == TRUE) il <- a
-      (newickout <- paste("(", paste(desc, collapse = ","), ")", il, sep = ""))
-    }
-  }
-  else {
-    (newickout <- a)
-  }
-}
-
+### recursion function
+#traverse <- function(a, i, innerl) {
+#  if (i < (ncol(df))) {
+#    alevelinner <- as.character(unique(df[which(as.character(df[, i]) == a), i + 1]))
+#    desc <- NULL
+#    if (length(alevelinner) == 1) {
+#      (newickout <- traverse(alevelinner, i + 1, innerl))
+#    } else {
+#      for (b in alevelinner) desc <- c(desc, traverse(b, i + 1, innerl))
+#      il <- NULL
+#      if (innerl == TRUE) il <- a
+#      (newickout <- paste("(", paste(desc, collapse = ","), ")", il, sep = ""))
+#    }
+#  }
+#  else {
+#    (newickout <- a)
+#  }
+#}
+#
 ## data.frame to newick function
-df2newick <- function(df, innerlabel = FALSE) {
-  alevel <- as.character(unique(df[, 1]))
-  newick <- NULL
-  for (x in alevel) newick <- c(newick, traverse(x, 1, innerlabel))
-  (newick <- paste("(", paste(newick, collapse = ","), ");", sep = ""))
-}
+#df2newick <- function(df, innerlabel = FALSE) {
+#  alevel <- as.character(unique(df[, 1]))
+#  newick <- NULL
+#  for (x in alevel) newick <- c(newick, traverse(x, 1, innerlabel))
+#  (newick <- paste("(", paste(newick, collapse = ","), ");", sep = ""))
+#}
+#
+#df <- data.frame(x = c("A", "A", "B", "B", "B"), y = c("Ab", "Ac", "Ba", "Ba", "Bd"), z = c("Abb", "Acc", "Bad", "Bae", "Bdd"))
+#myNewick <- df2newick(df, TRUE)
+#
+#library(ape)
+#mytree <- read.tree(text = myNewick)
+#plot(mytree)
 
-df <- data.frame(x = c("A", "A", "B", "B", "B"), y = c("Ab", "Ac", "Ba", "Ba", "Bd"), z = c("Abb", "Acc", "Bad", "Bae", "Bdd"))
-myNewick <- df2newick(df, TRUE)
 
-library(ape)
-mytree <- read.tree(text = myNewick)
-plot(mytree)
+##

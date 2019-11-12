@@ -239,7 +239,9 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
 #'
 #'
 #' @examples
-gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h", minlength = 1, maxlength = 2000, subsample=NULL, out.file = NULL, compress = FALSE, out.dir = NULL) {
+gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h",
+                     minlength = 1, maxlength = 2000, subsample=NULL,
+                     out.file = NULL, compress = FALSE, out.dir = NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -255,7 +257,9 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
   if (is.null(marker)) {
     marker <- "COI[GENE] OR CO1[GENE] OR COX1[GENE]"
     if (!quiet) (cat("Using default marker 'COI[GENE] OR CO1[GENE] OR COX1[GENE]' \n"))
-  } else (marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]"))
+  } else if(!is.null(marker) && !marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")  ) {
+    marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]")
+    }
   if (is.null(out.file)) {
     name <- marker %>%
       str_replace_all(pattern="\\[GENE]", replacement ="") %>%
@@ -278,20 +282,23 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
   }
   if (file.exists(out.file)) {
     file.remove(out.file)
+    cat("", file=out.file)
   }
   if (stringr::str_detect(out.file, ".gz")) {
     compress <- TRUE
   }
+
 
   tryCatch(
     {
       # Genbank Search
       if (!marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")) {
         searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
-
+        chunksize=10000
       } else if (marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")) {
         message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
+        chunksize=1000
         }
 
       search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = TRUE)
@@ -302,15 +309,15 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
         l <- 1
         start <- 0
 
-        chunks <- length(search_results$ids) / 10000
+        chunks <- length(search_results$ids) / chunksize
         if (!is.integer(chunks)) {
-          chunks <- as.integer(length(search_results$ids) / 10000) + 1
+          chunks <- as.integer(length(search_results$ids) / chunksize) + 1
         }
 
         for (l in 1:chunks) {
 
           # Fetch gb flat files
-          dl <- rentrez::entrez_fetch(db = "nuccore", web_history = search_results$web_history, rettype = "gb", retmax = 10000, retstart = start)
+          dl <- rentrez::entrez_fetch(db = "nuccore", web_history = search_results$web_history, rettype = "gb", retmax = chunksize, retstart = start)
           gb <- biofiles::gbRecord(rcd = textConnection(dl))
 
           # Hierarchial output
@@ -366,7 +373,7 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
           }
 
           if (!quiet) (message("Chunk", l, " of ", chunks, " downloaded\r"))
-          start <- start + 10000
+          start <- start + chunksize
           Sys.sleep(2.5)
           if (l >= chunks) {
             time <- Sys.time() - time
@@ -432,8 +439,9 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
   if (is.null(marker)) {
     marker <- "COI[GENE] OR CO1[GENE] OR COX1[GENE]"
     if (!quiet) (cat("Using default marker 'COI[GENE] OR CO1[GENE] OR COX1[GENE]' \n"))
-  } else (marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]"))
-
+  } else if(!is.null(marker) && !marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")  ) {
+    marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]")
+  }
   if (is.null(out.file)) {
     name <- marker %>%
       str_replace_all(pattern="\\[GENE]", replacement ="") %>%

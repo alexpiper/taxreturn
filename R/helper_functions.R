@@ -11,7 +11,6 @@
 #' @param name2
 #'
 #' @return
-#' @export
 #'
 #' @examples
 qualMaxEEplot <- function(fastq.r1, fastq.r2, name1 = "Fastq_R1", name2 = "Fastq_R2") {
@@ -112,7 +111,6 @@ qualMaxEEplot <- function(fastq.r1, fastq.r2, name1 = "Fastq_R1", name2 = "Fastq
 #' @param GroupBy
 #'
 #' @return
-#' @export
 #'
 #' @examples
 summarize_taxa <- function(physeq, Rank, GroupBy = NULL) {
@@ -168,7 +166,6 @@ summarize_taxa <- function(physeq, Rank, GroupBy = NULL) {
 #' @param ...
 #'
 #' @return
-#' @export
 #'
 #' @examples
 create_mismatch <- function(dna, dist, ...) {
@@ -193,7 +190,6 @@ create_mismatch <- function(dna, dist, ...) {
 #' @param ...
 #'
 #' @return
-#' @export
 #'
 #' @examples
 proportions <- function(x, thresh = NA, na_rm = FALSE, ...) {
@@ -204,37 +200,3 @@ proportions <- function(x, thresh = NA, na_rm = FALSE, ...) {
 }
 
 
-# Propagate taxonomic assignments to species level ------------------------
-
-
-
-#' Propagate taxonomy
-#'
-#' @param tax
-#' @param from
-#'
-#' @return
-#' @export
-#'
-#' @examples
-propagate_tax <- function(tax, from = "Family") {
-  col.prefix <- substr(colnames(tax), 1, 1) # Assumes named Kingdom, ...
-
-  # Highest level to propagate from
-  if (from == "Phylum") (start <- 2)
-  if (from == "Class") (start <- 3)
-  if (from == "Order") (start <- 4)
-  if (from == "Family") (start <- 5)
-  if (from == "Genus") (start <- 6)
-  if (from == "Species") (start <- 7)
-
-  # Propagate
-  for (col in seq(start, ncol(tax))) {
-    prop <- is.na(tax[, col]) & !is.na(tax[, col - 1])
-    newtax <- tax[prop, col - 1]
-    needs.prefix <- !grepl("^[A-z]__", newtax)
-    newtax[needs.prefix] <- paste(col.prefix[col - 1], newtax[needs.prefix], sep = "__")
-    tax[prop, col] <- newtax
-  }
-  tax
-}
