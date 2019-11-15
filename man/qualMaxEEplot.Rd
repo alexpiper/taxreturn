@@ -11,5 +11,5 @@ qualMaxEEplot(fastq.r1, fastq.r2, name1 = "Fastq_R1",
 \item{name2}{}
 }
 \description{
-QC Max EE plot
+modified from code by Remi Maglione https://github.com/RemiMaglione/r-scripts/blob/master/Qual_vs_MaxEE_plot.R
 }

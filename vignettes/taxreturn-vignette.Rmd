@@ -57,7 +57,7 @@ fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream="speci
 We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region
 ```{r Download mitochondria, eval=FALSE, include=TRUE}
 # Fetch mitochondria from genbank
-fetchSeqs("Drosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE, cores=1)
+fetchSeqs("Insecta", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE, cores=1)
 ```
 
 # Get some outgroups using random subsampling of search
