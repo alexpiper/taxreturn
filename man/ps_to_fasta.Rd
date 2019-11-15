@@ -4,18 +4,23 @@
 \alias{ps_to_fasta}
 \title{outputs a FASTA file from a phyloseq object}
 \usage{
-ps_to_fasta(ps = ps, file = NULL, rank = NULL)
+ps_to_fasta(ps = ps, out.file = NULL, rank = NULL, width = 1000,
+  ...)
 }
 \arguments{
 \item{ps}{A \code{phyloseq} object that contains \code{\link[phyloseq]{refseq}}.
 If there the \code{refseq} slot is not filled, this function will try pull the
 sequences from \code{\link[phyloseq]{get_taxa}}}
 
-\item{file}{(optional) A file name that ends in ".fasta" or ".fa".
-If a file name is not supplied, the file will be named after the phyloseq object.}
-
 \item{rank}{(optional) A taxonomic rank from the \code{\link[phyloseq]{tax_table}} which will be used to name the sequences.
 If no rank is supplied, samples will be named \code{ASV_#}}
+
+\item{width}{(Default 1000) The number of characters in each fasta line before wrapping occurs}
+
+\item{...}{(Optional) Any further paramaters to be passed to \code{writeXStringSet}}
+
+\item{file}{(optional) A file name that ends in ".fasta" or ".fa".
+If a file name is not supplied, the file will be named after the phyloseq object.}
 }
 \value{
 This function saves a FASTA-formatted text file from the input \code{phyloseq} object.

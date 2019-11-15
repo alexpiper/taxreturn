@@ -215,43 +215,45 @@ proportions <- function(x, thresh = NA, na_rm = FALSE, ...) {
 #' @param rank (optional) A taxonomic rank from the \code{\link[phyloseq]{tax_table}} which will be used to name the sequences.
 #' If no rank is supplied, samples will be named \code{ASV_#}
 #'
+#' @param width (Default 1000) The number of characters in each fasta line before wrapping occurs
+#'
+#' @param ... (Optional) Any further paramaters to be passed to \code{writeXStringSet}
+#'
 #' @return This function saves a FASTA-formatted text file from the input \code{phyloseq} object.
 #' @export
 #' @examples
 #' save_fasta(ps)
 #' save_fasta(ps = ps, file = "sequences.fasta", rank = "Genus")
 
-ps_to_fasta <- function(ps = ps, file = NULL, rank = NULL){
+ps_to_fasta <- function(ps = ps, out.file = NULL, rank = NULL, width = 1000, ...){
 
   if (is.null(ps)){
     message("Phyloseq object not found.")
   }
 
-  if (is.null(file)){
-    file <- paste0(deparse(substitute(ps)), ".fasta")
-  }
-
-  if (is.null(rank) || !rank %in% rank_names(ps)){
-    message("Rank not found. Naming sequences sequentially (i.e. ASV_#).")
-    seq_names <- paste0("ASV_", 1:ntaxa(ps))
-  } else {
-    seq_names <- make.unique(unname(tax_table(ps)[,rank]), sep = "_")
+  if (is.null(out.file)){
+    out.file <- paste0(deparse(substitute(ps)), ".fasta")
   }
 
   if (!is.null(refseq(ps, errorIfNULL = FALSE))){
-    seqs <-as.vector(refseq(ps))
+    seqs <- DNAStringSet(as.vector(refseq(ps)))
   } else{
     message("refseq() not found. Using taxa names for sequences.")
     if (sum(grepl("[^ACTG]", rownames(tax_table(ps)))) > 0){
       stop("Error: Taxa do not appear to be DNA sequences.")
     }
-    seqs <- colnames(get_taxa(ps))
+    seqs <- DNAStringSet(colnames(get_taxa(ps)))
   }
 
-  for (i in 1:ntaxa(ps)) {
-    cat(paste(">", seq_names[i], sep=""), file=file, sep="\n", append=TRUE)
-    cat(seqs[i], file=file, sep="\n", append=TRUE)
+  if (is.null(rank) || !rank %in% rank_names(ps)){
+    message("Rank not found. Naming sequences sequentially (i.e. ASV_#).")
+    names(seqs) <- paste0("ASV_", 1:ntaxa(ps))
+  } else {
+    names(seqs) <- make.unique(unname(tax_table(ps)[,rank]), sep = "_")
   }
-  message(paste0(ntaxa(ps), " sequences written to <", file, ">."))
+
+  writeXStringSet(seqs, filepath = out.file, width=width, ... = ...)
+  message(paste0(ntaxa(ps), " sequences written to <", out.file, ">."))
 }
+
 
