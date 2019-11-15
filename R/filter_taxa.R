@@ -517,12 +517,13 @@ get_gbif_taxonomy_edited <- function(x, subspecies = TRUE, higherrank = TRUE, ve
 #' Default is the invertebrate mitochondrial code 'SGC4'
 #' @param forward
 #' @param reverse
+#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
 #'
 #' @return
 #' @export
 #'
 #' @examples
-get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE) {
+get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, resolve_draws="majority") {
   # Convert to DNAbin
   if (is(x, "DNAbin")) {
     x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
@@ -534,16 +535,25 @@ get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FA
     R_frames <- lapply(1:3, function(pos) subseq(reverseComplement(x), start=pos))
   }
   #Translate all reading frames
-  translated <- lapply(F_frames, translate, genetic.code = getGeneticCode(genetic.code))
+  suppressWarnings(translated <- lapply(F_frames, translate, genetic.code = getGeneticCode(genetic.code)))
   #select the reading frames that contain 0 stop codons, or return NA
   reading_frame <- vector("integer", length=length(x))
   for (i in 1:length(x)){
     fvec = c(str_count(as.character(translated[[1]][i]), "\\*"),
              str_count(as.character(translated[[2]][i]), "\\*"),
              str_count(as.character(translated[[3]][i]), "\\*"))
-    if(any(fvec==0)){
+    if(sum(fvec==0)==1){
       reading_frame[i] <- which(fvec==0)
-    } else (reading_frame[i] <- NA)
+    } else if(sum(fvec==0)>1) {
+      reading_frame[i] <- 0
+    }else if(sum(fvec==0)==0) {
+      reading_frame[i] <- NA
+    }
+  }
+  if (resolve_draws == "majority") {
+    reading_frame[reading_frame==0] <- reading_frame[which.max(tabulate(reading_frame))]
+  } else if (resolve_draws == "remove") {
+    reading_frame[reading_frame==0] <- NA
   }
   return(reading_frame)
 }
