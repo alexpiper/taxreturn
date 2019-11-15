@@ -1,6 +1,3 @@
-
-
-
 # QC Max EE plot  ----------------------------------------------------------
 
 #' QC Max EE plot
@@ -205,7 +202,8 @@ proportions <- function(x, thresh = NA, na_rm = FALSE, ...) {
 
 #' outputs a FASTA file from a phyloseq object
 #'
-#' @description This function outputs a FASTA-formatted text file from a \code{phyloseq} object. This code was modified from \code{reltools} package https://github.com/DanielSprockett/reltools by Daniel Sprocket
+#' @description This function outputs a FASTA-formatted text file from a \code{phyloseq} object.
+#' This code was modified from \code{reltools} package https://github.com/DanielSprockett/reltools by Daniel Sprocket
 #'
 #' @param ps A \code{phyloseq} object that contains \code{\link[phyloseq]{refseq}}.
 #' If there the \code{refseq} slot is not filled, this function will try pull the
@@ -219,7 +217,6 @@ proportions <- function(x, thresh = NA, na_rm = FALSE, ...) {
 #'
 #' @return This function saves a FASTA-formatted text file from the input \code{phyloseq} object.
 #' @export
-#'
 #' @examples
 #' save_fasta(ps)
 #' save_fasta(ps = ps, file = "sequences.fasta", rank = "Genus")
