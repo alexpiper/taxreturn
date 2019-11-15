@@ -200,3 +200,59 @@ proportions <- function(x, thresh = NA, na_rm = FALSE, ...) {
 }
 
 
+# ps_to_fasta --------------------------------------------------------------
+
+
+#' outputs a FASTA file from a phyloseq object
+#'
+#' @description This function outputs a FASTA-formatted text file from a \code{phyloseq} object. This code was modified from \code{reltools} package https://github.com/DanielSprockett/reltools
+#'
+#' @param ps A \code{phyloseq} object that contains \code{\link[phyloseq]{refseq}}.
+#' If there the \code{refseq} slot is not filled, this function will try pull the
+#' sequences from \code{\link[phyloseq]{get_taxa}}
+#'
+#' @param file (optional) A file name that ends in ".fasta" or ".fa".
+#' If a file name is not supplied, the file will be named after the phyloseq object.
+#'
+#' @param rank (optional) A taxonomic rank from the \code{\link[phyloseq]{tax_table}} which will be used to name the sequences.
+#' If no rank is supplied, samples will be named \code{ASV_#}
+#'
+#' @return This function saves a FASTA-formatted text file from the input \code{phyloseq} object.
+#'
+#' @examples
+#' save_fasta(ps)
+#' save_fasta(ps = ps, file = "sequences.fasta", rank = "Genus")
+
+ps_to_fasta <- function(ps = ps, file = NULL, rank = NULL){
+
+  if(is.null(ps)){
+    message("Phyloseq object not found.")
+  }
+
+  if(is.null(file)){
+    file <- paste0(deparse(substitute(ps)), ".fasta")
+  }
+
+  if(is.null(rank) | !rank %in% rank_names(ps)){
+    message("Rank not found. Naming sequences sequentially (i.e. ASV_#).")
+    seq_names <- paste0("ASV_", 1:ntaxa(ps))
+  } else {
+    seq_names <- make.unique(unname(tax_table(ps)[,rank]), sep = "_")
+  }
+
+  if(!is.null(refseq(ps))){
+    seqs <-as.vector(refseq(ps))
+  } else{
+    message("refseq() not found. Using taxa names for sequences.")
+    if(sum(grepl("[^ACTG]", rownames(tax_table(ps)))) > 0){
+      stop("Taxa do not appear to be DNA sequences.")
+    }
+    seqs <-get_taxa(ps)
+  }
+
+  for (i in 1:ntaxa(ps)){
+    cat(paste(">", seq_names[i], sep=""), file=file, sep="\n", append=TRUE)
+    cat(seqs[i], file=file, sep="\n", append=TRUE)
+  }
+  message(paste0(ntaxa(ps), " sequences written to <", file, ">."))
+}
