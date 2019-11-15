@@ -21,11 +21,8 @@ If no rank is supplied, samples will be named \code{ASV_#}}
 This function saves a FASTA-formatted text file from the input \code{phyloseq} object.
 }
 \description{
-<<<<<<< HEAD
-This function outputs a FASTA-formatted text file from a \code{phyloseq} object. This code was modified from \code{reltools} package https://github.com/DanielSprockett/reltools by Daniel Sprocket
-=======
-This function outputs a FASTA-formatted text file from a \code{phyloseq} object. This code was modified from \code{reltools} package https://github.com/DanielSprockett/reltools
->>>>>>> e3fa884b2e10d878daaa9f0b2cec9d2334219317
+This function outputs a FASTA-formatted text file from a \code{phyloseq} object.
+This code was modified from \code{reltools} package https://github.com/DanielSprockett/reltools by Daniel Sprocket
 }
 \examples{
 save_fasta(ps)

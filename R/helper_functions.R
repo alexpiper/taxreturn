@@ -223,34 +223,35 @@ proportions <- function(x, thresh = NA, na_rm = FALSE, ...) {
 
 ps_to_fasta <- function(ps = ps, file = NULL, rank = NULL){
 
-  if(is.null(ps)){
+  if (is.null(ps)){
     message("Phyloseq object not found.")
   }
 
-  if(is.null(file)){
+  if (is.null(file)){
     file <- paste0(deparse(substitute(ps)), ".fasta")
   }
 
-  if(is.null(rank) | !rank %in% rank_names(ps)){
+  if (is.null(rank) || !rank %in% rank_names(ps)){
     message("Rank not found. Naming sequences sequentially (i.e. ASV_#).")
     seq_names <- paste0("ASV_", 1:ntaxa(ps))
   } else {
     seq_names <- make.unique(unname(tax_table(ps)[,rank]), sep = "_")
   }
 
-  if(!is.null(refseq(ps))){
+  if (!is.null(refseq(ps, errorIfNULL = FALSE))){
     seqs <-as.vector(refseq(ps))
   } else{
     message("refseq() not found. Using taxa names for sequences.")
-    if(sum(grepl("[^ACTG]", rownames(tax_table(ps)))) > 0){
-      stop("Taxa do not appear to be DNA sequences.")
+    if (sum(grepl("[^ACTG]", rownames(tax_table(ps)))) > 0){
+      stop("Error: Taxa do not appear to be DNA sequences.")
     }
-    seqs <-get_taxa(ps)
+    seqs <- colnames(get_taxa(ps))
   }
 
-  for (i in 1:ntaxa(ps)){
+  for (i in 1:ntaxa(ps)) {
     cat(paste(">", seq_names[i], sep=""), file=file, sep="\n", append=TRUE)
     cat(seqs[i], file=file, sep="\n", append=TRUE)
   }
   message(paste0(ntaxa(ps), " sequences written to <", file, ">."))
 }
+
