@@ -5,7 +5,7 @@
 \title{Get Reading frame of sequences}
 \usage{
 get_reading_frame(x, genetic.code = "SGC4", forward = TRUE,
-  reverse = FALSE)
+  reverse = FALSE, resolve_draws = "majority")
 }
 \arguments{
 \item{x}{Sequences in DNAStringset or DNAbin format}
@@ -13,7 +13,7 @@ get_reading_frame(x, genetic.code = "SGC4", forward = TRUE,
 \item{genetic.code}{A genetic code for the Amino acid translation. See all known codes at GENETIC_CODE_TABLE
 Default is the invertebrate mitochondrial code 'SGC4'}
 
-\item{reverse}{}
+\item{resolve_draws}{How draws should be resolved when multiple possible frames produce sequences with no stop codons.}
 }
 \description{
 Get Reading frame of sequences

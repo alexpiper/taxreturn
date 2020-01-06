@@ -176,6 +176,7 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random"
 # Resolve synonyms -------------------------------------------------------
 
 #' Resolve taxonomic synonyms
+#' @description This function takes a DNAbin object, or a list of species and uses the Global Biodiversity Information Facility (GBIF) to resolve taxonomic synonyms
 #'
 #' @param x
 #' @param subspecies
@@ -189,35 +190,48 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random"
 #'
 #' @import tidyverse
 #' @examples
-resolve_synonyms <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ignore", higherrank = FALSE, fuzzy = TRUE) {
+resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ignore", higherrank = FALSE, fuzzy = TRUE) {
   time <- Sys.time() # get time
-  # Convert to DNAbin
-  if (!is(x, "DNAbin")) {
-    x <- ape::as.DNAbin(x)
-  }
+
   if (quiet == TRUE) {
     verbose <- FALSE
   } else {
     (verbose <- TRUE)
   }
 
-  # first split names
+  # Check type of input
+  if (is(x, "DNAbin")) {
+    message("Input is DNAbin")
+    is.seq <- TRUE
+  } else  if (is(x, "DNAStringSet")| is(x, "DNAString")) {
+    message("Input is DNAStringSet, converting to DNAbin")
+    x <- ape::as.DNAbin(x)
+    is.seq <- TRUE
+  } else  if (is(x, "character")) {
+    message("Input is character vector, resolving Genus species binomials")
+    is.seq <- FALSE
+  }
+
+  # if input has sequences, get names
+  if (is.seq == TRUE) {
   query <- names(x) %>%
     stringr::str_split_fixed(";", n = 2) %>%
     tibble::as_tibble() %>%
     tidyr::separate(col = V1, into = c("acc", "taxid"), sep = "\\|") %>%
     dplyr::rename(query = V2)
+  } else if (is.seq ==FALSE ) {
+    query <- data.frame(query= x)
+    query$taxid <- "NA" # Add dummy columns
+    query$acc <- "NA"
+    }
 
-  # Need to make a better estimator
   if (verbose == TRUE) {
     message(paste0(
       "resolving synonyms for ", length(unique(query$query)),
-      " Unique taxa, estimated time: ", signif((length(unique(query$query)) * 0.5) / 3600, digits = 3), " hours"
+      " Unique taxa, estimated time: ", signif((length(unique(query$query)) * 0.5) / 3600, digits = 3), " hours" #need better estimator
     ))
   }
-
-  # out <- traitdataform::get_gbif_taxonomy(unique(query$query),subspecies = subspecies, verbose=verbose,higherrank=higherrank,fuzzy=fuzzy,resolve_synonyms = TRUE )
-  out <- get_gbif_taxonomy_edited(unique(query$query), subspecies = subspecies, verbose = verbose, higherrank = higherrank, fuzzy = fuzzy, resolve_synonyms = TRUE)
+  out <- resolve_gbif(unique(query$query), subspecies = subspecies, verbose = verbose, higherrank = higherrank, fuzzy = fuzzy, resolve_taxonomy = TRUE)
 
   out <- out %>%
     dplyr::filter(synonym == TRUE) %>%
@@ -227,59 +241,69 @@ resolve_synonyms <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
     dplyr::mutate(scientificNameStd = as.character(scientificNameStd)) %>%
     dplyr::mutate_all(as.character())
 
-  if (missing == "ignore") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, update name but keep old taxid
+  if(nrow(out) > 0) {
+    if (missing == "ignore") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, update name but keep old taxid
 
+      query <- query %>%
+        dplyr::left_join(out, by = "query") %>%
+        dplyr::mutate(query = case_when(
+          !is.na(scientificNameStd) ~ scientificNameStd,
+          is.na(scientificNameStd) ~ query
+        )) %>% # Catch all for anything that is not above case
+        dplyr::mutate(taxid = case_when(
+          !is.na(taxidnew) ~ taxidnew,
+          TRUE ~ taxid
+        )) %>%
+        dplyr::select(acc, taxid, query)
+    } else if (missing == "keepold") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, keep old column
+
+      query <- query %>%
+        dplyr::left_join(out, by = "query") %>%
+        dplyr::mutate(query = case_when(
+          !is.na(scientificNameStd) & !is.na(taxidnew) ~ scientificNameStd,
+          TRUE ~ query
+        )) %>% # Catch all for anything that is not above case
+        dplyr::mutate(taxid = case_when(
+          !is.na(scientificNameStd) & !is.na(taxidnew) ~ taxidnew,
+          TRUE ~ taxid
+        )) %>%
+        dplyr::select(acc, taxid, query)
+    } else if (missing == "remove") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, remvoe
+
+      query <- query %>%
+        dplyr::left_join(out, by = "query") %>%
+        dplyr::mutate(keepcol = case_when(
+          !is.na(scientificNameStd) & is.na(taxidnew) ~ FALSE,
+          !is.na(scientificNameStd) & !is.na(taxidnew) ~ TRUE,
+          is.na(scientificNameStd) & !is.na(query) ~ TRUE,
+          TRUE ~ TRUE
+        )) %>% # Catch all for anything that is not above case
+        dplyr::filter(keepcol == TRUE) %>%
+        dplyr::mutate(query = case_when(
+          !is.na(scientificNameStd) ~ scientificNameStd,
+          TRUE ~ query
+        )) %>% # Catch all for anything that is not above case
+        dplyr::mutate(taxid = case_when(
+          !is.na(taxidnew) ~ taxidnew,
+          TRUE ~ taxid
+        )) %>%
+        dplyr::select(acc, taxid, query)
+    }
+
+    if(is.seq == TRUE) {
     query <- query %>%
-      dplyr::left_join(out, by = "query") %>%
-      dplyr::mutate(query = case_when(
-        !is.na(scientificNameStd) ~ scientificNameStd,
-        TRUE ~ query
-      )) %>% # Catch all for anything that is not above case
-      dplyr::mutate(taxid = case_when(
-        !is.na(taxidnew) ~ taxidnew,
-        TRUE ~ taxid
-      )) %>%
-      dplyr::select(acc, taxid, query)
-  } else if (missing == "keepold") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, keep old column
+      tidyr::unite(col = V1, c("acc", "taxid"), sep = "|")
 
-    query <- query %>%
-      dplyr::left_join(out, by = "query") %>%
-      dplyr::mutate(query = case_when(
-        !is.na(scientificNameStd) & !is.na(taxidnew) ~ scientificNameStd,
-        TRUE ~ query
-      )) %>% # Catch all for anything that is not above case
-      dplyr::mutate(taxid = case_when(
-        !is.na(scientificNameStd) & !is.na(taxidnew) ~ taxidnew,
-        TRUE ~ taxid
-      )) %>%
-      dplyr::select(acc, taxid, query)
-  } else if (missing == "remove") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, remvoe
+      names(x) <- paste(query$V1, query$query, sep = ";")
+    } else if (is.seq == FALSE) {
+        x <- query$query
+      }
 
-    query <- query %>%
-      dplyr::left_join(out, by = "query") %>%
-      dplyr::mutate(keepcol = case_when(
-        !is.na(scientificNameStd) & is.na(taxidnew) ~ FALSE,
-        !is.na(scientificNameStd) & !is.na(taxidnew) ~ TRUE,
-        is.na(scientificNameStd) & !is.na(query) ~ TRUE,
-        TRUE ~ TRUE
-      )) %>% # Catch all for anything that is not above case
-      dplyr::filter(keepcol == TRUE) %>%
-      dplyr::mutate(query = case_when(
-        !is.na(scientificNameStd) ~ scientificNameStd,
-        TRUE ~ query
-      )) %>% # Catch all for anything that is not above case
-      dplyr::mutate(taxid = case_when(
-        !is.na(taxidnew) ~ taxidnew,
-        TRUE ~ taxid
-      )) %>%
-      dplyr::select(acc, taxid, query)
-  }
-  query <- query %>%
-    tidyr::unite(col = V1, c("acc", "taxid"), sep = "|")
+  } else (message("No synonyms detected"))
 
-  names(x) <- paste(query$V1, query$query, sep = ";")
+
   time <- Sys.time() - time
-  if (!quiet) (message(paste0("finished in ", format(time, digits = 2))))
+  if (!quiet) {message(paste0("resolved ", nrow(out), " synonyms in ", format(time, digits = 2)))}
   return(x)
 }
 
@@ -292,8 +316,8 @@ resolve_synonyms <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
 # COuld remove subspecies
 # COuld te
 
-get_gbif_taxonomy_edited <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALSE,
-                                     fuzzy = TRUE, conf_threshold = 90, resolve_synonyms = TRUE) {
+resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALSE,
+                                     fuzzy = TRUE, conf_threshold = 90, resolve_taxonomy = TRUE) {
   matchtype <- status <- confidence <- NULL
 
   ## Get GBIF data - this needs to be sped up majorly, would be nice to move to taxize::db
@@ -304,13 +328,7 @@ get_gbif_taxonomy_edited <- function(x, subspecies = TRUE, higherrank = TRUE, ve
     purrr::map("result") %>%
     flatten()
 
-  ## Backup temp
-  temp2 <- temp
-  write_rds(temp, "temp.rds")
-
-  temp <- temp2
   i <- 1
-  #
   for (i in 1:length(temp)) {
     warning_i <- ""
     synonym_i <- FALSE
@@ -348,7 +366,7 @@ get_gbif_taxonomy_edited <- function(x, subspecies = TRUE, higherrank = TRUE, ve
     }
     if (!any(temp[[i]]$status == "ACCEPTED") & any(temp[[i]]$status ==
       "SYNONYM")) {
-      if (resolve_synonyms) {
+      if (resolve_taxonomy) {
         keep <- temp[i]
         if (!is.null(temp[[i]]$species) && !is.na(temp[[i]]$species)) {
           temp[i] <- taxize::get_gbifid_(temp[[i]]$species[which.max(temp[[i]]$confidence)],

@@ -57,10 +57,10 @@ fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream="speci
 We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region
 ```{r Download mitochondria, eval=FALSE, include=TRUE}
 # Fetch mitochondria from genbank
-fetchSeqs("Insecta", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE, cores=1)
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE, cores=1)
 ```
 
-# Get some outgroups using random subsampling of search
+# Get some outgroups using random subsampling of entrez query results
 ```{r outgroups}
 outgroup_classes <- dplyr::bind_rows(taxize::downstream("Arthropoda", db="itis", downto="Class")) %>%
   filter(!taxonname=="Insecta") %>%
@@ -71,7 +71,7 @@ outgroup_kingdoms <- c("Bacteria", "Fungi")
 
 outgroups <- c(outgroup_classes, outgroup_phyla, outgroup_kingdoms)
 
-fetchSeqs(outgroups, database="genbank", out.dir="outgroups", quiet=FALSE, marker="COI[GENE] OR CO1[GENE] OR COX1[GENE]", output = "gb-binom", subsample = 100, compress=TRUE, cores=1)
+fetchSeqs(outgroups, database="genbank", out.dir="outgroups", quiet=FALSE, marker="COI[GENE] OR CO1[GENE] OR COX1[GENE]", output = "gb-binom", subsample = 10, compress=TRUE, cores=1)
 ```
 
 
@@ -114,10 +114,13 @@ As we only wish to look at the sequence data contained within the range of our a
 ```{r clean seqs}
 #read in all fastas and merge
 library(Biostrings)
-gbSeqs <-  readDNAStringSet(sort(list.files("genbank", pattern = ".fa", full.names = TRUE)))
-boldSeqs <-  readDNAStringSet(sort(list.files("bold", pattern = ".fa", full.names = TRUE)))
-mergedSeqs <- append(gbSeqs, boldSeqs, after=length(gbSeqs))
-uniqSeqs <- mergedSeqs[unique(names(mergedSeqs)),] # Remove those sequnce names that are identical across both databases
+
+seqs <- c(readDNAStringSet(list.files("genbank", pattern = ".fa", full.names = TRUE)),
+                readDNAStringSet(list.files("bold", pattern = ".fa", full.names = TRUE)),
+                readDNAStringSet(list.files("outgroups", pattern = ".fa", full.names = TRUE))
+                )
+
+uniqSeqs <- seqs[unique(names(seqs)),] # Remove those sequnce names that are identical across both databases
 
 #remove non-homologous sequences
 filtered <- clean_seqs(uniqSeqs, model, minscore = 100, cores=2, shave=TRUE)
@@ -190,7 +193,7 @@ Classification of sequences into reference taxonomy can be complicated by the ex
 The options to consider here, is what to do with the synonyms that dont exist in the NCBI taxonomy, in this case we ignore the fact taxa are missing from the NCBI taxonomy and rename them anyway
 
 ```{r resolve synoynms}
-resolved <- resolve_synonyms(subset, subspecies=FALSE, quiet=FALSE, missing="ignore", higherrank=FALSE, fuzzy=TRUE)
+resolved <- resolve_taxonomy(purged, subspecies=FALSE, quiet=FALSE, missing="ignore", higherrank=FALSE, fuzzy=TRUE)
 
 #Check for differences in names
 names(resolved)[which(!names(resolved) %in% names(subset))]
