@@ -5,7 +5,7 @@
 \title{Filter sequences containing stop codons}
 \usage{
 codon_filter(x, genetic.code = "SGC4", forward = TRUE,
-  reverse = FALSE)
+  reverse = FALSE, remove.ambiguities = FALSE)
 }
 \arguments{
 \item{x}{Sequences in DNAStringset or DNAbin format}

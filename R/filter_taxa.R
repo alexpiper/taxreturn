@@ -546,6 +546,11 @@ get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FA
   if (is(x, "DNAbin")) {
     x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
   }
+  #Check for N's
+  if(hasOnlyBaseLetters(x) == FALSE) {stop("Error: Sequences contain ambiguities")}
+  #discards <- sapply(x, hasOnlyBaseLetters)
+  #x <- insect::subset.DNAbin(x, subset = !discards)
+
   if(forward==TRUE) {
     F_frames <- lapply(1:3, function(pos) subseq(x, start=pos))
   }
@@ -591,7 +596,17 @@ get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FA
 #' @export
 #'
 #' @examples
-codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE){
+codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, remove.ambiguities=TRUE){
+  #Check for N's
+  if(hasOnlyBaseLetters(x) == FALSE & remove.ambiguities == FALSE) {
+    stop("Error: Sequences containing ambiguities, set remove.ambiguities to TRUE")
+  } else if(hasOnlyBaseLetters(x) == FALSE & remove.ambiguities==TRUE) {
+    discards <- sapply(x, hasOnlyBaseLetters)
+    discards <- discards[discards == FALSE]
+    x <- x[which(!names(x) %in% names(discards))]
+    message(paste0(length(discards), " Sequences containing ambiguities were removed"))
+  }
+
   #Get reading frames
   frames <- get_reading_frame(x, genetic.code = genetic.code, forward = forward, reverse = reverse)
 
