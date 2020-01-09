@@ -28,16 +28,10 @@
 #' @export
 #'
 #' @examples
-boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file = NULL, compress = FALSE, out.dir = NULL) {
+boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file = NULL, compress = FALSE, out.dir = NULL, db=NULL) {
 
   # function setup
   time <- Sys.time() # get time
-
-  # Check if taxizedb is installed
-  search_or_sql <- "taxizedb" %in% rownames(installed.packages())
-  if (search_or_sql == FALSE) {
-    message("taxizedb is not installed, using web queries instead")
-  }
 
   if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
     stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
@@ -118,49 +112,56 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
 
         # Genbank taxID output
       } else if (output == "gb") {
+
         data <- subset(data, select = c("sampleid", "species_name", "nucleotides")) %>%
           na.omit() %>%
-          dplyr::mutate(species_name = trimws(species_name, which = "both")) %>%
-          dplyr::mutate(gb = taxizedb::name2taxid(data$species_name)) %>%
-          #dplyr::mutate(gb = ncbi_taxid(data$species_name)) %>%
-          tidyr::unite("name", c("sampleid", "gb"), sep = "|")
+          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+          dplyr::left_join(db, by="tax_name") %>%
+          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|")
 
         # gb-binom
       } else if (output == "gb-binom") {
-        data <- subset(data, select = c("sampleid", "species_name", "nucleotides")) %>%
-          na.omit() %>%
-          dplyr::mutate(species_name = trimws(species_name, which = "both"))
+    #
+    #    data <- subset(data, select = c("sampleid", "species_name", "nucleotides")) %>%
+    #      na.omit() %>%
+    #      dplyr::mutate(species_name = trimws(species_name, which = "both"))
 
-        ids <- taxizedb::name2taxid(data$species_name, out_type = "summary")
-        #ids <- ncbi_taxid(data$species_name)
-        # Add exception handling for duplicated taxon names
-        if (any(duplicated(ids$name_txt))) {
-          dupname <- ids$name_txt[ duplicated(ids$name_txt)]
-          dup <- ids[ids$name_txt %in% dupname, ] %>%
-            dplyr::mutate(correct = FALSE)
-          class <- taxizedb::classification(dup$tax_id)
+    #    #ids <- taxizedb::name2taxid(data$species_name, out_type = "summary")
+    #    ids <- data %>%
+    #      dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+    #      dplyr::left_join(db, by="tax_name") #%>%
+    #      dplyr::pull(tax_id)
+    #
+    #    # Add exception handling for duplicated taxon names
+    #    if (any(duplicated(ids$name_txt))) {
+    #      dupname <- ids$name_txt[ duplicated(ids$name_txt)]
+    #      dup <- ids[ids$name_txt %in% dupname, ] %>%
+    #        dplyr::mutate(correct = FALSE)
+    #      class <- taxizedb::classification(dup$tax_id)
 
-          for (i in 1:length(class)) {
-            dup$correct[i] <- any(stringr::str_detect(class[[i]]$name, pattern = "Insecta"))
-          }
+    #      for (i in 1:length(class)) {
+    #        dup$correct[i] <- any(stringr::str_detect(class[[i]]$name, pattern = "Insecta"))
+    #      }
 
-          filt <- dup$tax_id[which(dup$correct == FALSE)]
-          ids <- ids %>%
-            dplyr::filter(!tax_id %in% filt) %>%
-            dplyr::rename(species_name = name_txt)
+    #      filt <- dup$tax_id[which(dup$correct == FALSE)]
+    #      ids <- ids %>%
+    #        dplyr::filter(!tax_id %in% filt) %>%
+    #        dplyr::rename(species_name = name_txt)
 
+    #      data <- data %>%
+    #        dplyr::left_join(ids, by = "species_name") %>%
+    #        dplyr::rename(gb = tax_id) %>%
+    #        tidyr::unite("name", c("sampleid", "gb"), sep = "|") %>%
+    #        tidyr::unite("name", c("name", "species_name"), sep = ";")
+    #    } else if (!any(duplicated(ids$name_txt))) {
           data <- data %>%
-            dplyr::left_join(ids, by = "species_name") %>%
-            dplyr::rename(gb = tax_id) %>%
-            tidyr::unite("name", c("sampleid", "gb"), sep = "|") %>%
-            tidyr::unite("name", c("name", "species_name"), sep = ";")
-        } else if (!any(duplicated(ids$name_txt))) {
-          data <- data %>%
-            dplyr::mutate(gb = taxizedb::name2taxid(data$species_name)) %>%
-            #dplyr::mutate(gb = ncbi_taxid(data$species_name)) %>%
-            tidyr::unite("name", c("sampleid", "gb"), sep = "|") %>%
-            tidyr::unite("name", c("name", "species_name"), sep = ";")
-        }
+            dplyr::select(sampleid, species_name, nucleotides) %>%
+            na.omit() %>%
+            dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+            dplyr::left_join(db, by="tax_name") %>%
+            tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
+            tidyr::unite("name", c("name", "tax_name"), sep = ";")
+       # }
       }
 
       # Output fASTA
@@ -245,11 +246,6 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
 
   # function setup
   time <- Sys.time() # get time
-  # Check if taxizedb is installed
-  search_or_sql <- "taxizedb" %in% rownames(installed.packages())
-  if (search_or_sql == FALSE) {
-    message("taxizedb is not installed, using web queries instead")
-  }
 
   if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
     stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
@@ -427,11 +423,6 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
 
   # function setup
   time <- Sys.time() # get time
-  # Check if taxizedb is installed
-  search_or_sql <- "taxizedb" %in% rownames(installed.packages())
-  if (search_or_sql == FALSE) {
-    message("taxizedb is not installed, using web queries instead")
-  }
 
   if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
     stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
@@ -521,7 +512,6 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
               })
               attributes(tax_chr) <- NULL
               taxout <- paste0(attributes(taxid)$names, "|", tax_chr)
-              return(taxout)
             }
             names <- cat_acctax(gb)
           } else if (output == "binom") {
@@ -534,7 +524,6 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
               })
               attributes(tax_chr) <- NULL
               taxout <- paste0(attributes(taxid)$names, "|", tax_chr)
-              return(taxout)
             }
             names <- paste0(cat_acctax(gb), ";", biofiles::getOrganism(gb))
           }
@@ -559,7 +548,7 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
     },
     error = function(e) NULL
   )
-  invisible(NULL)
+  return(search_results)
 }
 
 
@@ -609,10 +598,9 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
 #' @examples
 fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TRUE, output = "h", minlength = 1, maxlength = 2000, subsample=FALSE, out.dir = NULL, compress = TRUE, cores = 1,...) {
 
-  # Check if taxizedb is installed
-  search_or_sql <- "taxizedb" %in% rownames(installed.packages())
-  if (search_or_sql == FALSE) {
-    stop("Error - taxizedb is not installed")
+  # Get NCBI Db if NCBI outputs are desired
+  if (output %in% c("gb", "gb-binom")) {
+    db <- get_ranked_lineage(synonyms = TRUE, force=FALSE)
   }
 
   #stop if subsample and BOLD is true
@@ -629,7 +617,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
 
       if (!quiet) cat("Multithreading with", cores, "cores\n")
       cores <- parallel::makeCluster(cores, outfile = "out.txt")
-      junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "taxizedb", "tidyverse", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
+      junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "tidyverse", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
       para <- TRUE
       stopclustr <- TRUE
     }
@@ -703,10 +691,10 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
     # Multithread
     bold_taxon <- if (para == TRUE) {
       message("Multithreading with BOLD")
-      parallel::parLapply(cores, bold_taxon, boldSearch, marker = marker, quiet = quiet, out.file = NULL, output = output, compress = compress)
+      parallel::parLapply(cores, bold_taxon, boldSearch, marker = marker, quiet = quiet, out.file = NULL, output = output, compress = compress, db=db)
     } else {
       message("Sequential processing with BOLD")
-      lapply(bold_taxon, boldSearch, marker = marker, quiet = quiet, out.dir = out.dir, out.file = NULL, output = output, compress = compress)
+      lapply(bold_taxon, boldSearch, marker = marker, quiet = quiet, out.dir = out.dir, out.file = NULL, output = output, compress = compress, db=db)
     }
   }
 

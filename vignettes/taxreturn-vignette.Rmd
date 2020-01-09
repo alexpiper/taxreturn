@@ -3,8 +3,10 @@ title: "taxreturn-vignette"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{taxreturn-vignette}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -48,7 +50,7 @@ fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream=
 
 ```{r Download BOLD Sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from BOLD
-fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream="species", quiet=FALSE, marker="COI-5P", output = "gb-binom",compress=TRUE, cores=1)
+fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream="species", quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, cores=1)
 
 ```
 

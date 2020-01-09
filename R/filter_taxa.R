@@ -198,6 +198,7 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
   } else {
     (verbose <- TRUE)
   }
+  db <- get_ranked_lineage(synonyms = TRUE, force=FALSE)
 
   # Check type of input
   if (is(x, "DNAbin")) {
@@ -236,7 +237,9 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
   out <- out %>%
     dplyr::filter(synonym == TRUE) %>%
     dplyr::filter(!scientificName == "Curculio bimaculatus") %>% # This taxa is breaking function
-    dplyr::mutate(taxidnew = taxizedb::name2taxid(scientificNameStd)) %>%
+    dplyr::left_join(db %>% select(tax_name, tax_id) %>% rename(scientificNameStd = tax_name), by="scientificNameStd") %>%
+    dplyr::rename(taxidnew = tax_id) %>%
+    #dplyr::mutate(taxidnew = taxizedb::name2taxid(scientificNameStd)) %>%
     dplyr::mutate(query = as.character(scientificName)) %>%
     dplyr::mutate(scientificNameStd = as.character(scientificNameStd)) %>%
     dplyr::mutate_all(as.character())

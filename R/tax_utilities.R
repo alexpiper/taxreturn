@@ -15,10 +15,11 @@ get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
   }
   tmp <- tempdir()
   if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp"))) {
-  fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
-  download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
-  message("Extracting data\n")
-  test <- untar(tarfile = paste0(tmp, "/tmp.tar.gz"), exdir = tmp)
+    message("Downloading NCBI taxonomy database")
+    fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
+    download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
+    message("Extracting data\n")
+    test <- untar(tarfile = paste0(tmp, "/tmp.tar.gz"), exdir = tmp)
   if (!identical(test, 0L)) {
     stop(cat(test))
   }
@@ -51,6 +52,7 @@ get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
   message("Done\n")
   return(lin)
 }
+
 
 
 # ncbi_taxid --------------------------------------------------------------

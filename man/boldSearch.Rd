@@ -5,7 +5,7 @@
 \title{boldSearch}
 \usage{
 boldSearch(x, marker = NULL, quiet = FALSE, output = "h",
-  out.file = NULL, compress = FALSE, out.dir = NULL)
+  out.file = NULL, compress = FALSE, out.dir = NULL, db = NULL)
 }
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
