@@ -13,7 +13,11 @@ codon_filter(x, genetic.code = "SGC4", forward = TRUE,
 \item{genetic.code}{A genetic code for the Amino acid translation. See all known codes at GENETIC_CODE_TABLE
 Default is the invertebrate mitochondrial code 'SGC4'}
 
-\item{reverse}{}
+\item{forward}{Whether the forward complement should be used}
+
+\item{reverse}{Whether the reverse complement should be used}
+
+\item{remove.ambiguities}{Whether ambiguous bases (non ATGC) bases should be removed}
 }
 \description{
 Filter sequences containing stop codons

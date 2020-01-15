@@ -13,6 +13,10 @@ get_reading_frame(x, genetic.code = "SGC4", forward = TRUE,
 \item{genetic.code}{A genetic code for the Amino acid translation. See all known codes at GENETIC_CODE_TABLE
 Default is the invertebrate mitochondrial code 'SGC4'}
 
+\item{forward}{whether the forward complement should be returned}
+
+\item{reverse}{Whether the reverse complemement should be returned}
+
 \item{resolve_draws}{How draws should be resolved when multiple possible frames produce sequences with no stop codons.}
 }
 \description{

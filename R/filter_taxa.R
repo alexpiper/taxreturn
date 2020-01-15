@@ -215,16 +215,16 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
 
   # if input has sequences, get names
   if (is.seq == TRUE) {
-  query <- names(x) %>%
-    stringr::str_split_fixed(";", n = 2) %>%
-    tibble::as_tibble() %>%
-    tidyr::separate(col = V1, into = c("acc", "taxid"), sep = "\\|") %>%
-    dplyr::rename(query = V2)
+    query <- names(x) %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "taxid"), sep = "\\|") %>%
+      dplyr::rename(query = V2)
   } else if (is.seq ==FALSE ) {
     query <- data.frame(query= x)
     query$taxid <- "NA" # Add dummy columns
     query$acc <- "NA"
-    }
+  }
 
   if (verbose == TRUE) {
     message(paste0(
@@ -233,7 +233,6 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
     ))
   }
   out <- resolve_gbif(unique(query$query), subspecies = subspecies, verbose = verbose, higherrank = higherrank, fuzzy = fuzzy, resolve_taxonomy = TRUE)
-
   out <- out %>%
     dplyr::filter(synonym == TRUE) %>%
     dplyr::filter(!scientificName == "Curculio bimaculatus") %>% # This taxa is breaking function
@@ -246,16 +245,15 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
 
   if(nrow(out) > 0) {
     if (missing == "ignore") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, update name but keep old taxid
-
       query <- query %>%
         dplyr::left_join(out, by = "query") %>%
         dplyr::mutate(query = case_when(
           !is.na(scientificNameStd) ~ scientificNameStd,
           is.na(scientificNameStd) ~ query
-        )) %>% # Catch all for anything that is not above case
+        )) %>%
         dplyr::mutate(taxid = case_when(
-          !is.na(taxidnew) ~ taxidnew,
-          TRUE ~ taxid
+          !is.na(taxidnew) ~ as.character(taxidnew),
+          is.na(taxidnew) ~ taxid
         )) %>%
         dplyr::select(acc, taxid, query)
     } else if (missing == "keepold") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, keep old column
@@ -267,8 +265,8 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
           TRUE ~ query
         )) %>% # Catch all for anything that is not above case
         dplyr::mutate(taxid = case_when(
-          !is.na(scientificNameStd) & !is.na(taxidnew) ~ taxidnew,
-          TRUE ~ taxid
+          !is.na(scientificNameStd) & !is.na(taxidnew) ~ as.character(taxidnew),
+          is.na(taxidnew) ~ taxid
         )) %>%
         dplyr::select(acc, taxid, query)
     } else if (missing == "remove") { # In cases where the updated synonym does not have a taxonomic ID in the NCBI database, remvoe
@@ -287,20 +285,20 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
           TRUE ~ query
         )) %>% # Catch all for anything that is not above case
         dplyr::mutate(taxid = case_when(
-          !is.na(taxidnew) ~ taxidnew,
-          TRUE ~ taxid
+          !is.na(taxidnew) ~ as.character(taxidnew),
+          is.na(taxidnew) ~ taxid
         )) %>%
         dplyr::select(acc, taxid, query)
     }
 
     if(is.seq == TRUE) {
-    query <- query %>%
-      tidyr::unite(col = V1, c("acc", "taxid"), sep = "|")
+      query <- query %>%
+        tidyr::unite(col = V1, c("acc", "taxid"), sep = "|")
 
       names(x) <- paste(query$V1, query$query, sep = ";")
     } else if (is.seq == FALSE) {
-        x <- query$query
-      }
+      x <- query$query
+    }
 
   } else (message("No synonyms detected"))
 
