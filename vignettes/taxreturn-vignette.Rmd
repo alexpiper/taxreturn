@@ -125,7 +125,7 @@ seqs <- c(readDNAStringSet(list.files("genbank", pattern = ".fa", full.names = T
 uniqSeqs <- seqs[unique(names(seqs)),] # Remove those sequnce names that are identical across both databases
 
 #remove non-homologous sequences
-filtered <- clean_seqs(uniqSeqs, model, minscore = 100, cores=2, shave=TRUE)
+filtered <- clean_seqs(uniqSeqs, model, minscore = 100, cores=1, shave=TRUE)
 ```
 
 ## Resolve Contaminated sequences and misannotated taxonomy
@@ -198,7 +198,7 @@ The options to consider here, is what to do with the synonyms that dont exist in
 resolved <- resolve_taxonomy(purged, subspecies=FALSE, quiet=FALSE, missing="ignore", higherrank=FALSE, fuzzy=TRUE)
 
 #Check for differences in names
-names(resolved)[which(!names(resolved) %in% names(subset))]
+names(resolved)[which(!names(resolved) %in% names(purged))]
 ```
 
 
