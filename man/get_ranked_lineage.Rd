@@ -2,7 +2,7 @@
 % Please edit documentation in R/tax_utilities.R
 \name{get_ranked_lineage}
 \alias{get_ranked_lineage}
-\title{Title}
+\title{Download NCBI taxdump}
 \usage{
 get_ranked_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
 }
@@ -10,5 +10,5 @@ get_ranked_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
 \item{synonyms}{}
 }
 \description{
-Title
+Download NCBI taxdump
 }

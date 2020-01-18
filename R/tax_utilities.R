@@ -1,6 +1,6 @@
 # Get_ranked_lineage ------------------------------------------------------
 
-#' Title
+#' Download NCBI taxdump
 #'
 #' @param db
 #' @param synonyms
@@ -14,7 +14,7 @@ get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
     stop("Only the NCBI taxonomy database is available in this version\n")
   }
   tmp <- tempdir()
-  if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp"))) {
+  if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp")) | !file.exists(paste0(tmp, "/tmp.tar.gz"))) {
     message("Downloading NCBI taxonomy database")
     fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
     download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
@@ -166,6 +166,122 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
   }
   return(out)
 }
+
+
+
+# Reformat DADA2 Genus ------------------------------------------------------
+
+# make this just run output heirarchy but removing species rank
+
+#' Reformat DADA2 Genus
+#'
+#' @param x
+#' @param quiet
+#' @param ranks
+#'
+#' @return
+#' @export
+#'
+#' @examples
+reformat_dada2_gen <- function(x, db = NULL, quiet = FALSE, ranks = NULL, force=FALSE) {
+  if (!is.null(ranks)) {
+    ranks <- ranks
+  } else if (is.null(ranks)) {
+    ranks <- c("kingdom", "phylum", "class", "order", "family", "genus")
+    message("No ranks supplied, using default ranks for DADA2 assignTaxonomy: kingdom;phylum;class;order;family;genus")
+  }
+  x <- reformat_heirarchy(x, db = db, quiet = quiet, ranks = ranks)
+  return(x)
+}
+
+
+# Reformat DADA2 Species ----------------------------------------------------
+
+#' Reformat DADA2 Species
+#'
+#' @param x
+#' @param quiet
+#'
+#' @return
+#' @export
+#'
+#' @examples
+reformat_dada2_spp <- function(x, quiet = FALSE) {
+  time <- Sys.time() # get time
+  # Convert to DNAbin
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+  }
+  seqnames <- stringr::str_split_fixed(names(x), pattern = ";", n = 2) %>%
+    as_tibble()
+  names(x) <- paste(seqnames$V1, seqnames$V2, sep = " ")
+  time <- Sys.time() - time
+  if (!quiet) (message(paste0("Reformatted annotations for ", length(x), " sequences in ", format(time, digits = 2))))
+  return(x)
+}
+
+
+
+# Reformat heirarchy ------------------------------------------------------
+
+#' Reformat heirarchy
+#'
+#' @param x
+#' @param quiet
+#' @param ranks
+#'
+#' @return
+#' @export
+#'
+#' @examples
+reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep = "_", force=FALSE) {
+  time <- Sys.time() # get time
+  # Convert to DNAbin
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+  }
+  if (is.null(db)) {
+    message("No taxonomy database provided, downloading from NCBI")
+    db <- get_ranked_lineage(force=force)
+  }
+
+  if (!is.null(ranks)) {
+    ranks <- ranks
+  } else if (is.null(ranks)) {
+    ranks <- c("kingdom", "phylum", "class", "order", "family", "genus", "species")
+    message("No ranks supplied, using default ranks: kingdom;phylum;class;order;family;genus;species")
+  }
+
+  # Split current names
+  seqnames <- names(x) %>%
+    stringr::str_split_fixed(";", n = 2) %>%
+    tibble::as_tibble() %>%
+    tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+    dplyr::rename(species = V2) %>%
+    dplyr::mutate(tax_id = as.numeric(tax_id))
+
+  # Get lineage from taxid
+  lineage <- seqnames %>%
+    dplyr::left_join (db %>% dplyr::select(-species), by = "tax_id")  %>%
+    tidyr::unite(col = V1, c(acc, tax_id), sep = "|") %>%
+    tidyr::unite(col = V2, c(!!ranks), sep = ";")
+
+  names(x) <- paste(lineage$V1, lineage$V2, "", sep = ";")
+  time <- Sys.time() - time
+  if (!quiet) (message(paste0("Reformatted annotations for ", length(x), " sequences in ", format(time, digits = 2))))
+  return(x)
+}
+
+
+
+
+# Reformat RDP --------------------------------------------------------------
+
+
+# Output IDTAXA -----------------------------------------------------------
+
+
+
 
 # taxonomy_to_newick ------------------------------------------------------
 
