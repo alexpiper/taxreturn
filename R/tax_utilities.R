@@ -278,9 +278,103 @@ reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep
 # Reformat RDP --------------------------------------------------------------
 
 
-# Output IDTAXA -----------------------------------------------------------
+# train IDTAXA -----------------------------------------------------------
 
 
+#' Train IDTAXA
+#'
+#' @param x
+#' @param maxGroupSize
+#' @param maxIterations
+#' @param allowGroupRemoval
+#' @param db
+#' @param quiet
+#' @param force
+#'
+#' @return
+#' @export
+#'
+#' @examples
+train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  db = NULL, quiet = FALSE, force=FALSE) {
+  time <- Sys.time() # get time
+
+  #Reformat to complete taxonomic heirarchy
+  seqs <- taxreturn::reformat_heirarchy(x, db=db, quiet=FALSE, force=force)
+
+  #Convert to DNAstringset for DECIPHER
+  seqs <- seqs %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
+
+
+  # As taxonomies are encoded in the sequence names rather than a separate file, use:
+  taxid <- NULL
+
+  #Add Root Rank
+  names(seqs) <- names(seqs)  %>% stringr::str_replace(";[;]*", ";Root;")
+
+
+  # obtain the taxonomic assignments
+  groups <- names(seqs) # sequence names
+
+  # assume the taxonomy begins with 'Root;'
+  groups <- gsub("(.*)(Root;)", "\\2", groups) # extract the group label
+  groupCounts <- table(groups)
+  u_groups <- names(groupCounts) # unique groups
+
+  if (!quiet) {message(paste0(length(u_groups), " unique species"))}
+
+  # Pruning training set
+  remove <- logical(length(seqs))
+  for (i in which(groupCounts > maxGroupSize)) {
+    index <- which(groups==u_groups[i])
+    keep <- sample(length(index),
+                   maxGroupSize)
+    remove[index[-keep]] <- TRUE
+  }
+  if (!quiet) {message(paste0(sum(remove), " sequences pruned from over-represented groups"))}
+
+  # Training the classifier
+  probSeqsPrev <- integer() # suspected problem sequences from prior iteration
+  for (i in seq_len(maxIterations)) {
+    if (!quiet) {message("Training iteration: ", i, "\n", sep="")}
+    # train the classifier
+    trainingSet <- DECIPHER::LearnTaxa(seqs[!remove],
+                             names(seqs)[!remove],
+                             taxid)
+
+    # look for problem sequences
+    probSeqs <- trainingSet$problemSequences$Index
+    if (length(probSeqs)==0) {
+      if (!quiet) {message("No problem sequences remaining.\n")}
+      break
+    } else if (length(probSeqs)==length(probSeqsPrev) &&
+               all(probSeqsPrev==probSeqs)) {
+      if (!quiet) {message("Iterations converged.\n")}
+      break
+    }
+    if (i==maxIterations)
+      break
+    probSeqsPrev <- probSeqs
+
+    # remove any problem sequences
+    index <- which(!remove)[probSeqs]
+    remove[index] <- TRUE # remove all problem sequences
+    if (!allowGroupRemoval) {
+      # replace any removed groups
+      missing <- !(u_groups %in% groups[!remove])
+      missing <- u_groups[missing]
+      if (length(missing) > 0) {
+        index <- index[groups[index] %in% missing]
+        remove[index] <- FALSE # don't remove
+      }
+    }
+  }
+  if (!quiet) {message(paste0(sum(remove), " sequences removed"))}
+  if (!quiet) {message(paste0(length(probSeqs), " problem sequences remaining"))}
+
+  time <- Sys.time() - time
+  if (!quiet) (message(paste0("trained IDTAXA on ", length(x), " sequences in ", format(time, digits = 2))))
+  return(trainingSet)
+}
 
 
 # taxonomy_to_newick ------------------------------------------------------
