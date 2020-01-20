@@ -399,6 +399,8 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
     if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
   }
 
+  if (!output %in% c("phylo", "treedf", "data.tree", "newick")) { stop("Output must be 'phylo', 'data.tree', 'newick' or 'treedf'")}
+
   # leave an autodetect for ranks?
   ranks <- stringr::str_to_lower(ranks)
   summarise <- stringr::str_to_lower(summarise)
@@ -419,7 +421,7 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
 
   if (output=="phylo"){
   out <-  ape::read.tree(textConnection(data.tree::ToNewick(lineage, heightAttribute = NULL)))
-  } else if (output=="tredf"){
+  } else if (output=="treedf"){
   out <- data.tree::ToDataFrameTree(lineage, "sum")
   } else if (output=="data.tree"){
     out <- lineage
