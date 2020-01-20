@@ -273,13 +273,7 @@ reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep
 }
 
 
-
-
-# Reformat RDP --------------------------------------------------------------
-
-
 # train IDTAXA -----------------------------------------------------------
-
 
 #' Train IDTAXA
 #'
@@ -379,42 +373,63 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 
 # taxonomy_to_newick ------------------------------------------------------
 
+#' tax2tree
+#'
+#' @param x a DNAbin object or an object coercible to DNAbin
+#' @param ranks The taxonomic ranks currently assigned to the names
+#' @param summarise Select a taxonomic rank to summarise at
+#' @param output The output to return, options are:
+#' "phylo" to return an ape phylo object
+#' "data.tree" to return a data.tree node object
+#' "treedf" to return a simplified tree with taxon summaries in a data frame
+#' "newick" to return a newick file for visualisation in other software
+#'
+#' @return a phylo, data.tree, newick, or treedf object
+#' @import data.tree
+#' @export
+#'
+#' @examples
+tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), summarise = "species", output="treedf"){
 
-## data frame to newick
+  # start timer
+  time <- Sys.time()
+  # Convert to DNAbin
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+    if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
+  }
 
-### recursion function
-#traverse <- function(a, i, innerl) {
-#  if (i < (ncol(df))) {
-#    alevelinner <- as.character(unique(df[which(as.character(df[, i]) == a), i + 1]))
-#    desc <- NULL
-#    if (length(alevelinner) == 1) {
-#      (newickout <- traverse(alevelinner, i + 1, innerl))
-#    } else {
-#      for (b in alevelinner) desc <- c(desc, traverse(b, i + 1, innerl))
-#      il <- NULL
-#      if (innerl == TRUE) il <- a
-#      (newickout <- paste("(", paste(desc, collapse = ","), ")", il, sep = ""))
-#    }
-#  }
-#  else {
-#    (newickout <- a)
-#  }
-#}
-#
-## data.frame to newick function
-#df2newick <- function(df, innerlabel = FALSE) {
-#  alevel <- as.character(unique(df[, 1]))
-#  newick <- NULL
-#  for (x in alevel) newick <- c(newick, traverse(x, 1, innerlabel))
-#  (newick <- paste("(", paste(newick, collapse = ","), ");", sep = ""))
-#}
-#
-#df <- data.frame(x = c("A", "A", "B", "B", "B"), y = c("Ab", "Ac", "Ba", "Ba", "Bd"), z = c("Abb", "Acc", "Bad", "Bae", "Bdd"))
-#myNewick <- df2newick(df, TRUE)
-#
-#library(ape)
-#mytree <- read.tree(text = myNewick)
-#plot(mytree)
+  # leave an autodetect for ranks?
+  ranks <- stringr::str_to_lower(ranks)
+  summarise <- stringr::str_to_lower(summarise)
+  groupranks <- ranks[1:match(summarise, ranks)]
 
+  #Get taxonomic lineage and convert to tree
+  lineage <- names(x) %>%
+    stringr::str_replace(pattern=";$", replacement = "") %>%
+    stringr::str_split_fixed(";", n=Inf) %>%
+    as.data.frame() %>%
+    magrittr::set_colnames(c("Acc", ranks )) %>%
+    dplyr::select(-Acc) %>%
+    dplyr::group_by_at(groupranks) %>%
+    dplyr::summarise(sum = dplyr::n()) %>%
+    tidyr::unite(col=pathString, !!groupranks, sep="/") %>%
+    dplyr::mutate(pathString = paste0("Root/", pathString)) %>%
+    data.tree::as.Node(.)
 
-##
+  if (output=="phylo"){
+  out <-  ape::read.tree(textConnection(data.tree::ToNewick(lineage, heightAttribute = NULL)))
+  } else if (output=="tredf"){
+  out <- data.tree::ToDataFrameTree(lineage, "sum")
+  } else if (output=="data.tree"){
+    out <- lineage
+  } else if (output =="newick"){
+    out <- data.tree::ToNewick(lineage, heightAttribute = NULL)
+  }
+
+  time <- Sys.time() - time
+  message(paste0("Generated a taxonomic tree for ", length(x), " Sequences in ", format(time, digits = 2)))
+
+  return(out)
+}
+

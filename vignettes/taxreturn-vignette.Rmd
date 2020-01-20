@@ -219,11 +219,14 @@ Next we will trim the sequences to the primer regions we use for metabarcoding u
 ```{r trim to primer regions}
 #Trim to primer region using virtualPCR from insect package
 amplicon <- insect::virtualPCR(pruned, up = "ACWGGWTGRACWGTNTAYCC", down= "ARYATDGTRATDGCHCCDGC", cores=2, rcdown = TRUE, trimprimers = TRUE)
+
+insect::writeFASTA(amplicon, file="cleaned_amplicon.fa.gz", compress=TRUE)
 ```
 
-## Format for RDP naive bayes classifier
+# Output trained classifiers
 
-```{r reformat taxonomy}
+
+```{r train and output}
 #Reformat to complete taxonomic heirarchy 
 heirarchy <- reformat_heirarchy(amplicon, db=db, quiet=FALSE)
 
@@ -232,97 +235,17 @@ dada2_gen <- reformat_dada2_gen(amplicon, db=db, quiet=FALSE)
 
 #Reformat to genus species binomials as suitable for assignSpecies in DADA2
 dada2_spp <- reformat_dada2_spp(amplicon)
-```
 
-# Train IDTAXA 
-
-```{r IDTAXA}
-library(DECIPHER)
-#Reformat to complete taxonomic heirarchy 
-heirarchy <- reformat_heirarchy(amplicon, db=db, quiet=FALSE)
-
-#Convert to DNAstringset for DECIPHER
-seqs <- heirarchy %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
-
-
-# As taxonomies are encoded in the sequence names rather than a separate file, use:
-taxid <- NULL
-seqs <- RemoveGaps(seqs)
-seqs <- OrientNucleotides(seqs)
-
-# obtain the taxonomic assignments
-groups <- names(seqs) # sequence names
-
-#Replace metazoa with Root
-names(seqs) <- names(seqs) %>% str_replace(pattern="Metazoa", replacement="Root")
-
-# assume the taxonomy begins with 'Root;' 
-groups <- gsub("(.*)(Root;)", "\\2", groups) # extract the group label
-groupCounts <- table(groups)
-u_groups <- names(groupCounts) # unique groups
-length(u_groups) # number of groups
- 
-# Pruning training set
-
-maxGroupSize <- 10 # max sequences per label (>= 1)
-remove <- logical(length(seqs))
-for (i in which(groupCounts > maxGroupSize)) {
-  index <- which(groups==u_groups[i])
-  keep <- sample(length(index),
-  maxGroupSize)
-  remove[index[-keep]] <- TRUE
-}
-sum(remove) # number of sequences eliminated
-
-
-# Training the classifier
-maxIterations <- 3 # must be >= 1
-allowGroupRemoval <- TRUE
-probSeqsPrev <- integer() # suspected problem sequences from prior iteration
-for (i in seq_len(maxIterations)) {
-  cat("Training iteration: ", i, "\n", sep="")
-  # train the classifier
-  trainingSet <- LearnTaxa(seqs[!remove],
-  names(seqs)[!remove],
-  taxid)
-  
-  # look for problem sequences
-  probSeqs <- trainingSet$problemSequences$Index
-  if (length(probSeqs)==0) {
-    cat("No problem sequences remaining.\n")
-    break
-  } else if (length(probSeqs)==length(probSeqsPrev) &&
-  all(probSeqsPrev==probSeqs)) {
-    cat("Iterations converged.\n")
-    break
-    }
-  if (i==maxIterations)
-  break
-  probSeqsPrev <- probSeqs
-  
-  # remove any problem sequences
-  index <- which(!remove)[probSeqs]
-  remove[index] <- TRUE # remove all problem sequences
-  if (!allowGroupRemoval) {
-    # replace any removed groups
-    missing <- !(u_groups %in% groups[!remove])
-    missing <- u_groups[missing]
-    if (length(missing) > 0) {
-    index <- index[groups[index] %in% missing]
-    remove[index] <- FALSE # don't remove
-    }
-  }
-}
-sum(remove) # total number of sequences eliminated
-length(probSeqs) # number of remaining problem sequences
-
-# View the results of training
-
-trainingSet
-plot(trainingSet)
-
+# Train IDTAXA
+trainingSet <- taxreturn::train_idtaxa(amplicon)
 #Write out training set
 saveRDS(trainingSet, file="reference/idtaxa.rds")
+
 ```
 
-## Output BLAST database
+
+# Summarise taxa in database
+
+```{r summary}
+summary <- tax2tree(heirarchy, output="treedf")
+```

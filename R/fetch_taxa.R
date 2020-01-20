@@ -121,39 +121,7 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
 
         # gb-binom
       } else if (output == "gb-binom") {
-    #
-    #    data <- subset(data, select = c("sampleid", "species_name", "nucleotides")) %>%
-    #      na.omit() %>%
-    #      dplyr::mutate(species_name = trimws(species_name, which = "both"))
 
-    #    #ids <- taxizedb::name2taxid(data$species_name, out_type = "summary")
-    #    ids <- data %>%
-    #      dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
-    #      dplyr::left_join(db, by="tax_name") #%>%
-    #      dplyr::pull(tax_id)
-    #
-    #    # Add exception handling for duplicated taxon names
-    #    if (any(duplicated(ids$name_txt))) {
-    #      dupname <- ids$name_txt[ duplicated(ids$name_txt)]
-    #      dup <- ids[ids$name_txt %in% dupname, ] %>%
-    #        dplyr::mutate(correct = FALSE)
-    #      class <- taxizedb::classification(dup$tax_id)
-
-    #      for (i in 1:length(class)) {
-    #        dup$correct[i] <- any(stringr::str_detect(class[[i]]$name, pattern = "Insecta"))
-    #      }
-
-    #      filt <- dup$tax_id[which(dup$correct == FALSE)]
-    #      ids <- ids %>%
-    #        dplyr::filter(!tax_id %in% filt) %>%
-    #        dplyr::rename(species_name = name_txt)
-
-    #      data <- data %>%
-    #        dplyr::left_join(ids, by = "species_name") %>%
-    #        dplyr::rename(gb = tax_id) %>%
-    #        tidyr::unite("name", c("sampleid", "gb"), sep = "|") %>%
-    #        tidyr::unite("name", c("name", "species_name"), sep = ";")
-    #    } else if (!any(duplicated(ids$name_txt))) {
           data <- data %>%
             dplyr::select(sampleid, species_name, nucleotides) %>%
             na.omit() %>%
@@ -161,11 +129,7 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
             dplyr::left_join(db, by="tax_name") %>%
             tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
             tidyr::unite("name", c("name", "tax_name"), sep = ";")
-       # }
       }
-
-      # Output fASTA
-      # iupac <- paste0(paste(names(Biostrings::IUPAC_CODE_MAP),collapse="|"),"|-")
 
       # Problem -some bold sequences contain an Ionisine
       data <- data %>%
