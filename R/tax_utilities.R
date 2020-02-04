@@ -435,3 +435,54 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
   return(out)
 }
 
+
+
+# LCA probs ---------------------------------------------------------------
+
+#' Probabilitys of sharing a rank as a function of sequence identity
+#'
+#' @param x a DNAbin object or an object coercible to DNAbin
+#' @param sim The sequence similarities to cluster at
+#' @param k integer giving the k-mer size used to generate the input matrix for k-means clustering.
+#' @param nstart value passed to  nstart passed to kmeans. Higher increases computation time but can improve clustering accuracy considerably.
+#' @param ranks The taxonomic ranks currently assigned to the names
+#' @param delim The delimiter used between ranks
+#'
+#' @return
+#' @export
+#'
+#' @examples
+lca_probs <- function(x, sim=seq(0.9,1,0.01), k=5, nstart = 20, ranks=c("kingdom", "phylum", "class", "order", "family", "genus", "species"), delim=";"){
+  # Convert to DNAbin
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+  }
+
+  simlist <- vector("list", length=length(sim))
+  for (s in 1:length(sim)) {
+    otus <- kmer::otu(x, k=k, threshold=sim[s] ) %>%
+      enframe()  %>%
+      tidyr::separate(name, into=c("Acc", ranks, "rep"), sep=";")
+
+    ranklist <- vector("list", length=length(ranks))
+    names(ranklist) <- ranks
+    for (i in 1:length(ranks)){
+
+      ranklist[[i]] <- otus %>%
+        select(c(ranks[i], "value")) %>%
+        group_by_all( ) %>%
+        dplyr::count() %>%
+        group_by(value) %>%             # now required with changes to dplyr::count()
+        mutate(prop = prop.table(n)) %>%
+        ungroup %>%
+        summarise(prop = mean(prop))
+    }
+
+    simlist[[s]] <- bind_cols(ranklist) %>%
+      set_colnames(ranks) %>%
+      mutate(sim = sim[s])
+  }
+  out <- bind_rows(simlist)
+  return(out)
+}
+
