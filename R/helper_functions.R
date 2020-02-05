@@ -405,47 +405,61 @@ clr <- function(x, base=2){
 #' @import insect
 #'
 #' @examples
-get_binding_position <- function(primer, model, tryrc=TRUE, quiet=FALSE, minscore=10, ...) {
-
-  if(!is.null(primer)){
-    if(!inherits(primer, "DNAbin")){
-      if(mode(primer) == "character"){
-        if(nchar(primer[1]) == 1) primer <- paste0(primer, collapse = "")
+get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, minscore = 10, ...) {
+  
+  if (!inherits(model, "PHMM")) { stop("Error: model must be a PHMM object")}
+  
+  if (!is.null(primer)) {
+    if (!inherits(primer, "DNAbin")) {
+      if (mode(primer) == "character") {
+        if (nchar(primer[1]) == 1) 
+          primer <- paste0(primer, collapse = "")
         primer <- insect::char2dna(primer)
-      }else{
-        if(!inherits(primer, "PHMM")) stop("Invalid primer(s)\n")
+      }
+      else {
+        if (!inherits(primer, "PHMM")) 
+          stop("Invalid primer(s)\n")
       }
     }
   }
-
-  if(tryrc == TRUE) {
-    down <- ape::complement(primer)
-  }
-
+  
   up <- primer[!primer %in% as.raw(c(2, 4))]
-  down <- down[!down %in% as.raw(c(2, 4))]
   vitF <- aphid::Viterbi(model, up, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
-  vitR <- aphid::Viterbi(model, down, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
-
-  if (vitF$score > vitR$score && vitF$score > minscore) {
-    if(!quiet){message("Forward complement matched alignment")}
+  
+  if (tryrc == TRUE) {
+    down <- ape::complement(primer)
+    down <- down[!down %in% as.raw(c(2, 4))]
+    vitR <- aphid::Viterbi(model, down, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
+    if (vitF$score > vitR$score && vitF$score > minscore) {
+      if (!quiet) {
+        message("Forward complement matched alignment")
+      }
+      path <- vitF$path
+    }
+    else if (vitF$score < vitR$score && vitR$score > minscore) {
+      if (!quiet) {
+        message("Reverse complement matched alignment")
+      }
+      path <- vitR$path
+    }
+    else if (vitF$score && vitR$score < minscore) {
+      return(NULL)
+      stop("Both complements of primer were below minscore")
+    }
+    
+  } else if(tryrc == FALSE && vitF$score > minscore) {
     path <- vitF$path
-  } else if (vitF$score < vitR$score && vitR$score > minscore) {
-    if(!quiet){message("Reverse complement matched alignment")}
-    path <- vitR$path
-  } else if( vitF$score && vitR$score < minscore ){
-    return(NULL)
-    stop("Both complements of primer were below minscore")
-  }
+  } else {Stop("Forward complement of primer was below minscore")}
 
   matchF <- match(1, path)
-  matchR <- (length(path) - (match(1, rev(path))-1))
-
-  if ((matchR-(matchF-1)) == length(primer[[1]])){
-    out <-  data.frame(primer=dna2char(primer),start=matchF,end= matchR)
-  } else if ((matchR-(matchF-1)) > length(primer[[1]])) {
+  matchR <- (length(path) - (match(1, rev(path)) - 1))
+  if ((matchR - (matchF - 1)) == length(primer[[1]])) {
+    out <- data.frame(primer = dna2char(primer), start = matchF, end = matchR)
+  }
+  else if ((matchR - (matchF - 1)) > length(primer[[1]])) {
     message("Warning: binding positions are larger than the primer length")
-  } else if ((matchR-(matchF-1)) < length(primer[[1]])) {
+  }
+  else if ((matchR - (matchF - 1)) < length(primer[[1]])) {
     message("Warning: binding positions are less than the primer length")
   }
   return(out)
