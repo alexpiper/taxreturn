@@ -486,3 +486,5 @@ lca_probs <- function(x, sim=seq(0.9,1,0.01), k=5, nstart = 20, ranks=c("kingdom
   return(out)
 }
 
+
+
