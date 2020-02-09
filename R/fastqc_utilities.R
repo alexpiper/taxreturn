@@ -25,22 +25,22 @@ fastqc_install <- function(url, dest.dir = "bin") {
 
   }
 
-  if (!dir.exists(destdir)) {
-    dir.create(destdir) # Create first directory
+  if (!dir.exists(dest.dir)) {
+    dir.create(dest.dir) # Create first directory
   }
 
-  if (dir.exists(paste0(destdir, "/fastQC"))) {
-    unlink(paste0(destdir, "/fastQC"), recursive = TRUE) # Remove old version
+  if (dir.exists(paste0(dest.dir, "/fastQC"))) {
+    unlink(paste0(dest.dir, "/fastQC"), recursive = TRUE) # Remove old version
   }
 
-  destfile <- file.path(destdir, basename(url))
+  destfile <- file.path(dest.dir, basename(url))
   if (exists(destfile)) {
     file.remove(destfile) # Remove old zip file
   }
   httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
 
   #unzip file
-  utils::unzip(destfile, exdir = destdir)
+  utils::unzip(destfile, exdir = dest.dir)
   #Remove download
   file.remove(destfile)
 }
