@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-fastqc_install <- function(url, destdir = "bin") {
+fastqc_install <- function(url, dest.dir = "bin") {
   if (missing(url)) {
 
     # find the latest version of fastq

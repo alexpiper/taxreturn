@@ -8,7 +8,7 @@
     if(interactive) stop("Executable for ", paste(exe, collapse=" or "), " not found! Please make sure that the software is correctly installed and, if necessary, path variables are set.", call.=FALSE)
     return(character(0))
   }
-  
+
   path[which(path!="")[1]]
 }
 
@@ -24,19 +24,19 @@
 #' @export
 #'
 #' @examples
-blast_install <- function(url, destdir = "bin") {
+blast_install <- function(url, dest.dir = "bin") {
   # get start time
   time <- Sys.time()
   # get OS
   localos <- Sys.info()["sysname"]
-  
+
   if (missing(url)) {
     # find the latest version of BLAST
     url <- 'ftp://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/'
     filenames <- RCurl::getURL(url, ftp.use.epsv = FALSE, dirlistonly = TRUE) %>%
       stringr::str_split("\r*\n") %>%
       unlist()
-    
+
     if(localos == "Windows"){
     url <- filenames[str_detect(filenames,"win64.tar.gz$")] %>%
       paste0(url,.)
@@ -47,35 +47,35 @@ blast_install <- function(url, destdir = "bin") {
       url <- filenames[str_detect(filenames,"linux.tar.gz$")] %>%
         paste0(url,.)
     }
-    
+
   }
-  
+
   if (!dir.exists(destdir)) {
     dir.create(destdir) # Create first directory
   }
-  
+
   version <- basename(url) %>% str_replace("(-x64)(.*?)(?=$)", "")
   if (dir.exists(paste0(destdir, "/",version))) {
     unlink(paste0(destdir, "/",version), recursive = TRUE) # Remove old version
   }
-  
+
   destfile <- file.path(destdir, basename(url))
   if (exists(destfile)) {
     file.remove(destfile) # Remove old zip file
   }
   httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
-  
+
   #unzip file and remove download
   utils::untar(destfile, exdir = destdir)
   file.remove(destfile)
-  
+
   #Set new $Paths variable for mac & linux
   if(localos == "Darwin" | localos == "unix"){
     old_path <- Sys.getenv("PATH")
     install_path <- list.dirs(destdir, full.names = TRUE)[str_detect(list.dirs(destdir, full.names = TRUE),"/bin$")]
     Sys.setenv(PATH = paste(old_path, normalizePath(install_path), sep = ":"))
   }
-  
+
   time <- Sys.time() - time
   message(paste0("Downloaded ", version, " in ", format(time, digits = 2)))
 }
@@ -119,14 +119,14 @@ makeblastdb <- function (file, dbtype = "nucl", args= NULL) {
 #'
 #' @examples
 blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FALSE){
-  
+
   time <- Sys.time() # get time
   # Create temp files
   tmp <- tempdir()
   tmpquery <- paste0(tmp, "/tmpquery.fa")
   tmpdb <- paste0(tmp, "/tmpquery.fa")
-  
-  
+
+
   # Database
   if(inherits(db, "DNAbin")){
     if (!quiet) { message("Database input is DNAbin: Creating temporary blast database") }
@@ -148,7 +148,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
   } else if (inherits(db, "character") &&  file.exists(file.path(db))){ # Handle filename
     db <- db
   }
-  
+
   # Query
   if(inherits(query, "DNAbin")){
     if (!quiet) { message("Query is DNAbin: Creating temporary fasta file") }
@@ -167,8 +167,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
   } else if (inherits(query, "character") &&  file.exists(file.path(query))){ # Handle filenames
     input <- query
   }
-  
-  
+
+
   #  Conduct BLAST search
   if (!quiet) { message("Running BLAST") }
   results <- system2(command = .findExecutable(type),
@@ -179,7 +179,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
                               "-ungapped", args),
                      wait = TRUE,
                      stdout = TRUE)
-  
+
   # Parse BLAST results
   out <- results %>%
     enframe() %>%
@@ -189,7 +189,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
              convert = TRUE)
   time <- Sys.time() - time
   if (!quiet) (message(paste0("finished BLAST in ", format(time, digits = 2))))
-  
+
   if(file.exists(tmpdb)){file.remove(tmpdb)}
   if(file.exists(tmpquery)){file.remove(tmpquery)}
   return(out)
@@ -225,5 +225,5 @@ blast_top_hit <- function(query, db, type="blastn", threshold=90, taxranks=c("Ki
     top_n(1, bitscore) %>%
     top_n(1, row_number(name)) %>% # Break ties by position
     separate(sseqid, c("acc",taxranks), delim)
-  
+
 }
