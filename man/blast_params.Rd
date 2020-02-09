@@ -7,7 +7,7 @@
 blast_params(type = "blastn")
 }
 \arguments{
-\item{type}{(Required) Type of blast to display help page for}
+\item{type}{(Required) Which BLAST function to display help page for}
 }
 \description{
 Show BLAST parameters

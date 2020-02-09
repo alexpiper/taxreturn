@@ -11,7 +11,7 @@
 #'
 #' @import httr
 #' @examples
-bbinstall <- function(url, dest.dir = "bin") {
+bbmap_install <- function(url, dest.dir = "bin") {
   if (missing(url)) {
 
     url <- ("https://sourceforge.net/projects/bbmap/files/latest/download")

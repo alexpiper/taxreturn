@@ -88,8 +88,7 @@ blast_install <- function(url, dest.dir = "bin") {
 #' Make blast Database
 #'
 #' @param file (Required) A fasta file to create a database from.
-#' @param dbtype (Optional) Type of database, accepts "nucl" for nucleotide
-#' default is "nucl" for nucleotide
+#' @param dbtype (Optional) Molecule type of database, accepts "nucl" for nucleotide or "prot" for protein.
 #' @param args (Optional) Extra arguments passed to BLAST
 #'
 #' @return
@@ -107,7 +106,7 @@ makeblastdb <- function (file, dbtype = "nucl", args= NULL) {
 
 #' Show BLAST parameters
 #'
-#' @param type (Required) Type of blast to display help page for
+#' @param type (Required) Which BLAST function to display help page for
 #'
 #' @return
 #' @export

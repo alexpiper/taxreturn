@@ -2,11 +2,12 @@
 
 export("%>%")
 export(bbdemux)
-export(bbinstall)
+export(bbmap_install)
 export(bbsplit)
 export(bbtrim)
 export(blast)
 export(blast_install)
+export(blast_params)
 export(blast_top_hit)
 export(boldSearch)
 export(clean_seqs)
