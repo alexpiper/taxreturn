@@ -4,12 +4,14 @@
 \alias{blast_install}
 \title{Install BLAST}
 \usage{
-blast_install(url, destdir = "bin")
+blast_install(url, dest.dir = "bin")
 }
 \arguments{
-\item{url}{A URL for the specific BLAST release to download. If missing, automatically download latest release.}
+\item{url}{(Optional) Default will search for the latest version
+URL to retrieve BLAST version from.}
 
-\item{destdir}{Destination to install BLAST to}
+\item{dest.dir}{(Optional)  Default "bin"
+Directory to install BLAST within.}
 }
 \description{
 Install BLAST

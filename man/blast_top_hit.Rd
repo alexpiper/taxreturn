@@ -10,22 +10,22 @@ blast_top_hit(query, db, type = "blastn", threshold = 90,
   quiet = FALSE)
 }
 \arguments{
-\item{query}{Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.}
+\item{query}{(Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.}
 
-\item{db}{Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
+\item{db}{(Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
 If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database}
 
-\item{type}{type of search to conduct, default 'blastn'}
+\item{type}{(Required) type of search to conduct, default 'blastn'}
 
-\item{threshold}{Minimum identity threshold to accept}
+\item{threshold}{(Required) Minimum identity threshold to accept}
 
-\item{taxranks}{The taxonomic ranks contained in the fasta headers}
+\item{taxranks}{(Required) The taxonomic ranks contained in the fasta headers}
 
-\item{delim}{The delimiter between taxonomic ranks in fasta headers}
+\item{delim}{(Required) The delimiter between taxonomic ranks in fasta headers}
 
-\item{args}{Extra arguments passed to BLAST}
+\item{args}{(Optional) Extra arguments passed to BLAST}
 
-\item{quiet}{Whether progress should be printed to console}
+\item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 }
 \description{
 Conduct BLAST search and return top hit

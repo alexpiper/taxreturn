@@ -17,8 +17,10 @@
 
 #' Install BLAST
 #'
-#' @param url A URL for the specific BLAST release to download. If missing, automatically download latest release.
-#' @param destdir Destination to install BLAST to
+#' @param url (Optional) Default will search for the latest version
+#' URL to retrieve BLAST version from.
+#' @param dest.dir (Optional)  Default "bin"
+#' Directory to install BLAST within.
 #'
 #' @return
 #' @export
@@ -85,9 +87,10 @@ blast_install <- function(url, dest.dir = "bin") {
 
 #' Make blast Database
 #'
-#' @param file A fasta file to create a database from
-#' @param dbtype Type of database, default is nucleotide
-#' @param args Extra arguments passed to BLAST
+#' @param file (Required) A fasta file to create a database from.
+#' @param dbtype (Optional) Type of database, accepts "nucl" for nucleotide
+#' default is "nucl" for nucleotide
+#' @param args (Optional) Extra arguments passed to BLAST
 #'
 #' @return
 #' @export
@@ -102,17 +105,30 @@ makeblastdb <- function (file, dbtype = "nucl", args= NULL) {
 }
 
 
+#' Show BLAST parameters
+#'
+#' @param type (Required) Type of blast to display help page for
+#'
+#' @return
+#' @export
+#'
+#' @examples
+blast_params <- function(type = "blastn") {
+  system(paste(.findExecutable(c(type)), "-help"))
+}
+
+
 # BLAST -------------------------------------------------------------------
 
 #' Run BLAST search
 #'
-#' @param query Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
-#' @param db Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
+#' @param query (Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
+#' @param db (Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
 #' If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database
-#' @param type type of search to conduct, default 'blastn'
-#' @param evalue Minimum evalue from search
-#' @param args Extra arguments passed to BLAST
-#' @param quiet Whether progress should be printed to console
+#' @param type (Required) type of search to conduct, default 'blastn'
+#' @param evalue (Required) Minimum evalue from search
+#' @param args (Optional) Extra arguments passed to BLAST
+#' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
 #'
 #' @return
 #' @export
@@ -201,15 +217,15 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
 #' BLAST Top Hit
 #'
 #' @description Conduct BLAST search and return top hit
-#' @param query Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
-#' @param db Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
+#' @param query (Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
+#' @param db (Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
 #' If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database
-#' @param type type of search to conduct, default 'blastn'
-#' @param threshold Minimum identity threshold to accept
-#' @param taxranks The taxonomic ranks contained in the fasta headers
-#' @param delim The delimiter between taxonomic ranks in fasta headers
-#' @param args Extra arguments passed to BLAST
-#' @param quiet Whether progress should be printed to console
+#' @param type (Required) type of search to conduct, default 'blastn'
+#' @param threshold (Required) Minimum identity threshold to accept
+#' @param taxranks (Required) The taxonomic ranks contained in the fasta headers
+#' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
+#' @param args (Optional) Extra arguments passed to BLAST
+#' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
 #'
 #' @return
 #' @export

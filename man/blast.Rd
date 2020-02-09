@@ -8,18 +8,18 @@ blast(query, db, type = "blastn", evalue = 1e-06, args = NULL,
   quiet = FALSE)
 }
 \arguments{
-\item{query}{Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.}
+\item{query}{(Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.}
 
-\item{db}{Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
+\item{db}{(Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
 If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database}
 
-\item{type}{type of search to conduct, default 'blastn'}
+\item{type}{(Required) type of search to conduct, default 'blastn'}
 
-\item{evalue}{Minimum evalue from search}
+\item{evalue}{(Required) Minimum evalue from search}
 
-\item{args}{Extra arguments passed to BLAST}
+\item{args}{(Optional) Extra arguments passed to BLAST}
 
-\item{quiet}{Whether progress should be printed to console}
+\item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 }
 \description{
 Run BLAST search

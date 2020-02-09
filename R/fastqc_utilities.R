@@ -2,7 +2,7 @@
 #'
 #' @param url (Optional) Default will search for the latest version
 #' URL to retrieve fastQC from.
-#' @param destdir (Optional)  Default "bin"
+#' @param dest.dir (Optional)  Default "bin"
 #' Directory to install fastQC within.
 #'
 #' @return
@@ -49,10 +49,10 @@ fastqc_install <- function(url, dest.dir = "bin") {
 #' @description Run FastQC Tool on windows or linux
 #' @param fq.dir (Required) Default is the current working directory.
 #'    path to the directory containing fastq files.
-#' @param qc.dir path to the FastQC result directory. If NULL, a directory
+#' @param qc.dir (Optional) path to the FastQC result directory. If NULL, a directory
 #'   named FASTQC is created in the current working directory.
-#' @param threads the number of threads to be used. Default is 1.
-#' @param fastqc.path path to fastqc program
+#' @param threads (Optional) the number of threads to be used. Default is 1.
+#' @param fastqc.path (Required) path to fastqc program
 #' @return A new directory containing the fastqc reports for each sample
 #'
 #' @import processx

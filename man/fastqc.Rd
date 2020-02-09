@@ -11,12 +11,12 @@ fastqc(fq.dir, qc.dir = NULL, threads = 1,
 \item{fq.dir}{(Required) Default is the current working directory.
 path to the directory containing fastq files.}
 
-\item{qc.dir}{path to the FastQC result directory. If NULL, a directory
+\item{qc.dir}{(Optional) path to the FastQC result directory. If NULL, a directory
 named FASTQC is created in the current working directory.}
 
-\item{threads}{the number of threads to be used. Default is 1.}
+\item{threads}{(Optional) the number of threads to be used. Default is 1.}
 
-\item{fastqc.path}{path to fastqc program}
+\item{fastqc.path}{(Required) path to fastqc program}
 }
 \value{
 A new directory containing the fastqc reports for each sample

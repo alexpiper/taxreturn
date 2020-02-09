@@ -7,11 +7,12 @@
 makeblastdb(file, dbtype = "nucl", args = NULL)
 }
 \arguments{
-\item{file}{A fasta file to create a database from}
+\item{file}{(Required) A fasta file to create a database from.}
 
-\item{dbtype}{Type of database, default is nucleotide}
+\item{dbtype}{(Optional) Type of database, accepts "nucl" for nucleotide
+default is "nucl" for nucleotide}
 
-\item{args}{Extra arguments passed to BLAST}
+\item{args}{(Optional) Extra arguments passed to BLAST}
 }
 \description{
 Make blast Database
