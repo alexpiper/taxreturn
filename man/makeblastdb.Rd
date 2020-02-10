@@ -4,7 +4,7 @@
 \alias{makeblastdb}
 \title{Make blast Database}
 \usage{
-makeblastdb(file, dbtype = "nucl", args = NULL)
+makeblastdb(file, dbtype = "nucl", args = NULL, quiet = FALSE)
 }
 \arguments{
 \item{file}{(Required) A fasta file to create a database from.}

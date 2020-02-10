@@ -598,5 +598,99 @@ pad_alignment <- function(x, model, pad="-", tryrc=FALSE, quiet=FALSE, check_ind
 }
 
 
+# Create Samplesheet ------------------------------------------------------
+
+
+
+#' Create Samplesheet
+#'
+#' @param SampleSheet
+#' @param runParameters
+#' @param format
+#' @param Fprimer
+#' @param Rprimer
+#' @param Ftwintag
+#' @param Rtwintag
+#'
+#' @return
+#' @export
+#' @import XML
+#'
+#' @examples
+create_samplesheet <- function(SampleSheet, runParameters, format = "miseq"){
+
+  if (format=="miseq"){
+    sample_sheet <- readr::read_csv(SampleSheet, skip=20, col_types = cols(
+      Sample_ID = col_character(),
+      Sample_Name = col_character(),
+      Sample_Plate = col_double(),
+      Sample_Well = col_character(),
+      I7_Index_ID = col_character(),
+      index = col_character(),
+      I5_Index_ID = col_character(),
+      index2 = col_character(),
+      Sample_Project = col_character(),
+      Description = col_logical()
+    ))
+
+    sample_header <- readr::read_csv(SampleSheet, n_max=19, col_types = cols(
+      `[Header]` = col_character()
+    )) %>%
+      dplyr::select(1:2) %>%
+      magrittr::set_colnames(c("var", "value")) %>%
+      tidyr::drop_na(var) %>%
+      dplyr::mutate(var = str_replace(make.unique(var), ".1", "_R")) %>%
+      dplyr::mutate(var = str_replace(var, " ", "_")) %>%
+      tibble::column_to_rownames("var") %>%
+      t() %>%
+      tibble::as_tibble() %>%
+      dplyr::select(Investigator_Name,
+             Project_Name,
+             Experiment_Name,
+             Assay,
+             Adapter)
+
+    XML::xmlFromRunParameters <- xmlParse(runParameters)
+    run_params <- XML::xmlToDataFrame(nodes = getNodeSet(xmlFromRunParameters, "/RunParameters")) %>%
+      as.data.frame() %>%
+      dplyr::mutate(FlowCellExpiry = FlowcellRFIDTag %>%
+               str_replace("^.{0,23}", "") %>%
+               str_replace(".{0,9}$", "") %>%
+               as.Date(),
+             ReagentKitExpiry = ReagentKitRFIDTag %>%
+               str_replace("^.{0,23}", "") %>%
+               str_replace(".{0,9}$", "") %>%
+               as.Date(),
+             PR2Expiry = PR2BottleRFIDTag %>%
+               str_replace("^.{0,23}", "") %>%
+               str_replace(".{0,9}$", "") %>%
+               as.Date(),
+             FCID = Barcode %>%
+               str_replace("^.{0,10}", ""),
+             RunStartDate = lubridate::ymd(RunStartDate)
+      ) %>%
+      dplyr::select(
+        RunID,
+        ScannerID,
+        RunNumber,
+        FCID,
+        RunStartDate,
+        PR2BottleBarcode,
+        ReagentKitBarcode,
+        FlowCellExpiry,
+        ReagentKitExpiry,
+        PR2Expiry,
+        MostRecentWashType) %>%
+      dplyr::mutate_if(is.factor, as.character)
+  } else {
+    message("Warning: Only miseq currently implemented")
+    return(NULL)
+  }
+
+  combined <- sample_sheet %>%
+    cbind(sample_header) %>%
+    cbind(run_params)
+  return(combined)
+}
 
 

@@ -95,12 +95,22 @@ blast_install <- function(url, dest.dir = "bin") {
 #' @export
 #'
 #' @examples
-makeblastdb <- function (file, dbtype = "nucl", args= NULL) {
+makeblastdb <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
+  time <- Sys.time() # get time
   if (is.null(args)){args <- ""}
+  if (stringr::str_detect(file, ".gz")) {
+    message("Unzipping file")
+    compressed <- TRUE
+    R.utils::gunzip(file, remove=FALSE)
+    file <- stringr::str_replace(file, ".gz", "")}
   results <- system2(command = .findExecutable("makeblastdb"),
                      args = c("-in", file, "-dbtype", dbtype, args),
                      wait = TRUE,
                      stdout = TRUE)
+  time <- Sys.time() - time
+  if (compressed) {file.remove(file)}
+  if (!quiet) (message(paste0("made BLAST DB in ", format(time, digits = 2))))
+
 }
 
 
@@ -153,7 +163,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
     Biostrings::writeXStringSet(db, tmpdb)
     makeblastdb(tmpdb)
     db <- tmpdb
-  } else if (inherits(db, "character") &&  all(str_to_upper(str_split(db,"")[[1]]) %in% Biostrings::DNA_ALPHABET)) { # Handle text input
+  } else if (inherits(db, "character") &&  all(stringr::str_to_upper(stringr::str_split(db,"")[[1]]) %in% Biostrings::DNA_ALPHABET)) { # Handle text input
     if (!quiet) { message("Database input is character string: Creating temporary blast database") }
     if (nchar(db[1]) == 1) {db <- paste0(db, collapse = "")}
     db <- insect::char2dna(db)
@@ -161,6 +171,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
     makeblastdb(tmpdb)
     db <- tmpdb
   } else if (inherits(db, "character") &&  file.exists(file.path(db))){ # Handle filename
+    makeblastdb(db)
+    db <- stringr::str_replace(db, ".gz", "")
     db <- db
   }
 
@@ -197,8 +209,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
 
   # Parse BLAST results
   out <- results %>%
-    enframe() %>%
-    separate(col = value,
+    tibble::enframe() %>%
+    tidyr::separate(col = value,
              into = c("qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"),
              sep = "\t",
              convert = TRUE)

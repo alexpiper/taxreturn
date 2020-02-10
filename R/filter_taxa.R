@@ -326,9 +326,20 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
 
 # modified from traitdataform pacakge https://github.com/EcologicalTraitData/traitdataform/issues/35
 
-# COuld remove subspecies
-# COuld te
-
+#' Resolve GBIF
+#'
+#' @param x
+#' @param subspecies
+#' @param higherrank
+#' @param verbose
+#' @param fuzzy
+#' @param conf_threshold
+#' @param resolve_taxonomy
+#'
+#' @import taxize
+#' @return
+#'
+#' @examples
 resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALSE,
                                      fuzzy = TRUE, conf_threshold = 90, resolve_taxonomy = TRUE) {
   matchtype <- status <- confidence <- NULL
