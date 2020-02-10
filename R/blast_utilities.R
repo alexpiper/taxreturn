@@ -52,29 +52,29 @@ blast_install <- function(url, dest.dir = "bin") {
 
   }
 
-  if (!dir.exists(destdir)) {
-    dir.create(destdir) # Create first directory
+  if (!dir.exists(dest.dir)) {
+    dir.create(dest.dir) # Create first directory
   }
 
   version <- basename(url) %>% str_replace("(-x64)(.*?)(?=$)", "")
-  if (dir.exists(paste0(destdir, "/",version))) {
-    unlink(paste0(destdir, "/",version), recursive = TRUE) # Remove old version
+  if (dir.exists(paste0(dest.dir, "/",version))) {
+    unlink(paste0(dest.dir, "/",version), recursive = TRUE) # Remove old version
   }
 
-  destfile <- file.path(destdir, basename(url))
+  destfile <- file.path(dest.dir, basename(url))
   if (exists(destfile)) {
     file.remove(destfile) # Remove old zip file
   }
   httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
 
   #unzip file and remove download
-  utils::untar(destfile, exdir = destdir)
+  utils::untar(destfile, exdir = dest.dir)
   file.remove(destfile)
 
   #Set new $Paths variable for mac & linux
   if(localos == "Darwin" | localos == "unix"){
     old_path <- Sys.getenv("PATH")
-    install_path <- list.dirs(destdir, full.names = TRUE)[str_detect(list.dirs(destdir, full.names = TRUE),"/bin$")]
+    install_path <- list.dirs(dest.dir, full.names = TRUE)[str_detect(list.dirs(dest.dir, full.names = TRUE),"/bin$")]
     Sys.setenv(PATH = paste(old_path, normalizePath(install_path), sep = ":"))
   }
 
