@@ -650,7 +650,7 @@ create_samplesheet <- function(SampleSheet, runParameters, format = "miseq"){
              Assay,
              Adapter)
 
-    XML::xmlFromRunParameters <- xmlParse(runParameters)
+    xmlFromRunParameters <- xmlParse(runParameters)
     run_params <- XML::xmlToDataFrame(nodes = getNodeSet(xmlFromRunParameters, "/RunParameters")) %>%
       as.data.frame() %>%
       dplyr::mutate(FlowCellExpiry = FlowcellRFIDTag %>%
