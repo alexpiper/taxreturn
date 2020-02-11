@@ -650,8 +650,13 @@ create_samplesheet <- function(SampleSheet, runParameters, format = "miseq"){
              Assay,
              Adapter)
 
-    xmlFromRunParameters <- xmlParse(runParameters)
-    run_params <- XML::xmlToDataFrame(nodes = getNodeSet(xmlFromRunParameters, "/RunParameters")) %>%
+    reads <- readr::read_csv(SampleSheet,skip=12, n_max=2, col_types = cols(
+      `[Reads]` = col_number() ))%>%
+      pull(`[Reads]`)
+    reads <- tibble(Fread = reads[1], Rread = reads[2])
+
+    xmlFromRunParameters <- XML::xmlParse(runParameters)
+    run_params <- XML::xmlToDataFrame(nodes = XML::getNodeSet(xmlFromRunParameters, "/RunParameters")) %>%
       as.data.frame() %>%
       dplyr::mutate(FlowCellExpiry = FlowcellRFIDTag %>%
                str_replace("^.{0,23}", "") %>%
@@ -689,8 +694,10 @@ create_samplesheet <- function(SampleSheet, runParameters, format = "miseq"){
 
   combined <- sample_sheet %>%
     cbind(sample_header) %>%
+    cbind(reads) %>%
     cbind(run_params)
-  return(combined)
+
+    return(combined)
 }
 
 
