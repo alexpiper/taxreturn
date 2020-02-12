@@ -4,8 +4,16 @@
 \alias{boldSearch}
 \title{boldSearch}
 \usage{
-boldSearch(x, marker = NULL, quiet = FALSE, output = "h",
-  out.file = NULL, compress = FALSE, out.dir = NULL, db = NULL)
+boldSearch(
+  x,
+  marker = NULL,
+  quiet = FALSE,
+  output = "h",
+  out.file = NULL,
+  compress = FALSE,
+  out.dir = NULL,
+  db = NULL
+)
 }
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
@@ -24,6 +32,9 @@ or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomi
 \item{compress}{Option to compress output fasta files using gzip}
 
 \item{out.dir}{Output directory to write fasta files to}
+}
+\value{
+
 }
 \description{
 boldSearch

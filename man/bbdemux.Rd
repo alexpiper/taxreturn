@@ -4,10 +4,23 @@
 \alias{bbdemux}
 \title{Demultiplex fusion primers using BBmap Seal}
 \usage{
-bbdemux(install = NULL, fwd, rev = NULL, Fbarcodes = NULL,
-  Rbarcodes = NULL, restrictleft = NULL, out.dir = "demux",
-  kmer = NULL, hdist = 0, degenerate = TRUE, overwrite = TRUE,
-  threads = NULL, mem = NULL, interleaved = FALSE, tidylog = TRUE)
+bbdemux(
+  install = NULL,
+  fwd,
+  rev = NULL,
+  Fbarcodes = NULL,
+  Rbarcodes = NULL,
+  restrictleft = NULL,
+  out.dir = "demux",
+  kmer = NULL,
+  hdist = 0,
+  degenerate = TRUE,
+  overwrite = TRUE,
+  threads = NULL,
+  mem = NULL,
+  interleaved = FALSE,
+  tidylog = TRUE
+)
 }
 \arguments{
 \item{install}{(Required) Install location for bbmap}
@@ -47,6 +60,9 @@ WARNING: mem detection can fail on cluster computing currently}
 
 \item{interleaved}{(Optional) Default FALSE
 Option to input interleaved reads}
+}
+\value{
+
 }
 \description{
 Demultiplex fusion primers using BBmap Seal

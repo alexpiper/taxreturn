@@ -13,6 +13,9 @@ URL to retrieve fastQC from.}
 \item{dest.dir}{(Optional)  Default "bin"
 Directory to install fastQC within.}
 }
+\value{
+
+}
 \description{
 fastqc_install
 }

@@ -9,6 +9,9 @@ fast_melt(physeq)
 \arguments{
 \item{physeq}{}
 }
+\value{
+
+}
 \description{
 Fast melt
 }

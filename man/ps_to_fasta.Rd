@@ -4,8 +4,7 @@
 \alias{ps_to_fasta}
 \title{outputs a FASTA file from a phyloseq object}
 \usage{
-ps_to_fasta(ps = ps, out.file = NULL, rank = NULL, width = 1000,
-  ...)
+ps_to_fasta(ps = ps, out.file = NULL, rank = NULL, width = 1000, ...)
 }
 \arguments{
 \item{ps}{A \code{phyloseq} object that contains \code{\link[phyloseq]{refseq}}.

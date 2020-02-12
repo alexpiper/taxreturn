@@ -4,11 +4,25 @@
 \alias{bbtrim}
 \title{Trim primers using BBDuk}
 \usage{
-bbtrim(install = NULL, fwd, rev = NULL, primers, restrictleft = NULL,
-  out.dir = "bbduk", trim.end = "left", ordered = TRUE,
-  kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0,
-  degenerate = TRUE, overwrite = TRUE, quality = FALSE,
-  tidylog = TRUE, maxlength = NULL)
+bbtrim(
+  install = NULL,
+  fwd,
+  rev = NULL,
+  primers,
+  restrictleft = NULL,
+  out.dir = "bbduk",
+  trim.end = "left",
+  ordered = TRUE,
+  kmer = NULL,
+  mink = FALSE,
+  tpe = TRUE,
+  hdist = 0,
+  degenerate = TRUE,
+  overwrite = TRUE,
+  quality = FALSE,
+  tidylog = TRUE,
+  maxlength = NULL
+)
 }
 \arguments{
 \item{install}{(Required) Install location for bbmap}
@@ -57,6 +71,9 @@ Read length histogram and Read GC content histogram.}
 
 \item{maxlength}{(Optional) Default FALSE
 Remove all reads above a maximum length. Useful for removing reads where no primers were found.}
+}
+\value{
+
 }
 \description{
 Trim primers using BBDuk

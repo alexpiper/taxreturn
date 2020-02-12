@@ -9,6 +9,9 @@ summarize_taxa(physeq, Rank, GroupBy = NULL)
 \arguments{
 \item{GroupBy}{}
 }
+\value{
+
+}
 \description{
 Summarise phyloseq table
 }

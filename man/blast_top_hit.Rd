@@ -4,10 +4,16 @@
 \alias{blast_top_hit}
 \title{BLAST Top Hit}
 \usage{
-blast_top_hit(query, db, type = "blastn", threshold = 90,
-  taxranks = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus",
-  "Species"), delim = ";", args = "-max_target_seqs 5",
-  quiet = FALSE)
+blast_top_hit(
+  query,
+  db,
+  type = "blastn",
+  threshold = 90,
+  taxranks = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+  delim = ";",
+  args = "-max_target_seqs 5",
+  quiet = FALSE
+)
 }
 \arguments{
 \item{query}{(Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.}
@@ -26,6 +32,9 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 \item{args}{(Optional) Extra arguments passed to BLAST}
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
+}
+\value{
+
 }
 \description{
 Conduct BLAST search and return top hit

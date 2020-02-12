@@ -4,8 +4,14 @@
 \alias{resolve_taxonomy}
 \title{Resolve taxonomic synonyms}
 \usage{
-resolve_taxonomy(x, subspecies = FALSE, quiet = TRUE,
-  missing = "ignore", higherrank = FALSE, fuzzy = TRUE)
+resolve_taxonomy(
+  x,
+  subspecies = FALSE,
+  quiet = TRUE,
+  missing = "ignore",
+  higherrank = FALSE,
+  fuzzy = TRUE
+)
 }
 \arguments{
 \item{x}{A DNAbin or DNAStringset object}

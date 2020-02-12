@@ -4,8 +4,7 @@
 \alias{fastqc}
 \title{Run FastQC Tool}
 \usage{
-fastqc(fq.dir, qc.dir = NULL, threads = 1,
-  fastqc.path = "bin/FastQC/fastqc")
+fastqc(fq.dir, qc.dir = NULL, threads = 1, fastqc.path = "bin/FastQC/fastqc")
 }
 \arguments{
 \item{fq.dir}{(Required) Default is the current working directory.

@@ -4,9 +4,14 @@
 \alias{lca_probs}
 \title{Probabilitys of sharing a rank as a function of sequence identity}
 \usage{
-lca_probs(x, sim = seq(0.9, 1, 0.01), k = 5, nstart = 20,
-  ranks = c("kingdom", "phylum", "class", "order", "family", "genus",
-  "species"), delim = ";")
+lca_probs(
+  x,
+  sim = seq(0.9, 1, 0.01),
+  k = 5,
+  nstart = 20,
+  ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
+  delim = ";"
+)
 }
 \arguments{
 \item{x}{a DNAbin object or an object coercible to DNAbin}
@@ -20,6 +25,9 @@ lca_probs(x, sim = seq(0.9, 1, 0.01), k = 5, nstart = 20,
 \item{ranks}{The taxonomic ranks currently assigned to the names}
 
 \item{delim}{The delimiter used between ranks}
+}
+\value{
+
 }
 \description{
 Probabilitys of sharing a rank as a function of sequence identity

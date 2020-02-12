@@ -9,6 +9,9 @@ create_mismatch(dna, dist, ...)
 \arguments{
 \item{...}{}
 }
+\value{
+
+}
 \description{
 Create_mismatch
 }

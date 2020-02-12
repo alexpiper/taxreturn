@@ -4,11 +4,20 @@
 \alias{codon_entropy}
 \title{Codon entropy}
 \usage{
-codon_entropy(x, genetic.code = "SGC4", forward = TRUE,
-  reverse = FALSE, codon.filter = TRUE, method = "ML")
+codon_entropy(
+  x,
+  genetic.code = "SGC4",
+  forward = TRUE,
+  reverse = FALSE,
+  codon.filter = TRUE,
+  method = "ML"
+)
 }
 \arguments{
 \item{codon.filter}{}
+}
+\value{
+
 }
 \description{
 Codon entropy

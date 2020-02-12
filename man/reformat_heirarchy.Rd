@@ -4,11 +4,20 @@
 \alias{reformat_heirarchy}
 \title{Reformat heirarchy}
 \usage{
-reformat_heirarchy(x, db = NULL, quiet = FALSE, ranks = NULL,
-  sppsep = "_", force = FALSE)
+reformat_heirarchy(
+  x,
+  db = NULL,
+  quiet = FALSE,
+  ranks = NULL,
+  sppsep = "_",
+  force = FALSE
+)
 }
 \arguments{
 \item{ranks}{}
+}
+\value{
+
 }
 \description{
 Reformat heirarchy

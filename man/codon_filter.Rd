@@ -4,8 +4,13 @@
 \alias{codon_filter}
 \title{Filter sequences containing stop codons}
 \usage{
-codon_filter(x, genetic.code = "SGC4", forward = TRUE,
-  reverse = FALSE, remove.ambiguities = TRUE)
+codon_filter(
+  x,
+  genetic.code = "SGC4",
+  forward = TRUE,
+  reverse = FALSE,
+  remove.ambiguities = TRUE
+)
 }
 \arguments{
 \item{x}{Sequences in DNAStringset or DNAbin format}
@@ -18,6 +23,9 @@ Default is the invertebrate mitochondrial code 'SGC4'}
 \item{reverse}{Whether the reverse complement should be used}
 
 \item{remove.ambiguities}{Whether ambiguous bases (non ATGC) bases should be removed}
+}
+\value{
+
 }
 \description{
 Filter sequences containing stop codons

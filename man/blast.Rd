@@ -4,8 +4,7 @@
 \alias{blast}
 \title{Run BLAST search}
 \usage{
-blast(query, db, type = "blastn", evalue = 1e-06, args = NULL,
-  quiet = FALSE)
+blast(query, db, type = "blastn", evalue = 1e-06, args = NULL, quiet = FALSE)
 }
 \arguments{
 \item{query}{(Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.}
@@ -20,6 +19,9 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 \item{args}{(Optional) Extra arguments passed to BLAST}
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
+}
+\value{
+
 }
 \description{
 Run BLAST search

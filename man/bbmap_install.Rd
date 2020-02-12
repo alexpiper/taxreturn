@@ -13,6 +13,9 @@ URL to retrieve bbmap from.}
 \item{dest.dir}{(Optional)  Default "bin"
 Directory to install bbmap within.}
 }
+\value{
+
+}
 \description{
 Install BBtools
 }

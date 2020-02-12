@@ -4,8 +4,16 @@
 \alias{pad_alignment}
 \title{Pad alignment}
 \usage{
-pad_alignment(x, model, pad = "-", tryrc = FALSE, quiet = FALSE,
-  check_indels = TRUE, minscore = 10, ...)
+pad_alignment(
+  x,
+  model,
+  pad = "-",
+  tryrc = FALSE,
+  quiet = FALSE,
+  check_indels = TRUE,
+  minscore = 10,
+  ...
+)
 }
 \arguments{
 \item{x}{A DNAbin object or an object coercible to DNAbin}
@@ -23,6 +31,9 @@ pad_alignment(x, model, pad = "-", tryrc = FALSE, quiet = FALSE,
 \item{minscore}{Minimum score for the viterbi alignment}
 
 \item{...}{aditional arguments to be passed to "Viterbi"}
+}
+\value{
+
 }
 \description{
 Aligns a DNABin to a reference PHMM model, and pads any gaps between the query and reference

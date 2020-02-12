@@ -2,6 +2,15 @@
 # .findExecutable ---------------------------------------------------------
 
 
+#' Finde executable
+#'
+#' @param exe
+#' @param interactive
+#'
+#' @return
+#' @export
+#'
+#' @examples
 .findExecutable <- function(exe, interactive=TRUE) {
   path <- Sys.which(exe)
   if(all(path=="")) {

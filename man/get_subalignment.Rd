@@ -4,8 +4,15 @@
 \alias{get_subalignment}
 \title{Get subalignment}
 \usage{
-get_subalignment(x, model, tryrc = FALSE, quiet = FALSE,
-  check_indels = TRUE, minscore = 10, ...)
+get_subalignment(
+  x,
+  model,
+  tryrc = FALSE,
+  quiet = FALSE,
+  check_indels = TRUE,
+  minscore = 10,
+  ...
+)
 }
 \arguments{
 \item{x}{A DNAbin object or an object coercible to DNAbin}
@@ -21,6 +28,9 @@ get_subalignment(x, model, tryrc = FALSE, quiet = FALSE,
 \item{minscore}{Minimum score for the viterbi alignment}
 
 \item{...}{aditional arguments to be passed to "Viterbi"}
+}
+\value{
+
 }
 \description{
 Aligns a DNABin to a reference PHMM model, and returns the optimal path

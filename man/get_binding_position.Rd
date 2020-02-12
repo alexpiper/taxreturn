@@ -4,8 +4,14 @@
 \alias{get_binding_position}
 \title{Get primer binding position}
 \usage{
-get_binding_position(primer, model, tryrc = TRUE, quiet = FALSE,
-  minscore = 10, ...)
+get_binding_position(
+  primer,
+  model,
+  tryrc = TRUE,
+  quiet = FALSE,
+  minscore = 10,
+  ...
+)
 }
 \arguments{
 \item{primer}{A character string, DNAbin object or an object coercible to DNAbin}
@@ -19,6 +25,9 @@ get_binding_position(primer, model, tryrc = TRUE, quiet = FALSE,
 \item{minscore}{Minimum score for the viterbi alignment.}
 
 \item{...}{aditional arguments to be passed to "Viterbi"}
+}
+\value{
+
 }
 \description{
 Get primer binding position

@@ -4,8 +4,17 @@
 \alias{clean_seqs}
 \title{Clean Sequences with PHMM}
 \usage{
-clean_seqs(x, model, minscore = 100, shave = TRUE, maxNs = 0,
-  cores = 1, quiet = FALSE, progress = FALSE, ...)
+clean_seqs(
+  x,
+  model,
+  minscore = 100,
+  shave = TRUE,
+  maxNs = 0,
+  cores = 1,
+  quiet = FALSE,
+  progress = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{A DNAbin or DNAStringset object}
@@ -21,6 +30,9 @@ clean_seqs(x, model, minscore = 100, shave = TRUE, maxNs = 0,
 \item{cores}{The number of CPUs to parallelize the operation over}
 
 \item{quiet}{Whether progress should be printed to the console.}
+}
+\value{
+
 }
 \description{
 Clean Sequences with PHMM

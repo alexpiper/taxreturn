@@ -4,8 +4,13 @@
 \alias{prune_groups}
 \title{Prune group sizes}
 \usage{
-prune_groups(x, maxGroupSize = 5, dedup = TRUE, discardby = "random",
-  quiet = FALSE)
+prune_groups(
+  x,
+  maxGroupSize = 5,
+  dedup = TRUE,
+  discardby = "random",
+  quiet = FALSE
+)
 }
 \arguments{
 \item{x}{A DNAbin or DNAStringset object}
@@ -21,6 +26,9 @@ Options include "random" which will randomly pick sequences to discard until the
 then discard sequences by length until the group is below maxGroupSize (Note: "novelty" is not yet implemented)}
 
 \item{quiet}{Whether progress should be printed to the console.}
+}
+\value{
+
 }
 \description{
 Prune group sizes

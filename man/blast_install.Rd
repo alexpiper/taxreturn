@@ -13,6 +13,9 @@ URL to retrieve BLAST version from.}
 \item{dest.dir}{(Optional)  Default "bin"
 Directory to install BLAST within.}
 }
+\value{
+
+}
 \description{
 Install BLAST
 }

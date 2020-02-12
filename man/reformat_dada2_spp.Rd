@@ -9,6 +9,9 @@ reformat_dada2_spp(x, quiet = FALSE)
 \arguments{
 \item{quiet}{}
 }
+\value{
+
+}
 \description{
 Reformat DADA2 Species
 }

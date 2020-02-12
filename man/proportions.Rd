@@ -9,6 +9,9 @@ proportions(x, thresh = NA, na_rm = FALSE, ...)
 \arguments{
 \item{...}{}
 }
+\value{
+
+}
 \description{
 Convert phyloseq table to proportions
 }

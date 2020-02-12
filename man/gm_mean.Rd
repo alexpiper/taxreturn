@@ -9,6 +9,9 @@ gm_mean(x, na.rm = TRUE)
 \arguments{
 \item{na.rm}{}
 }
+\value{
+
+}
 \description{
 Geometric mean
 }

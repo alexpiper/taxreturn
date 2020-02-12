@@ -4,12 +4,21 @@
 \alias{train_idtaxa}
 \title{Train IDTAXA}
 \usage{
-train_idtaxa(x, maxGroupSize = 10, maxIterations = 3,
-  allowGroupRemoval = TRUE, db = NULL, quiet = FALSE,
-  force = FALSE)
+train_idtaxa(
+  x,
+  maxGroupSize = 10,
+  maxIterations = 3,
+  allowGroupRemoval = TRUE,
+  db = NULL,
+  quiet = FALSE,
+  force = FALSE
+)
 }
 \arguments{
 \item{force}{}
+}
+\value{
+
 }
 \description{
 Train IDTAXA

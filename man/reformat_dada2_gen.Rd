@@ -4,11 +4,13 @@
 \alias{reformat_dada2_gen}
 \title{Reformat DADA2 Genus}
 \usage{
-reformat_dada2_gen(x, db = NULL, quiet = FALSE, ranks = NULL,
-  force = FALSE)
+reformat_dada2_gen(x, db = NULL, quiet = FALSE, ranks = NULL, force = FALSE)
 }
 \arguments{
 \item{ranks}{}
+}
+\value{
+
 }
 \description{
 Reformat DADA2 Genus

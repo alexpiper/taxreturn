@@ -9,6 +9,9 @@ summarise_taxa(physeq, Rank, GroupBy = NULL)
 \arguments{
 \item{GroupBy}{}
 }
+\value{
+
+}
 \description{
 Summarise_taxa
 }

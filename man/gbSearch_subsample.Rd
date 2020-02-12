@@ -4,10 +4,19 @@
 \alias{gbSearch_subsample}
 \title{Genbank subsampling}
 \usage{
-gbSearch_subsample(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE,
-  output = "h", minlength = 1, maxlength = 2000, subsample = 1000,
-  chunk_size = 300, out.file = NULL, compress = FALSE,
-  out.dir = NULL)
+gbSearch_subsample(
+  x,
+  marker = c("COI", "CO1", "COX1"),
+  quiet = FALSE,
+  output = "h",
+  minlength = 1,
+  maxlength = 2000,
+  subsample = 1000,
+  chunk_size = 300,
+  out.file = NULL,
+  compress = FALSE,
+  out.dir = NULL
+)
 }
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
@@ -26,6 +35,9 @@ or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomi
 \item{compress}{Option to compress output fasta files using gzip}
 
 \item{out.dir}{Output directory to write fasta files to}
+}
+\value{
+
 }
 \description{
 Genbank subsampling

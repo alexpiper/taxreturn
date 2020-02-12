@@ -9,6 +9,9 @@ ncbi_taxid(x, db = NULL)
 \arguments{
 \item{db}{}
 }
+\value{
+
+}
 \description{
 Get ncbi taxid's for a taxon name
 }

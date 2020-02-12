@@ -4,10 +4,21 @@
 \alias{fetchSeqs}
 \title{Fetchseqs wrapper function}
 \usage{
-fetchSeqs(x, database, marker = NULL, downstream = FALSE,
-  quiet = TRUE, output = "h", minlength = 1, maxlength = 2000,
-  subsample = FALSE, out.dir = NULL, compress = TRUE, cores = 1,
-  ...)
+fetchSeqs(
+  x,
+  database,
+  marker = NULL,
+  downstream = FALSE,
+  quiet = TRUE,
+  output = "h",
+  minlength = 1,
+  maxlength = 2000,
+  subsample = FALSE,
+  out.dir = NULL,
+  compress = TRUE,
+  cores = 1,
+  ...
+)
 }
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
@@ -35,6 +46,9 @@ This can be useful for ensuring no off-target sequences are returned. Default 20
 \item{compress}{Option to compress output fasta files using gzip}
 
 \item{cores}{Number of cores to use}
+}
+\value{
+
 }
 \description{
 Fetchseqs wrapper function

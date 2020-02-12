@@ -13,6 +13,9 @@ makeblastdb(file, dbtype = "nucl", args = NULL, quiet = FALSE)
 
 \item{args}{(Optional) Extra arguments passed to BLAST}
 }
+\value{
+
+}
 \description{
 Make blast Database
 }

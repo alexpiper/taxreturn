@@ -9,6 +9,9 @@ create_samplesheet(SampleSheet, runParameters, format = "miseq")
 \arguments{
 \item{Rtwintag}{}
 }
+\value{
+
+}
 \description{
 Create Samplesheet
 }

@@ -14,6 +14,9 @@ bbsplit(install = NULL, files, overwrite = FALSE)
 \item{overwrite}{(Optional) Default TRUE
 Option to overwrite existing output files.}
 }
+\value{
+
+}
 \description{
 Split interleaved reads
 }

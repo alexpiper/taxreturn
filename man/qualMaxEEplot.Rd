@@ -4,11 +4,13 @@
 \alias{qualMaxEEplot}
 \title{QC Max EE plot}
 \usage{
-qualMaxEEplot(fastq.r1, fastq.r2, name1 = "Fastq_R1",
-  name2 = "Fastq_R2")
+qualMaxEEplot(fastq.r1, fastq.r2, name1 = "Fastq_R1", name2 = "Fastq_R2")
 }
 \arguments{
 \item{name2}{}
+}
+\value{
+
 }
 \description{
 modified from code by Remi Maglione https://github.com/RemiMaglione/r-scripts/blob/master/Qual_vs_MaxEE_plot.R

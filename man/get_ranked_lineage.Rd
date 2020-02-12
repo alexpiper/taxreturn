@@ -9,6 +9,9 @@ get_ranked_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
 \arguments{
 \item{synonyms}{}
 }
+\value{
+
+}
 \description{
 Download NCBI taxdump
 }

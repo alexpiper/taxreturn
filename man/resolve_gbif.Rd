@@ -4,12 +4,21 @@
 \alias{resolve_gbif}
 \title{Resolve GBIF}
 \usage{
-resolve_gbif(x, subspecies = TRUE, higherrank = TRUE,
-  verbose = FALSE, fuzzy = TRUE, conf_threshold = 90,
-  resolve_taxonomy = TRUE)
+resolve_gbif(
+  x,
+  subspecies = TRUE,
+  higherrank = TRUE,
+  verbose = FALSE,
+  fuzzy = TRUE,
+  conf_threshold = 90,
+  resolve_taxonomy = TRUE
+)
 }
 \arguments{
 \item{resolve_taxonomy}{}
+}
+\value{
+
 }
 \description{
 Resolve GBIF

@@ -4,8 +4,12 @@
 \alias{tax2tree}
 \title{tax2tree}
 \usage{
-tax2tree(x, ranks = c("kingdom", "phylum", "class", "order", "family",
-  "genus", "species"), summarise = "species", output = "treedf")
+tax2tree(
+  x,
+  ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
+  summarise = "species",
+  output = "treedf"
+)
 }
 \arguments{
 \item{x}{a DNAbin object or an object coercible to DNAbin}
