@@ -274,146 +274,150 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
 #'   mink=FALSE, hdist=2, maxlength=140, overwrite=TRUE)
 #'}
 bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
-                         restrictleft = NULL, out.dir = "bbduk", trim.end = "left", ordered = TRUE,
-                         kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
-                         overwrite = TRUE, quality = FALSE, maxlength = NULL) {
+                   restrictleft = NULL, out.dir = "bbduk", trim.end = "left", ordered = TRUE,
+                   kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
+                   overwrite = TRUE, quality = FALSE, maxlength = NULL, tmp=NULL) {
   nsamples <- length(fwd)
   # Create temp files
-  tmp <- tempdir()
+  if(is.null(tmp)) {tmp <- tempdir()}
   tmplogs <- paste0(tmp, "/bbtrim.log")
-  tmpout <- paste0(tmp,"/stdout.log")
-  tmperr <- paste0(tmp,"/stderr.log")
+  if(file.exists(tmplogs)) { file.remove(tmplogs)}
 
-      bbduk <- function(install = NULL, fwd, rev = NULL, primers,
-                        restrictleft = NULL, out.dir = "bbduk", trim.end = "left", ordered = TRUE,
-                        kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
-                        overwrite = TRUE, quality = FALSE, maxlength = NULL) {
-        install <- paste0(install, "/current jgi.BBDuk")
+  bbduk <- function(install = NULL, fwd, rev = NULL, primers,
+                    restrictleft = NULL, out.dir = "bbduk", trim.end = "left", ordered = TRUE,
+                    kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
+                    overwrite = TRUE, quality = FALSE, maxlength = NULL, tmp=NULL) {
+    install <- paste0(install, "/current jgi.BBDuk")
 
-        in1 <- paste0("in=", fwd)
-        if (!is.null(rev)) {
-          in2 <- paste0("in2=", rev)
-        } else {
-          (in2 <- "")
-        }
+    # Create temp files
+    if(is.null(tmp)) {tmp <- tempdir()}
+    tmplogs <- paste0(tmp, "/bbtrim.log")
+    tmpout <- paste0(tmp,"/stdout.log")
+    tmperr <- paste0(tmp,"/stderr.log")
 
-        if (!is.null(primers)) {
-          literal <- paste0("literal=", paste0(primers, collapse = ","))
-        } else {
-          (stop("Primer sequences are required for trimming"))
-        }
+    in1 <- paste0("in=", fwd)
+    if (!is.null(rev)) {
+      in2 <- paste0("in2=", rev)
+    } else {
+      (in2 <- "")
+    }
 
-        if (is.null(rev)) {
-          out <- paste0(
-            "out=", dirname(fwd), "/", out.dir, "/", basename(fwd)
-          ) %>%
-            stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
-          out1 <- ""
-          out2 <- ""
-        } else if (!is.null(rev)) {
-          out <- ""
-          out1 <- paste0("out1=", dirname(fwd), "/", out.dir, "/", basename(fwd)) %>%
-            stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
-          out2 <- paste0("out2=", dirname(rev), "/", out.dir, "/", basename(rev)) %>%
-            stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
-        }
+    if (!is.null(primers)) {
+      literal <- paste0("literal=", paste0(primers, collapse = ","))
+    } else {
+      (stop("Primer sequences are required for trimming"))
+    }
 
-
-        if (trim.end == "left") {
-          trim.end <- paste0("ktrim=l")
-        } else if (trim.end == "right") {
-          trim.end <- paste0("ktrim=r")
-        }
-
-        if (is.numeric(kmer)) {
-          kmer <- paste0("k=", kmer)
-        } else {
-          (kmer <- paste0("k=", sort(nchar(primers), decreasing = FALSE)[1]))
-        }
-
-        if (is.numeric(maxlength)) {
-          maxlength <- paste0("maxlength=", maxlength)
-        } else {
-          maxlength <- ""
-        }
-
-        if (is.numeric(mink)) {
-          mink <- paste0("mink=", mink) # Note - mink makes it noticibly slower
-        } else if (mink == TRUE) {
-          mink <- paste0("mink=", (sort(nchar(primers), decreasing = FALSE)[1] / 2))
-        } else if (mink == FALSE) {
-          mink <- ""
-        }
+    if (is.null(rev)) {
+      out <- paste0(
+        "out=", dirname(fwd), "/", out.dir, "/", basename(fwd)
+      ) %>%
+        stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
+      out1 <- ""
+      out2 <- ""
+    } else if (!is.null(rev)) {
+      out <- ""
+      out1 <- paste0("out1=", dirname(fwd), "/", out.dir, "/", basename(fwd)) %>%
+        stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
+      out2 <- paste0("out2=", dirname(rev), "/", out.dir, "/", basename(rev)) %>%
+        stringr::str_replace(pattern = ".fastq", replacement = ".trimmed.fastq")
+    }
 
 
-        if (is.numeric(restrictleft)) {
-          restrictleft <- paste0("restrictleft=", restrictleft)
-        } else {
-          restrictleft <- paste0("restrictleft=", sort(nchar(primers), decreasing = TRUE)[1])
-        }
+    if (trim.end == "left") {
+      trim.end <- paste0("ktrim=l")
+    } else if (trim.end == "right") {
+      trim.end <- paste0("ktrim=r")
+    }
 
-        if (ordered == TRUE) {
-          ordered <- "ordered=T"
-        } else {
-          (ordered <- "")
-        }
+    if (is.numeric(kmer)) {
+      kmer <- paste0("k=", kmer)
+    } else {
+      (kmer <- paste0("k=", sort(nchar(primers), decreasing = FALSE)[1]))
+    }
 
-        if (is.numeric(hdist)) {
-          hdist <- paste0("hdist=", hdist)
-        }
+    if (is.numeric(maxlength)) {
+      maxlength <- paste0("maxlength=", maxlength)
+    } else {
+      maxlength <- ""
+    }
 
-        if (degenerate == TRUE) {
-          degenerate <- "copyundefined"
-        } else {
-          (degenerate <- "")
-        }
+    if (is.numeric(mink)) {
+      mink <- paste0("mink=", mink) # Note - mink makes it noticibly slower
+    } else if (mink == TRUE) {
+      mink <- paste0("mink=", (sort(nchar(primers), decreasing = FALSE)[1] / 2))
+    } else if (mink == FALSE) {
+      mink <- ""
+    }
 
-        if (overwrite == TRUE) {
-          overwrite <- "overwrite=TRUE"
-        } else {
-          (overwrite <- "")
-        }
 
-        if (tpe == TRUE) {
-          tpe <- "tpe"
-        } else {
-          (tpe <- "")
-        }
+    if (is.numeric(restrictleft)) {
+      restrictleft <- paste0("restrictleft=", restrictleft)
+    } else {
+      restrictleft <- paste0("restrictleft=", sort(nchar(primers), decreasing = TRUE)[1])
+    }
 
-        args <- paste(" -cp ", install, in1, in2, literal, restrictleft, out, out1,
-          out2, kmer, mink, hdist, trim.end, tpe, degenerate, quality,
-          maxlength, overwrite, "-da",
-          collapse = " "
-        )
+    if (ordered == TRUE) {
+      ordered <- "ordered=T"
+    } else {
+      (ordered <- "")
+    }
 
-        # Set up quality tracking
-        if (quality == TRUE) {
-          qualnames <- fwd %>% str_replace(pattern=".fastq.gz", replacement="") %>%
-            basename
-          qualnames <- paste0(tmp, qualnames)
-          quality <-
-            paste0("bhist=", qualnames, "_bhist.txt ",
-                   "qhist=", qualnames, "_qhist.txt ",
-                   "gchist=", qualnames, "_gchist.txt ",
-                   "aqhist=", qualnames, "_aqhist.txt ",
-                   "lhist=", qualnames, "_lhist.txt ",
-                   "gcbins=auto ")
-        } else {
-          (quality <- "")
-        }
+    if (is.numeric(hdist)) {
+      hdist <- paste0("hdist=", hdist)
+    }
 
-        # Run bbduk
-        result <- system2(command="java",
-                          args = args,
-                          stdout = tmpout,
-                          stderr = tmperr,
-                          wait=TRUE)
-        now <- date()
-        cat(paste0("Executed: ", now, "\n"), file = tmplogs, append=TRUE)
-        cat(paste0("Sample:\t", fwd, "\n"), file = tmplogs, append=TRUE)
-        file.append(tmplogs, tmperr)
-        file.remove(c(tmpout, tmperr))
-      }
+    if (degenerate == TRUE) {
+      degenerate <- "copyundefined"
+    } else {
+      (degenerate <- "")
+    }
+
+    if (overwrite == TRUE) {
+      overwrite <- "overwrite=TRUE"
+    } else {
+      (overwrite <- "")
+    }
+
+    if (tpe == TRUE) {
+      tpe <- "tpe"
+    } else {
+      (tpe <- "")
+    }
+    # Set up quality tracking
+    if (quality == TRUE) {
+      qualnames <- fwd %>% str_replace(pattern=".fastq.gz", replacement="") %>%
+        basename
+      qualnames <- paste0(tmp, qualnames)
+      quality <-
+        paste0("bhist=", qualnames, "_bhist.txt ",
+               "qhist=", qualnames, "_qhist.txt ",
+               "gchist=", qualnames, "_gchist.txt ",
+               "aqhist=", qualnames, "_aqhist.txt ",
+               "lhist=", qualnames, "_lhist.txt ",
+               "gcbins=auto ")
+    } else {
+      (quality <- "")
+    }
+
+    args <- paste(" -cp ", install, in1, in2, literal, restrictleft, out, out1,
+                  out2, kmer, mink, hdist, trim.end, tpe, degenerate, quality,
+                  maxlength, overwrite, "-da",
+                  collapse = " "
+    )
+
+    # Run bbduk
+    result <- system2(command="java",
+                      args = args,
+                      stdout = tmpout,
+                      stderr = tmperr,
+                      wait=TRUE)
+    now <- date()
+    cat(paste0("Executed: ", now, "\n"), file = tmplogs, append=TRUE)
+    cat(paste0("Sample:\t", fwd, "\n"), file = tmplogs, append=TRUE)
+    file.append(tmplogs, tmperr)
+    file.remove(c(tmpout, tmperr))
+  }
 
   if (nsamples > 1) {
     for (i in 1:nsamples) {
@@ -422,7 +426,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
             out.dir = out.dir, trim.end = trim.end, ordered = ordered,
             kmer = kmer, mink = mink, tpe = tpe, hdist = hdist,
             degenerate = degenerate, quality = quality,
-            overwrite = overwrite, maxlength = maxlength)
+            overwrite = overwrite, maxlength = maxlength, tmp=tmp)
     }
   } else if (nsamples == 1) {
     bbduk(install = install, fwd = fwd, rev = rev,
@@ -430,7 +434,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           out.dir = out.dir, trim.end = trim.end, ordered = ordered,
           kmer = kmer, mink = mink, tpe = tpe, hdist = hdist,
           degenerate = degenerate, quality = quality,
-          overwrite = overwrite, maxlength = maxlength)
+          overwrite = overwrite, maxlength = maxlength, tmp=tmp)
   }
 
   #Parse logs
@@ -457,7 +461,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
 
   } else (out <- parsed)
 
-    return(out)
+  return(out)
 }
 
 # Split interleaved reads -------------------------------------------------
