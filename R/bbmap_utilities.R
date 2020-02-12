@@ -26,7 +26,7 @@ bbmap_install <- function(url, dest.dir = "bin") {
   }
 
   destfile <- paste0(file.path(dest.dir, basename(url)),".tar.gz")
-  if (exists(destfile)) {
+  if (file.exists(destfile)) {
     file.remove(destfile) # Remove old zip file
   }
   #Download file
@@ -90,7 +90,7 @@ bbmap_install <- function(url, dest.dir = "bin") {
 #'
 bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
                           restrictleft = NULL, out.dir = "demux", kmer = NULL, hdist = 0, degenerate = TRUE,
-                          overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE, tidylog=TRUE) {
+                          overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE, parse_logs=TRUE) {
   nsamples <- length(fwd)
 
   bbtools_seal <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
@@ -168,7 +168,7 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
       dir.create("logs")
     }
 
-    if (exists("logs/bbdemux.log")) {
+    if (file.exists("logs/bbdemux.log")) {
       file.remove(c("logs/bbdemux.log"))
     }
 
@@ -204,7 +204,7 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
   file.remove("Fprimers.fa")
   file.remove("Rprimers.fa")
 
-  if (tidylog == TRUE) {
+  if (parse_logs == TRUE) {
     parsed <- parse_bbdemux("logs/bbdemux.log")
     readr::write_tsv(parsed, "logs/bbdemux_tidy.tsv")
     return(parsed)
@@ -276,7 +276,7 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
 bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
                          restrictleft = NULL, out.dir = "bbduk", trim.end = "left", ordered = TRUE,
                          kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
-                         overwrite = TRUE, quality = FALSE, tidylog=TRUE, maxlength = NULL) {
+                         overwrite = TRUE, quality = FALSE, parse_logs=TRUE, maxlength = NULL) {
   nsamples <- length(fwd)
 
       bbduk <- function(install = NULL, fwd, rev = NULL, primers,
@@ -401,7 +401,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           dir.create("logs")
         }
 
-        if (exists("logs/bbtrim.log")) {
+        if (file.exists("logs/bbtrim.log")) {
           file.remove(c("logs/bbtrim.log"))
         }
 
@@ -436,7 +436,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           overwrite = overwrite, maxlength = maxlength)
   }
       if (quality == TRUE) {
-        ## Could return these in a list alongside the tidylog
+        ## Could return these in a list alongside the parse_logs
 
         #Base composition histogram by position.
         bhist <- parse_bhist("logs")
@@ -465,7 +465,7 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
 
       }
 
-      if (tidylog == TRUE) {
+      if (parse_logs == TRUE) {
        parsed <- parse_bbtrim("logs/bbtrim.log")
        readr::write_tsv(parsed, "logs/bbtrim_tidy.tsv")
        return(parsed)
@@ -560,8 +560,8 @@ parse_bbtrim <- function(x) {
     dplyr::mutate_if(is.character, as.numeric)
 
   result <- read_tsv(lines[which(str_sub(lines, 1, 7) == 'Result:' )], col_names = FALSE) %>%
-    tidyr::separate(X2, into="reads_out", sep=" ", extra="drop") %>%
-    tidyr::separate(X3, into="bases_out", sep=" ", extra="drop") %>%
+    tidyr::separate(X2, into="output_reads", sep=" ", extra="drop") %>%
+    tidyr::separate(X3, into="output_bases", sep=" ", extra="drop") %>%
     dplyr::select(reads_out, bases_out) %>%
     dplyr::mutate_if(is.character, as.numeric)
 
@@ -569,12 +569,6 @@ parse_bbtrim <- function(x) {
   return(out)
 
 }
-
-##################################################################################################
-
-## PARSING FUNCTIONS
-
-
 
 # Parse bbdemux -----------------------------------------------------------
 

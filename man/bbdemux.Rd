@@ -19,7 +19,7 @@ bbdemux(
   threads = NULL,
   mem = NULL,
   interleaved = FALSE,
-  tidylog = TRUE
+  parse_logs = TRUE
 )
 }
 \arguments{
