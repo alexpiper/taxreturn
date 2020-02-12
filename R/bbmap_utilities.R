@@ -96,6 +96,12 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
                           restrictleft = NULL, out.dir = "demux", kmer = NULL, hdist = 0, degenerate = TRUE,
                           overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE) {
   nsamples <- length(fwd)
+  # Create temp files
+  tmp <- tempdir()
+  tmplogs <- paste0(tmp, "/bbdemux.log")
+  tmpout <- paste0(tmp,"/stdout.log")
+  tmperr <- paste0(tmp,"/stderr.log")
+
 
   bbtools_seal <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
                            restrictleft = NULL, out.dir = "demux", kmer = NULL, hdist = 0, degenerate = TRUE,
@@ -167,13 +173,6 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
                   degenerate, overwrite, threads, "kpt=t",
                   collapse = " "
     )
-
-    # Create temp files
-    tmp <- tempdir()
-    tmplogs <- paste0(tmp, "/bbdemux.log")
-    tmpout <- paste0(tmp,"/stdout.log")
-    tmperr <- paste0(tmp,"/stderr.log")
-
 
     result <- system2(command="java",
                       args = args,
@@ -279,6 +278,11 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
                          kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
                          overwrite = TRUE, quality = FALSE, maxlength = NULL) {
   nsamples <- length(fwd)
+  # Create temp files
+  tmp <- tempdir()
+  tmplogs <- paste0(tmp, "/bbtrim.log")
+  tmpout <- paste0(tmp,"/stdout.log")
+  tmperr <- paste0(tmp,"/stderr.log")
 
       bbduk <- function(install = NULL, fwd, rev = NULL, primers,
                         restrictleft = NULL, out.dir = "bbduk", trim.end = "left", ordered = TRUE,
@@ -382,12 +386,6 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           collapse = " "
         )
 
-        # Create temp files
-        tmp <- tempdir()
-        tmplogs <- paste0(tmp, "/bbtrim.log")
-        tmpout <- paste0(tmp,"/stdout.log")
-        tmperr <- paste0(tmp,"/stderr.log")
-
         # Set up quality tracking
         if (quality == TRUE) {
           qualnames <- fwd %>% str_replace(pattern=".fastq.gz", replacement="") %>%
@@ -478,6 +476,12 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
 #'
 bbsplit <- function(install = NULL, files, overwrite = FALSE) {
   nsamples <- length(files)
+  # Create temp files
+  tmp <- tempdir()
+  tmplogs <- paste0(tmp, "/bbreformat.log")
+  tmpout <- paste0(tmp,"/stdout.log")
+  tmperr <- paste0(tmp,"/stderr.log")
+
 
   bbtools_reformatreads <- function(install = NULL, file, overwrite = FALSE) {
     # Split interleaved reads
@@ -489,12 +493,6 @@ bbsplit <- function(install = NULL, files, overwrite = FALSE) {
     } else {
       (overwrite <- "")
     }
-
-    # Create temp files
-    tmp <- tempdir()
-    tmplogs <- paste0(tmp, "/bbreformat.log")
-    tmpout <- paste0(tmp,"/stdout.log")
-    tmperr <- paste0(tmp,"/stderr.log")
 
     reformat_args <- paste(" -cp ", paste0(install, "/current jgi.ReformatReads "), file, out1, out2, overwrite, collapse = " ")
 
