@@ -4,7 +4,7 @@
 \alias{bbmap_install}
 \title{Install BBtools}
 \usage{
-bbmap_install(url, dest.dir = "bin")
+bbmap_install(url, dest.dir = "bin", force = FALSE)
 }
 \arguments{
 \item{url}{(Optional) Default will search for the latest version

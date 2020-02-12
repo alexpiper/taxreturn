@@ -30,6 +30,7 @@
 #' URL to retrieve BLAST version from.
 #' @param dest.dir (Optional)  Default "bin"
 #' Directory to install BLAST within.
+#' @force Whether existing installs should be forcefully overwritten
 #'
 #' @return
 #' @export

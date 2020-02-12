@@ -4,12 +4,13 @@
 #' URL to retrieve fastQC from.
 #' @param dest.dir (Optional)  Default "bin"
 #' Directory to install fastQC within.
+#' @force Whether existing installs should be forcefully overwritten
 #'
 #' @return
 #' @export
 #'
 #' @examples
-fastqc_install <- function(url, dest.dir = "bin", force=FALSE) {
+fastqc_install <- function(url, dest.dir = "bin", force = FALSE) {
   if (missing(url)) {
 
     # find the latest version of fastq

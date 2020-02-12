@@ -4,6 +4,7 @@
 #' URL to retrieve bbmap from.
 #' @param dest.dir (Optional)  Default "bin"
 #' Directory to install bbmap within.
+#' @force Whether existing installs should be forcefully overwritten
 #'
 #'
 #' @return
@@ -11,7 +12,7 @@
 #'
 #' @import httr
 #' @examples
-bbmap_install <- function(url, dest.dir = "bin") {
+bbmap_install <- function(url, dest.dir = "bin", force = FALSE) {
   if (missing(url)) {
 
     url <- ("https://sourceforge.net/projects/bbmap/files/latest/download")
