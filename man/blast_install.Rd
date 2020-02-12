@@ -4,7 +4,7 @@
 \alias{blast_install}
 \title{Install BLAST}
 \usage{
-blast_install(url, dest.dir = "bin")
+blast_install(url, dest.dir = "bin", force = FALSE)
 }
 \arguments{
 \item{url}{(Optional) Default will search for the latest version

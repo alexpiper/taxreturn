@@ -4,7 +4,7 @@
 \alias{fastqc_install}
 \title{fastqc_install}
 \usage{
-fastqc_install(url, dest.dir = "bin")
+fastqc_install(url, dest.dir = "bin", force = FALSE)
 }
 \arguments{
 \item{url}{(Optional) Default will search for the latest version

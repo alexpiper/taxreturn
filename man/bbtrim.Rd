@@ -20,7 +20,6 @@ bbtrim(
   degenerate = TRUE,
   overwrite = TRUE,
   quality = FALSE,
-  parse_logs = TRUE,
   maxlength = NULL
 )
 }

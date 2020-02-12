@@ -21,7 +21,10 @@ bbmap_install <- function(url, dest.dir = "bin") {
     dir.create(dest.dir) # Create first directory
   }
 
-  if (dir.exists(paste0(dest.dir, "/bbmap"))) {
+
+  if (dir.exists(paste0(dest.dir, "/bbmap")) && force == FALSE) {
+    stop("Stopped as bbmap already exists in directory, to overwrite set force to TRUE")
+  } else  if (dir.exists(paste0(dest.dir, "/bbmap")) && force == TRUE) {
     unlink(paste0(dest.dir, "/bbmap"), recursive = TRUE) # Remove old version
   }
 
@@ -90,7 +93,7 @@ bbmap_install <- function(url, dest.dir = "bin") {
 #'
 bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
                           restrictleft = NULL, out.dir = "demux", kmer = NULL, hdist = 0, degenerate = TRUE,
-                          overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE, parse_logs=TRUE) {
+                          overwrite = TRUE, threads = NULL, mem = NULL, interleaved = FALSE) {
   nsamples <- length(fwd)
 
   bbtools_seal <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes = NULL,
@@ -164,24 +167,23 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
                   collapse = " "
     )
 
-    if (!dir.exists("logs")) {
-      dir.create("logs")
-    }
+    # Create temp files
+    tmp <- tempdir()
+    tmplogs <- paste0(tmp, "/bbdemux.log")
+    tmpout <- paste0(tmp,"/stdout.log")
+    tmperr <- paste0(tmp,"/stderr.log")
 
-    if (file.exists("logs/bbdemux.log")) {
-      file.remove(c("logs/bbdemux.log"))
-    }
 
     result <- system2(command="java",
                       args = args,
-                      stdout="logs/stdout.log",
-                      stderr="logs/stderr.log",
+                      stdout= tmpout,
+                      stderr= tmperr,
                       wait=TRUE)
     now <- date()
-    cat(paste0("Executed: ", now, "\n"), file="logs/bbdemux.log", append=TRUE)
-    cat(paste0("Sample:\t", fwd, "\n"), file="logs/bbdemux.log", append=TRUE)
-    file.append("logs/bbdemux.log", "logs/stderr.log")
-    file.remove(c("logs/stdout.log", "logs/stderr.log"))
+    cat(paste0("Executed: ", now, "\n"), file=tmplogs, append=TRUE)
+    cat(paste0("Sample:\t", fwd, "\n"), file=tmplogs, append=TRUE)
+    file.append(tmplogs, tmperr)
+    file.remove(c(tmpout, tmperr))
   }
 
 
@@ -204,11 +206,9 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
   file.remove("Fprimers.fa")
   file.remove("Rprimers.fa")
 
-  if (parse_logs == TRUE) {
-    parsed <- parse_bbdemux("logs/bbdemux.log")
-    readr::write_tsv(parsed, "logs/bbdemux_tidy.tsv")
-    return(parsed)
-  } else (return(NULL))
+  #parse and return logs
+  parsed <- parse_bbdemux(tmplogs)
+  return(parsed)
 }
 
 
@@ -276,7 +276,7 @@ bbdemux <- function(install = NULL, fwd, rev = NULL, Fbarcodes = NULL, Rbarcodes
 bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
                          restrictleft = NULL, out.dir = "bbduk", trim.end = "left", ordered = TRUE,
                          kmer = NULL, mink = FALSE, tpe = TRUE, hdist = 0, degenerate = TRUE,
-                         overwrite = TRUE, quality = FALSE, parse_logs=TRUE, maxlength = NULL) {
+                         overwrite = TRUE, quality = FALSE, maxlength = NULL) {
   nsamples <- length(fwd)
 
       bbduk <- function(install = NULL, fwd, rev = NULL, primers,
@@ -375,11 +375,23 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           (tpe <- "")
         }
 
-        if (quality == TRUE) {
+        args <- paste(" -cp ", install, in1, in2, literal, restrictleft, out, out1,
+          out2, kmer, mink, hdist, trim.end, tpe, degenerate, quality,
+          maxlength, overwrite, "-da",
+          collapse = " "
+        )
 
+        # Create temp files
+        tmp <- tempdir()
+        tmplogs <- paste0(tmp, "/bbtrim.log")
+        tmpout <- paste0(tmp,"/stdout.log")
+        tmperr <- paste0(tmp,"/stderr.log")
+
+        # Set up quality tracking
+        if (quality == TRUE) {
           qualnames <- fwd %>% str_replace(pattern=".fastq.gz", replacement="") %>%
             basename
-          qualnames <- paste0("logs/",qualnames)
+          qualnames <- paste0(tmp, qualnames)
           quality <-
             paste0("bhist=", qualnames, "_bhist.txt ",
                    "qhist=", qualnames, "_qhist.txt ",
@@ -391,31 +403,17 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           (quality <- "")
         }
 
-        args <- paste(" -cp ", install, in1, in2, literal, restrictleft, out, out1,
-          out2, kmer, mink, hdist, trim.end, tpe, degenerate, quality,
-          maxlength, overwrite, "-da",
-          collapse = " "
-        )
-
-        if (!dir.exists("logs")) {
-          dir.create("logs")
-        }
-
-        if (file.exists("logs/bbtrim.log")) {
-          file.remove(c("logs/bbtrim.log"))
-        }
-
         # Run bbduk
         result <- system2(command="java",
                           args = args,
-                          stdout="logs/stdout.log",
-                          stderr="logs/stderr.log",
+                          stdout = tmpout,
+                          stderr = tmperr,
                           wait=TRUE)
         now <- date()
-        cat(paste0("Executed: ", now, "\n"), file="logs/bbtrim.log", append=TRUE)
-        cat(paste0("Sample:\t", fwd, "\n"), file="logs/bbtrim.log", append=TRUE)
-        file.append("logs/bbtrim.log", "logs/stderr.log")
-        file.remove(c("logs/stdout.log", "logs/stderr.log"))
+        cat(paste0("Executed: ", now, "\n"), file = tmplogs, append=TRUE)
+        cat(paste0("Sample:\t", fwd, "\n"), file = tmplogs, append=TRUE)
+        file.append(tmplogs, tmperr)
+        file.remove(c(tmpout, tmperr))
       }
 
   if (nsamples > 1) {
@@ -435,41 +433,32 @@ bbtrim <- function(install = NULL, fwd, rev = NULL, primers,
           degenerate = degenerate, quality = quality,
           overwrite = overwrite, maxlength = maxlength)
   }
-      if (quality == TRUE) {
-        ## Could return these in a list alongside the parse_logs
 
-        #Base composition histogram by position.
-        bhist <- parse_bhist("logs")
-        readr::write_delim(bhist, path="logs/bhist.tsv")
-        #file.remove(list.files(path="logs", pattern="_bhist.txt", full.names = TRUE))
+  #Parse logs
+  parsed <- parse_bbtrim(tmplogs)
 
-        #Quality histogram by position.
-        qhist <- parse_qhist("logs")
-        readr::write_delim(qhist, path="logs/qhist.tsv")
-        #file.remove(list.files(path="logs", pattern="_qhist.txt", full.names = TRUE))
+  if (quality == TRUE) {
+    #Base composition histogram by position.
+    bhist <- parse_bhist(tmp)
+    #Quality histogram by position.
+    qhist <- parse_qhist(tmp)
+    #Histogram of average read quality. - how does this work with binned qscores?
+    aqhist <- parse_aqhist(tmp)
+    #Read GC content histogram. - is it worth just reading in the top 4 lines?
+    gchist <- parse_aqhist(tmp)
+    #Read length histogram.
+    lhist <- parse_lhist(tmp)
 
-        #Histogram of average read quality. - how does this work with binned qscores?
-        aqhist <- parse_aqhist("logs")
-        readr::write_delim(aqhist, path="logs/aqhist.tsv")
-        #file.remove(list.files(path="logs", pattern="_aqhist.txt", full.names = TRUE))
+    out <- list(parsed,
+                bhist,
+                qhist,
+                aqhist,
+                gchist,
+                lhist)
 
-        #Read GC content histogram. - is it worth just reading in the top 4 lines?
-        gchist <- parse_aqhist("logs")
-        readr::write_delim(gchist, path="logs/gchist.tsv")
-        #file.remove(list.files(path="logs", pattern="_gchist.txt", full.names = TRUE))
+  } else (out <- parsed)
 
-        #Read length histogram.
-        lhist <- parse_lhist("logs")
-        readr::write_delim(lhist, path="logs/_lhist.tsv")
-        #file.remove(list.files(path="logs", pattern="_lhist.txt", full.names = TRUE))
-
-      }
-
-      if (parse_logs == TRUE) {
-       parsed <- parse_bbtrim("logs/bbtrim.log")
-       readr::write_tsv(parsed, "logs/bbtrim_tidy.tsv")
-       return(parsed)
-      } else (return(NULL))
+    return(out)
 }
 
 # Split interleaved reads -------------------------------------------------
@@ -500,18 +489,24 @@ bbsplit <- function(install = NULL, files, overwrite = FALSE) {
       (overwrite <- "")
     }
 
+    # Create temp files
+    tmp <- tempdir()
+    tmplogs <- paste0(tmp, "/bbreformat.log")
+    tmpout <- paste0(tmp,"/stdout.log")
+    tmperr <- paste0(tmp,"/stderr.log")
+
     reformat_args <- paste(" -cp ", paste0(install, "/current jgi.ReformatReads "), file, out1, out2, overwrite, collapse = " ")
 
     # Run Reformatreads
     result <- system2(command="java",
                       args = reformat_args,
-                      stdout="logs/stdout.log",
-                      stderr="logs/stderr.log",
+                      stdout=tmpout,
+                      stderr=tmperr,
                       wait=TRUE)
     now <- date()
     cat(paste0("Executed: ", now, "\n"), file="logs/bbreformat.log", append=TRUE)
-    file.append("logs/bbreformat.log", "logs/stderr.log")
-    file.remove(c("logs/stdout.log", "logs/stderr.log"))
+    file.append(tmplogs, tmperr)
+    file.remove(c(tmpout, tmperr))
 
   }
 

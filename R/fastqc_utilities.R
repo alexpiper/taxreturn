@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-fastqc_install <- function(url, dest.dir = "bin") {
+fastqc_install <- function(url, dest.dir = "bin", force=FALSE) {
   if (missing(url)) {
 
     # find the latest version of fastq
@@ -29,9 +29,13 @@ fastqc_install <- function(url, dest.dir = "bin") {
     dir.create(dest.dir) # Create first directory
   }
 
-  if (dir.exists(paste0(dest.dir, "/fastQC"))) {
+  # Check if dir exists
+  if (dir.exists(paste0(dest.dir, "/fastQC")) && force == FALSE) {
+    stop("Stopped as FASTQC already exists in directory, to overwrite set force to TRUE")
+  } else  if (dir.exists(paste0(dest.dir, "/fastQC")) && force == TRUE) {
     unlink(paste0(dest.dir, "/fastQC"), recursive = TRUE) # Remove old version
   }
+
 
   destfile <- file.path(dest.dir, basename(url))
   if (exists(destfile)) {

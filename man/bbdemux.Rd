@@ -18,8 +18,7 @@ bbdemux(
   overwrite = TRUE,
   threads = NULL,
   mem = NULL,
-  interleaved = FALSE,
-  parse_logs = TRUE
+  interleaved = FALSE
 )
 }
 \arguments{

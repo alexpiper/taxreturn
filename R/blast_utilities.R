@@ -35,7 +35,8 @@
 #' @export
 #'
 #' @examples
-blast_install <- function(url, dest.dir = "bin") {
+blast_install <- function(url, dest.dir = "bin", force = FALSE) {
+
   # get start time
   time <- Sys.time()
   # get OS
@@ -49,13 +50,13 @@ blast_install <- function(url, dest.dir = "bin") {
       unlist()
 
     if(localos == "Windows"){
-    url <- filenames[str_detect(filenames,"win64.tar.gz$")] %>%
+    url <- filenames[stringr::str_detect(filenames,"win64.tar.gz$")] %>%
       paste0(url,.)
     } else if(localos == "Darwin"){
-      url <- filenames[str_detect(filenames,"macosx.tar.gz$")] %>%
+      url <- filenames[stringr::str_detect(filenames,"macosx.tar.gz$")] %>%
         paste0(url,.)
     } else if(localos == "unix"){
-      url <- filenames[str_detect(filenames,"linux.tar.gz$")] %>%
+      url <- filenames[stringr::str_detect(filenames,"linux.tar.gz$")] %>%
         paste0(url,.)
     }
 
@@ -65,18 +66,20 @@ blast_install <- function(url, dest.dir = "bin") {
     dir.create(dest.dir) # Create first directory
   }
 
-  version <- basename(url) %>% str_replace("(-x64)(.*?)(?=$)", "")
-  if (dir.exists(paste0(dest.dir, "/",version))) {
-    unlink(paste0(dest.dir, "/",version), recursive = TRUE) # Remove old version
+  blast_version <- basename(url) %>% stringr::str_replace("(-x64)(.*?)(?=$)", "")
+  if (dir.exists(paste0(dest.dir, "/", blast_version)) && force == FALSE) {
+    stop("Stopped as BLAST already exists in directory, to overwrite set force to TRUE")
+  } else  if (dir.exists(paste0(dest.dir, "/", blast_version)) && force == TRUE) {
+    unlink(paste0(dest.dir, "/", blast_version), recursive = TRUE) # Remove old version
   }
 
   destfile <- file.path(dest.dir, basename(url))
   if (exists(destfile)) {
     file.remove(destfile) # Remove old zip file
   }
-  httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
 
-  #unzip file and remove download
+  #Download and unzip
+  httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
   utils::untar(destfile, exdir = dest.dir)
   file.remove(destfile)
 
@@ -88,7 +91,7 @@ blast_install <- function(url, dest.dir = "bin") {
   }
 
   time <- Sys.time() - time
-  message(paste0("Downloaded ", version, " in ", format(time, digits = 2)))
+  message(paste0("Downloaded ", blast_version, " in ", format(time, digits = 2)))
 }
 
 
