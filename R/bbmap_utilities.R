@@ -560,7 +560,7 @@ parse_bbtrim <- function(x) {
   result <- read_tsv(lines[which(str_sub(lines, 1, 7) == 'Result:' )], col_names = FALSE) %>%
     tidyr::separate(X2, into="output_reads", sep=" ", extra="drop") %>%
     tidyr::separate(X3, into="output_bases", sep=" ", extra="drop") %>%
-    dplyr::select(reads_out, bases_out) %>%
+    dplyr::select(output_reads, output_bases) %>%
     dplyr::mutate_if(is.character, as.numeric)
 
   out <- cbind(sample, input, ktrimmed, result)
