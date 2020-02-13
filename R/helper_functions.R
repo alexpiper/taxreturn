@@ -1,104 +1,174 @@
-# QC Max EE plot  ----------------------------------------------------------
 
-#' QC Max EE plot
-#' @description modified from code by Remi Maglione https://github.com/RemiMaglione/r-scripts/blob/master/Qual_vs_MaxEE_plot.R
-#' @param fastq.r1
-#' @param fastq.r2
-#' @param name1
-#' @param name2
+# Get Qual Stats ----------------------------------------------------------
+
+
+#' Get qual stats
+#'
+#' @param input
+#' @param n
 #'
 #' @return
+#' @export
 #'
 #' @examples
-qualMaxEEplot <- function(fastq.r1, fastq.r2, name1 = "Fastq_R1", name2 = "Fastq_R2") {
-  ### Loading dependenies
-  require(ggplot2)
-  require(patchwork)
-  ### Definning function
-  fastqTmp <- function(fastq) {
-    fastq.tmp <- rbind(
-      data.frame(
-        R = fastq$X.Base,
-        Q = fastq$Mean, S = c("Mean"),
-        E = 10^(-fastq$Mean / 10),
-        A = Reduce("+", 10^(-fastq$Mean / 10), accumulate = TRUE)
-      ),
-      data.frame(
-        R = fastq$X.Base,
-        Q = fastq$Median,
-        S = c("Median"),
-        E = 10^(-fastq$Median / 10),
-        A = Reduce("+", 10^(-fastq$Median / 10), accumulate = TRUE)
-      ),
-      data.frame(
-        R = fastq$X.Base,
-        Q = fastq$Lower.Quartile,
-        S = c("Lower.Quartile"),
-        E = 10^(-fastq$Lower.Quartile / 10),
-        A = Reduce("+", 10^(-fastq$Lower.Quartile / 10), accumulate = TRUE)
-      ),
-      data.frame(
-        R = fastq$X.Base,
-        Q = fastq$Upper.Quartile,
-        S = c("Upper.Quartile"),
-        E = 10^(-fastq$Upper.Quartile / 10),
-        A = Reduce("+", 10^(-fastq$Upper.Quartile / 10), accumulate = TRUE)
-      ),
-      data.frame(
-        R = fastq$X.Base,
-        Q = fastq$X10th.Percentile,
-        S = c("X10th.Percentile"),
-        E = 10^(-fastq$X10th.Percentile / 10),
-        A = Reduce("+", 10^(-fastq$X10th.Percentile / 10), accumulate = TRUE)
-      ),
-      data.frame(
-        R = fastq$X.Base,
-        Q = fastq$X90th.Percentile,
-        S = c("X90th.Percentile"),
-        E = 10^(-fastq$X90th.Percentile / 10),
-        A = Reduce("+", 10^(-fastq$X90th.Percentile / 10), accumulate = TRUE)
-      )
-    )
-    return(fastq.tmp)
+get_qual_stats <- function (input, n = 5e+05) {
+
+  statdf <- data.frame(Cycle = integer(0), Mean = numeric(0),
+                       Q25 = numeric(0), Q50 = numeric(0), Q75 = numeric(0),
+                       Cum = numeric(0), file = character(0))
+  anndf <- data.frame(minScore = numeric(0), label = character(0),
+                      rclabel = character(0), rc = numeric(0), file = character(0))
+  #Check files arent empty
+  fl <- input[file.size(input) > 28]
+  if (length(input) > length(fl)) {
+    message("Warning, the following files were empty: \n")
+    message(paste0(input[!input %in% fl], " \n"))
+  }
+  # Start loop
+  FIRST <- TRUE
+  for (f in fl[!is.na(fl)]) {
+
+    # f <- fl[!is.na(fl)][[1]]
+
+    srqa <- qa(f, n = n)
+    df <- srqa[["perCycle"]]$quality
+    rc <- sum(srqa[["readCounts"]]$read)
+    if (rc >= n) {
+      rclabel <- paste("Reads >= ", n)
+    }  else {      rclabel <- paste("Reads: ", rc)
+    }
+    means <- rowsum(df$Score * df$Count, df$Cycle)/rowsum(df$Count,  df$Cycle)
+
+    get_quant <- function(xx, yy, q) {
+      xx[which(cumsum(yy)/sum(yy) >= q)][[1]]
+    }
+    q25s <- by(df, df$Cycle, function(x) get_quant(x$Score, x$Count, 0.25), simplify = TRUE)
+    q50s <- by(df, df$Cycle, function(x) get_quant(x$Score, x$Count, 0.5), simplify = TRUE)
+    q75s <- by(df, df$Cycle, function(x) get_quant(x$Score, x$Count, 0.75), simplify = TRUE)
+    cums <- by(df, df$Cycle, function(x) sum(x$Count), simplify = TRUE)
+    if (!all(sapply(list(names(q25s), names(q50s), names(q75s), names(cums)), identical, rownames(means)))) {
+      stop("Calculated quantiles/means weren't compatible.")
+    }
+    if (FIRST) {
+      plotdf <- cbind(df, file = basename(f))
+      FIRST <- FALSE
+    }
+    else {
+      plotdf <- rbind(plotdf, cbind(df, file = basename(f)))
+    }
+
+    statdf <- rbind(statdf, data.frame(Cycle = as.integer(rownames(means)),
+                                       Mean = means, Q25 = as.vector(q25s), Q50 = as.vector(q50s),
+                                       Q75 = as.vector(q75s), Cum = 10 * as.vector(cums)/rc,
+                                       file = basename(f)))
+    anndf <- rbind(anndf, data.frame(minScore = min(df$Score),
+                                     label = basename(f), rclabel = rclabel, rc = rc,
+                                     file = basename(f)))
   }
 
-  qualPlot <- function(df.tmp) {
-    p_r <- ggplot(df.tmp, aes(color = S)) +
-      geom_point(aes(x = R, y = Q), size = 1) +
-      labs(x = "Reads position", y = "Reads Quality")
-    return(p_r)
+  anndf$minScore <- min(anndf$minScore)
+
+  get_ee <- function(Q){
+    ee <- 10^(-Q/ 10)
+    return(ee)
   }
 
-  maxEEplot <- function(df.tmp) {
-    q_r <- ggplot(df.tmp[complete.cases(df.tmp), ], aes(color = S)) +
-      geom_point(aes(x = R, y = log10(A)), size = 1) +
+
+  plotdf.summary <- aggregate(Count ~ Cycle + Score, plotdf, sum)
+  plotdf.summary$label <- paste(nrow(anndf), "files (aggregated)")
+  means <- rowsum(plotdf.summary$Score * plotdf.summary$Count, plotdf.summary$Cycle)/rowsum(plotdf.summary$Count, plotdf.summary$Cycle)
+  EEmeans <- get_ee(rowsum(plotdf.summary$Score * plotdf.summary$Count, plotdf.summary$Cycle)/rowsum(plotdf.summary$Count, plotdf.summary$Cycle))
+  q10s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.1), simplify = TRUE)
+  EE10s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.1)), simplify = TRUE)
+  q25s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.25), simplify = TRUE)
+  EE25s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.25)), simplify = TRUE)
+  q50s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.5), simplify = TRUE)
+  EE50s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.50)), simplify = TRUE)
+  q75s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.75), simplify = TRUE)
+  EE75s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.75)), simplify = TRUE)
+  q90s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_quant(x$Score, x$Count, 0.9), simplify = TRUE)
+  EE90s <- by(plotdf.summary, plotdf.summary$Cycle, function(x) get_ee(get_quant(x$Score, x$Count, 0.9)), simplify = TRUE)
+  cums <- by(plotdf.summary, plotdf.summary$Cycle, function(x) sum(x$Count), simplify = TRUE)
+  statdf.summary <- data.frame(Cycle = as.integer(rownames(means)),
+                               QMean = means,
+                               EEmean = EEmeans,
+                               Q10 = as.vector(q10s),
+                               EE10 = as.vector(EE10s),
+                               Q25 = as.vector(q25s),
+                               EE25 = as.vector(EE25s),
+                               Q50 = as.vector(q50s),
+                               EE50 = as.vector(EE50s),
+                               Q75 = as.vector(q75s),
+                               EE75 = as.vector(EE75s),
+                               Q90 = as.vector(q90s),
+                               EE90 = as.vector(EE90s),
+                               reads = 10 * as.vector(cums)/rc)
+  attr(statdf.summary, "qsummary") <- "qsummary"
+  return(statdf.summary)
+}
+
+
+# Qual plot ---------------------------------------------------------------
+
+
+#' Quality plot
+#'
+#' @param input
+#' @param n
+#'
+#' @return
+#' @export
+#'
+#' @examples
+qual_plot <- function(input, n = 5e+05) {
+    summary <- get_qual_stats(input, n = n )
+    plot <- summary %>%
+      dplyr::select(Cycle, reads, starts_with("Q")) %>%
+      tidyr::pivot_longer(cols = starts_with("Q")) %>%
+      ggplot(aes(x=Cycle, y=value, colour=name)) +
+        #geom_point(size=1)  +
+        geom_line(data = summary, aes(y = QMean), color = "#66C2A5") +
+        geom_line(data = summary, aes(y = Q25), color = "#FC8D62", size = 0.25, linetype = "dashed") +
+        geom_line(data = summary, aes(y = Q50), color = "#FC8D62", size = 0.25) +
+        geom_line(data = summary, aes(y = Q75), color = "#FC8D62",  size = 0.25, linetype = "dashed") +
+        #geom_tile(aes(fill = reads))
+        labs(x = "Reads position", y = "Quality Score") +
+        ylim(c(0, NA))
+  return(plot)
+}
+
+
+#' MaxEE plot
+#'
+#' @param input
+#' @param n
+#'
+#' @return
+#' @export
+#'
+#' @examples
+maxEEplot <- function(input, n = 5e+05) {
+  summary <- get_qual_stats(input, n = n )
+  plot <- summary %>%
+    dplyr::select(Cycle, starts_with("EE")) %>%
+    tidyr::pivot_longer(cols = starts_with("EE")) %>%
+    dplyr::group_by(name) %>%
+    dplyr::mutate(cumsumEE = cumsum(value)) %>%
+    ggplot(aes(x=Cycle, y=log10(cumsumEE), colour=name)) +
+      geom_point(size=1) +
+      geom_hline(yintercept = log10(1), color = "red") +
       geom_hline(yintercept = log10(2), color = "red") +
       geom_hline(yintercept = log10(3), color = "red") +
       geom_hline(yintercept = log10(5), color = "red") +
       geom_hline(yintercept = log10(7), color = "red") +
+      geom_text(label = "MaxEE=1", aes(x = 0, y = log10(1), hjust = 0, vjust = 0), color = "red") +
       geom_text(label = "MaxEE=2", aes(x = 0, y = log10(2), hjust = 0, vjust = 0), color = "red") +
       geom_text(label = "MaxEE=3", aes(x = 0, y = log10(3), hjust = 0, vjust = 0), color = "red") +
       geom_text(label = "MaxEE=5", aes(x = 0, y = log10(5), hjust = 0, vjust = 0), color = "red") +
       geom_text(label = "MaxEE=7", aes(x = 0, y = log10(7), hjust = 0, vjust = 0), color = "red") +
-      labs(x = "Reads position", y = "EE = sum(10^(-Q/10)) log10") #+
-    # coord_cartesian(ylim = c(log10(min(df.tmp[complete.cases(df.tmp), ]$A)), log10(max(df.tmp[complete.cases(df.tmp), ]$A))))
-    return(q_r)
-  }
-
-  ### MAIN
-  p_r1 <- qualPlot(df.tmp = fastqTmp(fastq.r1)) +
-    ggtitle(name1) +
-    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-  p_r2 <- qualPlot(df.tmp = fastqTmp(fastq.r2)) + ggtitle(name2) +
-    ggtitle(name2) +
-    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-  q_r1 <- maxEEplot(df.tmp = fastqTmp(fastq.r1))
-  q_r2 <- maxEEplot(df.tmp = fastqTmp(fastq.r2))
-
-  return(plot((p_r1 + p_r2) / (q_r1 + q_r2), cols = 2))
+      labs(x = "Reads position", y = "Log10 Cumulative expected errors")
+  return(plot)
 }
-
-
 
 
 #' Summarise phyloseq table
