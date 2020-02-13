@@ -485,7 +485,7 @@ resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALS
       if (higherrank) {
         temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
           max(temp[[i]]$confidence))
-        warning_i <- paste(warning_i, "No matching species concept! Entry has been mapped to higher taxonomic level.")
+        warning_i <- paste(warning_i, "No matching species concept! Entry has been mapped to higher taxonomic rank.")
       }
       else {
         temp[[i]] <- data.frame(
@@ -684,27 +684,29 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 }
 
 
-# Find mixed clusters -----------------------------------------------------
+# Get mixed clusters -----------------------------------------------------
 
-#' Find mixed clusters
+#' Get mixed clusters
 #'
-#' @param x
-#' @param db
-#' @param level
-#' @param confidence
-#' @param quiet
-#' @param ...
+#' @param x	 A DNAbin list object whose names include NCBItaxonomic identification numbers.
+#' @param db A NCBI taxonomy database from get_ncbi_lineage. If missing will download new one
+#' @param rank The taxonomic rank to check clusters at
+#' @param threshold numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.
+#' @param confidence The minimum confidence value for a sequence to be purged. For example, if confidence = 0.8 (the default value)
+#'  a sequence will only be purged if its taxonomy differs from at least four other independent sequences in its cluster.
+#' @param quiet logical indicating whether progress should be printed to the console.
+#' @param ... further arguments to pass to kmer::otu (not including nstart).
 #'
 #' @return
 #' @export
 #'
 #' @examples
-find_mixed_clusters <- function (x, db, level = "order", confidence = 0.8, quiet = FALSE, ...) {
+get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confidence = 0.8, quiet = FALSE, ...) {
   # Setup
   if(missing(db)){db <- taxreturn::get_ncbi_lineage()}
   lineage <- get_lineage(x, db = db)
-  level <- tolower(level)
-  if(level == "all") {level <- colnames(db)[3:ncol(db)]}
+  rank <- tolower(rank)
+  if(rank == "all") {rank <- colnames(db)[3:ncol(db)]}
 
   # Cluster OTUS
   if (is.null(attr(x, "OTU"))) {
@@ -739,12 +741,12 @@ find_mixed_clusters <- function (x, db, level = "order", confidence = 0.8, quiet
     return(res)
   }
 
-  # Loop over level
-  results <- vector("list", length=length(level))
-  for (i in 1:length(level)){
+  # Loop over rank
+  results <- vector("list", length=length(rank))
+  for (i in 1:length(rank)){
     lins <- lineage %>%
-      dplyr::select(!!level[i]) %>%
-      dplyr::pull(!!level[i])
+      dplyr::select(!!rank[i]) %>%
+      dplyr::pull(!!rank[i])
     lins[is.na(lins)] <- ""
     names(lins) <- lineage$Acc
 
@@ -755,19 +757,19 @@ find_mixed_clusters <- function (x, db, level = "order", confidence = 0.8, quiet
     mixedtab <- lapply(splitlist, find_mixed)
     mixedtab <- mixedtab[!vapply(mixedtab, is.null, logical(1))]
     if (length(mixedtab) == 0) {
-      if (!quiet) {cat("No erroneous sequences at", level[i],   "rank \n")}
+      if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
       results[[i]] <- NULL
     } else if (length(mixedtab) > 0){
       names(mixedtab) <- NULL
       mixedtab <- do.call("rbind", mixedtab)
       mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
       if (nrow(mixedtab) == 0) {
-        if (!quiet) {cat("No erroneous sequences at", level[i],   "rank \n")}
+        if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
         results[[i]] <- NULL
       } else if(nrow(mixedtab) > 0 ) {
         mixedtab <- mixedtab[order(mixedtab$confidence, decreasing = TRUE), ]
-        if (!quiet) {cat("identified", nrow(mixedtab), "potentially erroneous sequences at", level[i],   "rank \n")}
-        results[[i]] <-  as.data.frame(mixedtab) %>% rownames_to_column("Acc") %>% mutate(level = level[i])
+        if (!quiet) {cat("identified", nrow(mixedtab), "potentially erroneous sequences at", rank[i],   "rank \n")}
+        results[[i]] <-  as.data.frame(mixedtab) %>% rownames_to_column("Acc") %>% mutate(rank = rank[i])
       }
     }
   }
