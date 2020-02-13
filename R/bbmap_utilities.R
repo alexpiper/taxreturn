@@ -24,7 +24,8 @@ bbmap_install <- function(url, dest.dir = "bin", force = FALSE) {
 
 
   if (dir.exists(paste0(dest.dir, "/bbmap")) && force == FALSE) {
-    stop("Stopped as bbmap already exists in directory, to overwrite set force to TRUE")
+    message("Skipped as bbmap already exists in directory, to overwrite set force to TRUE")
+    return(NULL)
   } else  if (dir.exists(paste0(dest.dir, "/bbmap")) && force == TRUE) {
     unlink(paste0(dest.dir, "/bbmap"), recursive = TRUE) # Remove old version
   }

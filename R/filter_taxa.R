@@ -206,7 +206,7 @@ resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ign
   } else {
     (verbose <- TRUE)
   }
-  db <- get_ranked_lineage(synonyms = TRUE, force=FALSE)
+  db <- get_ncbi_lineage(synonyms = TRUE, force=FALSE)
 
   # Check type of input
   if (is(x, "DNAbin")) {
@@ -682,3 +682,100 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
   names(ent) <- names(x)
  return(ent)
 }
+
+
+# Find mixed clusters -----------------------------------------------------
+
+#' Find mixed clusters
+#'
+#' @param x
+#' @param db
+#' @param level
+#' @param confidence
+#' @param quiet
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+find_mixed_clusters <- function (x, db, level = "order", confidence = 0.8, quiet = FALSE, ...) {
+  # Setup
+  if(missing(db)){db <- taxreturn::get_ncbi_lineage()}
+  lineage <- get_lineage(x, db = db)
+  level <- tolower(level)
+  if(level == "all") {level <- colnames(db)[3:ncol(db)]}
+
+  # Cluster OTUS
+  if (is.null(attr(x, "OTU"))) {
+    if (!quiet) {cat("Clustering OTUs\n")}
+    otus <- kmer::otu(x, nstart = 20, ... = ...)
+  } else {
+    if (!quiet) {cat("Obtaining OTU membership from input object\n")}
+    otus <- attr(x, "OTU")
+    stopifnot(length(x) == length(otus))
+  }
+  if (!quiet) {cat("Comparing lineage metadata within OTUs\n")}
+
+  # Get mixed clusters
+  find_mixed <- function(y) {
+    hashes <- paste0(gsub("(^.{4}).+", "\\1",
+                          names(y)), y)
+    yu <- y[!duplicated(hashes)]
+    if (length(unique(yu)) < 2) {
+      return(NULL)
+    }
+
+    tab <- sort(table(yu), decreasing = TRUE)
+    if (tab[1] == tab[2]) {
+      return(NULL)
+    }
+    consensus <- names(tab)[1]
+    mixed <- y != consensus
+    mixedu <- yu != consensus
+    nu <- length(mixedu)
+    res <- data.frame(listed = y[mixed], suggested = rep(consensus,
+                                                         sum(mixed)), confidence = sum(!mixedu)/nu, nstudies = nu)
+    return(res)
+  }
+
+  # Loop over level
+  results <- vector("list", length=length(level))
+  for (i in 1:length(level)){
+    lins <- lineage %>%
+      dplyr::select(!!level[i]) %>%
+      dplyr::pull(!!level[i])
+    lins[is.na(lins)] <- ""
+    names(lins) <- lineage$Acc
+
+    f <- as.factor(otus)
+    splitlist <- split(lins, f)
+    splitlist <- splitlist[tabulate(f) > 2]
+
+    mixedtab <- lapply(splitlist, find_mixed)
+    mixedtab <- mixedtab[!vapply(mixedtab, is.null, logical(1))]
+    if (length(mixedtab) == 0) {
+      if (!quiet) {cat("No erroneous sequences at", level[i],   "rank \n")}
+      results[[i]] <- NULL
+    } else if (length(mixedtab) > 0){
+      names(mixedtab) <- NULL
+      mixedtab <- do.call("rbind", mixedtab)
+      mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
+      if (nrow(mixedtab) == 0) {
+        if (!quiet) {cat("No erroneous sequences at", level[i],   "rank \n")}
+        results[[i]] <- NULL
+      } else if(nrow(mixedtab) > 0 ) {
+        mixedtab <- mixedtab[order(mixedtab$confidence, decreasing = TRUE), ]
+        if (!quiet) {cat("identified", nrow(mixedtab), "potentially erroneous sequences at", level[i],   "rank \n")}
+        results[[i]] <-  as.data.frame(mixedtab) %>% rownames_to_column("Acc") %>% mutate(level = level[i])
+      }
+    }
+  }
+
+  out <- bind_rows(results)
+
+  if (nrow(out)==0) {
+    return(NULL)
+  } else (return(out))
+}
+

@@ -20,7 +20,8 @@ bbtrim(
   degenerate = TRUE,
   overwrite = TRUE,
   quality = FALSE,
-  maxlength = NULL
+  maxlength = NULL,
+  tmp = NULL
 )
 }
 \arguments{

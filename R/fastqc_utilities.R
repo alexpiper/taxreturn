@@ -32,7 +32,8 @@ fastqc_install <- function(url, dest.dir = "bin", force = FALSE) {
 
   # Check if dir exists
   if (dir.exists(paste0(dest.dir, "/fastQC")) && force == FALSE) {
-    stop("Stopped as FASTQC already exists in directory, to overwrite set force to TRUE")
+    message("Skipped as FASTQC already exists in directory, to overwrite set force to TRUE")
+    return(NULL)
   } else  if (dir.exists(paste0(dest.dir, "/fastQC")) && force == TRUE) {
     unlink(paste0(dest.dir, "/fastQC"), recursive = TRUE) # Remove old version
   }

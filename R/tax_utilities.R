@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
+get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
   if (!identical(db, "NCBI")) {
     stop("Only the NCBI taxonomy database is available in this version\n")
   }
@@ -55,6 +55,24 @@ get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
 
 
 
+#' (Deprecated) Get ranked Lineage
+#'
+#' @param db
+#' @param synonyms
+#' @param force
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
+  .Deprecated("get_ncbi_lineage") #include a package argument, too
+  get_ncbi_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
+}
+
+
+
+
 # ncbi_taxid --------------------------------------------------------------
 
 #' Get ncbi taxid's for a taxon name
@@ -68,7 +86,7 @@ get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
 #' @examples
 ncbi_taxid <- function(x, db=NULL) {
 
-  if (is.null(db)) { db <- get_ranked_lineage()}
+  if (is.null(db)) { db <- get_ncbi_lineage()}
   out <-  as.data.frame(x) %>%
     magrittr::set_colnames("tax_name") %>%
     dplyr::left_join (db, by = "tax_name") %>%
@@ -221,6 +239,32 @@ reformat_dada2_spp <- function(x, quiet = FALSE) {
 }
 
 
+# get_lineage -------------------------------------------------------------
+
+#' Get lineage
+#'
+#' @param x
+#' @param db
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_lineage <- function(x, db){
+  if(missing(db)){ db <- taxreturn::get_ncbi_lineage()}
+  cat("Getting taxonomic lineage from taxids\n")
+  lineage <- names(x) %>%
+    stringr::str_split_fixed(";", n = 2) %>%
+    tibble::as_tibble() %>%
+    tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+    dplyr::rename(species = V2) %>%
+    dplyr::mutate(tax_id = as.numeric(tax_id))  %>%
+    dplyr::left_join (db %>% dplyr::select(-species), by = "tax_id")  %>%
+    tidyr::unite(col = V1, c(acc, tax_id), sep = "|")  %>%
+    rename(Acc = V1)
+  return(lineage)
+}
+
 
 # Reformat heirarchy ------------------------------------------------------
 
@@ -242,7 +286,7 @@ reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep
   }
   if (is.null(db)) {
     message("No taxonomy database provided, downloading from NCBI")
-    db <- get_ranked_lineage(force=force)
+    db <- get_ncbi_lineage(force=force)
   }
 
   if (!is.null(ranks)) {

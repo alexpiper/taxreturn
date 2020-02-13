@@ -564,7 +564,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
 
   # Get NCBI Db if NCBI outputs are desired
   if (output %in% c("gb", "gb-binom")) {
-    db <- get_ranked_lineage(synonyms = TRUE, force=FALSE)
+    db <- get_ncbi_lineage(synonyms = TRUE, force=FALSE)
   }
 
   #stop if subsample and BOLD is true

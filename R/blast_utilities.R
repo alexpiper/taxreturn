@@ -69,7 +69,8 @@ blast_install <- function(url, dest.dir = "bin", force = FALSE) {
 
   blast_version <- basename(url) %>% stringr::str_replace("(-x64)(.*?)(?=$)", "")
   if (dir.exists(paste0(dest.dir, "/", blast_version)) && force == FALSE) {
-    stop("Stopped as BLAST already exists in directory, to overwrite set force to TRUE")
+    message("Skipped as BLAST already exists in directory, to overwrite set force to TRUE")
+    return(NULL)
   } else  if (dir.exists(paste0(dest.dir, "/", blast_version)) && force == TRUE) {
     unlink(paste0(dest.dir, "/", blast_version), recursive = TRUE) # Remove old version
   }

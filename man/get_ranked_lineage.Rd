@@ -2,16 +2,16 @@
 % Please edit documentation in R/tax_utilities.R
 \name{get_ranked_lineage}
 \alias{get_ranked_lineage}
-\title{Download NCBI taxdump}
+\title{(Deprecated) Get ranked Lineage}
 \usage{
 get_ranked_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
 }
 \arguments{
-\item{synonyms}{}
+\item{force}{}
 }
 \value{
 
 }
 \description{
-Download NCBI taxdump
+(Deprecated) Get ranked Lineage
 }
