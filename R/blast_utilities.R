@@ -2,7 +2,7 @@
 # .findExecutable ---------------------------------------------------------
 
 
-#' Finde executable
+#' Find executable
 #'
 #' @param exe
 #' @param interactive
@@ -260,7 +260,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
 #' @examples
 blast_top_hit <- function(query, db, type="blastn", threshold=90, taxranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";", args="-max_target_seqs 5", quiet=FALSE ){
   #Conduct BLAST
-  result <- blast(query=query, db=db, args=args)
+  result <- blast(query=query, type=type, db=db, args=args)
   #Subset to top hit
   top_hit <- result %>%
     filter(pident > threshold) %>%

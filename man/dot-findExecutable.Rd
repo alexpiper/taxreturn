@@ -2,7 +2,7 @@
 % Please edit documentation in R/blast_utilities.R
 \name{.findExecutable}
 \alias{.findExecutable}
-\title{Finde executable}
+\title{Find executable}
 \usage{
 .findExecutable(exe, interactive = TRUE)
 }
@@ -13,5 +13,5 @@
 
 }
 \description{
-Finde executable
+Find executable
 }
