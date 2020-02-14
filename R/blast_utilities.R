@@ -111,6 +111,7 @@ blast_install <- function(url, dest.dir = "bin", force = FALSE) {
 #' @examples
 makeblastdb <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
   time <- Sys.time() # get time
+  .findExecutable("makeblastdb") # Check blast is installed
   if (is.null(args)){args <- ""}
   if (stringr::str_detect(file, ".gz")) {
     message("Unzipping file")
@@ -165,6 +166,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
   tmpquery <- paste0(tmp, "/tmpquery.fa")
   tmpdb <- paste0(tmp, "/tmpquery.fa")
 
+  .findExecutable(type) # check blast is installed
 
   # Database
   if(inherits(db, "DNAbin")){
