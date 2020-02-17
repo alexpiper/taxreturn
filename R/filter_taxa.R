@@ -775,7 +775,8 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
         results[[i]] <-  mixedtab %>%
           as.data.frame() %>%
           tibble::rownames_to_column("Acc") %>%
-          dplyr::mutate(rank = rank[i]) %>%
+          dplyr::mutate(rank = rank[i],
+                        threshold = threshold) %>%
           dplyr::mutate_if(is.factor, as.character)
       }
     }
