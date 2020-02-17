@@ -690,7 +690,8 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #'
 #' @param x	 A DNAbin list object whose names include NCBItaxonomic identification numbers.
 #' @param db A NCBI taxonomy database from get_ncbi_lineage. If missing will download new one
-#' @param rank The taxonomic rank to check clusters at
+#' @param rank The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
+#' If "all", the clusters will be checked at all taxonomic ranks available.
 #' @param threshold numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.
 #' @param confidence The minimum confidence value for a sequence to be purged. For example, if confidence = 0.8 (the default value)
 #'  a sequence will only be purged if its taxonomy differs from at least four other independent sequences in its cluster.
@@ -699,14 +700,16 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #'
 #' @return
 #' @export
+#' @import tibble
 #'
 #' @examples
 get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confidence = 0.8, quiet = FALSE, ...) {
+  if(missing(x)) {stop("Error: x is required")}
   # Setup
   if(missing(db)){db <- taxreturn::get_ncbi_lineage()}
   lineage <- get_lineage(x, db = db)
   rank <- tolower(rank)
-  if(rank == "all") {rank <- colnames(db)[3:ncol(db)]}
+  if(any(rank == "all")) {rank <- colnames(db)[3:ncol(db)]}
 
   # Cluster OTUS
   if (is.null(attr(x, "OTU"))) {
@@ -769,12 +772,16 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
       } else if(nrow(mixedtab) > 0 ) {
         mixedtab <- mixedtab[order(mixedtab$confidence, decreasing = TRUE), ]
         if (!quiet) {cat("identified", nrow(mixedtab), "potentially erroneous sequences at", rank[i],   "rank \n")}
-        results[[i]] <-  as.data.frame(mixedtab) %>% rownames_to_column("Acc") %>% mutate(rank = rank[i])
+        results[[i]] <-  mixedtab %>%
+          as.data.frame() %>%
+          tibble::rownames_to_column("Acc") %>%
+          dplyr::mutate(rank = rank[i]) %>%
+          dplyr::mutate_if(is.factor, as.character)
       }
     }
   }
 
-  out <- bind_rows(results)
+  out <- dplyr::bind_rows(results)
 
   if (nrow(out)==0) {
     return(NULL)

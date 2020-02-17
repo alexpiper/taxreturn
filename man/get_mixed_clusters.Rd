@@ -19,7 +19,8 @@ get_mixed_clusters(
 
 \item{db}{A NCBI taxonomy database from get_ncbi_lineage. If missing will download new one}
 
-\item{rank}{The taxonomic rank to check clusters at}
+\item{rank}{The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
+If "all", the clusters will be checked at all taxonomic ranks available.}
 
 \item{threshold}{numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.}
 
