@@ -761,14 +761,14 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     mixedtab <- mixedtab[!vapply(mixedtab, is.null, logical(1))]
     if (length(mixedtab) == 0) {
       if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
-      results[[i]] <- NULL
+      results[[i]] <-  NULL
     } else if (length(mixedtab) > 0){
-      names(mixedtab) <- NULL
+      names(mixedtab) <-  NULL
       mixedtab <- do.call("rbind", mixedtab)
       mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
       if (nrow(mixedtab) == 0) {
         if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
-        results[[i]] <- NULL
+        results[[i]] <-  NULL
       } else if(nrow(mixedtab) > 0 ) {
         mixedtab <- mixedtab[order(mixedtab$confidence, decreasing = TRUE), ]
         if (!quiet) {cat("identified", nrow(mixedtab), "potentially erroneous sequences at", rank[i],   "rank \n")}

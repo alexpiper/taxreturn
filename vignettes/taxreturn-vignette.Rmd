@@ -244,8 +244,37 @@ saveRDS(trainingSet, file="reference/idtaxa.rds")
 ```
 
 
-# Summarise taxa in database
+# Summarise number of taxa in database
 
 ```{r summary}
 summary <- tax2tree(heirarchy, output="treedf")
+```
+
+# Get top hit identity distribution for dataset
+
+The top hit identity distribution (THID) of Edgar et al 2018 offers a method of Edgar et al 2018 offers a method for sumarising the distances between a reference database and a query dataset. Here we summarise how well our new reference database contains the genetics from an insect metabarcoding dataset. Taxreturn contains a wrapper around the NCBI blast utilities to make this easy.
+
+```{r THID}
+seqtab <- readRDS("seqtab_final.rds")
+
+seqs <- insect::char2dna(colnames(seqtab))
+
+# Check if blast is installed. If not, install a local version
+if(all(Sys.which("blastn")=="")){
+  blast_install(dest.dir="bin")
+}
+
+# Create blast Database
+makeblastdb("cleaned_amplicon.fa.gz")
+
+THID <- blast_top_hit(query=seqs, db="cleaned_amplicon.fa")
+
+# plot histogram
+gg.THID <- THID %>%
+  ggplot(aes(x=pident))+ 
+  geom_histogram(colour="black") + 
+  ggtitle("Top Hit Identity Distribution") +
+  xlab("Top Hit Identity") + 
+  ylab("Sequences")
+
 ```
