@@ -566,7 +566,7 @@ resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALS
 #'
 #' @examples
 get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, resolve_draws="majority") {
-  # Convert to DNAbin
+  # Convert to DNAStringSet
   if (is(x, "DNAbin")) {
     x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
   }
@@ -622,6 +622,10 @@ get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FA
 #'
 #' @examples
 codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, remove.ambiguities=TRUE){
+  # Convert to DNAStringSet
+  if (is(x, "DNAbin")) {
+    x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
+  }
   #Check for N's
   if(hasOnlyBaseLetters(x) == FALSE & remove.ambiguities == FALSE) {
     stop("Error: Sequences containing ambiguities, set remove.ambiguities to TRUE")
@@ -711,7 +715,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
   lineage <- taxreturn::get_lineage(x, db = db)
   rank <- tolower(rank)
   if(any(rank == "all")) {rank <- colnames(db)[3:ncol(db)]}
-  
+
   # Cluster OTUS
   if (is.null(attr(x, "OTU"))) {
     if (!quiet) {cat(paste0("Clustering OTUs at ", threshold, "% \n"))}
@@ -723,7 +727,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
   }
   if(length(unique(otus))==1) {stop("Error: only one unique cluster")}
   if (!quiet) {cat("Comparing lineage metadata within OTUs\n")}
-  
+
   # Get mixed clusters
   find_mixed <- function(y) {
     hashes <- paste0(gsub("(^.{4}).+", "\\1",
@@ -732,7 +736,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     if (length(unique(yu)) < 2) {
       return(NULL)
     }
-    
+
     tab <- sort(table(yu), decreasing = TRUE)
     if (tab[1] == tab[2]) {
       return(NULL)
@@ -745,7 +749,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
                                                          sum(mixed)), confidence = sum(!mixedu)/nu, nstudies = nu)
     return(res)
   }
-  
+
   # Loop over rank
   results <- vector("list", length=length(rank))
   for (i in 1:length(rank)){
@@ -782,9 +786,9 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
       }
     }
   }
-  
+
   out <- dplyr::bind_rows(results)
-  
+
   if (nrow(out)==0) {
     return(NULL)
   } else (return(out))
