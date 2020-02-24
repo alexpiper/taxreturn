@@ -298,10 +298,12 @@ reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep
 
   # Split current names
   seqnames <- names(x) %>%
-    stringr::str_split_fixed(";", n = 2) %>%
+    stringr::str_replace(";$", "") %>%
+    stringr::str_split_fixed(";", n = Inf) %>%
     tibble::as_tibble() %>%
-    tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
-    dplyr::rename(species = V2) %>%
+    tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|")%>%
+    dplyr::select(1:2, tail(names(.), 1)) %>%
+    magrittr::set_colnames(c("acc", "tax_id", "species")) %>%
     dplyr::mutate(tax_id = as.numeric(tax_id))
 
   # Get lineage from taxid
