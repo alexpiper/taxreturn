@@ -703,25 +703,27 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' @import tibble
 #'
 #' @examples
+
 get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confidence = 0.8, quiet = FALSE, ...) {
   if(missing(x)) {stop("Error: x is required")}
   # Setup
   if(missing(db)){db <- taxreturn::get_ncbi_lineage()}
-  lineage <- get_lineage(x, db = db)
+  lineage <- taxreturn::get_lineage(x, db = db)
   rank <- tolower(rank)
   if(any(rank == "all")) {rank <- colnames(db)[3:ncol(db)]}
-
+  
   # Cluster OTUS
   if (is.null(attr(x, "OTU"))) {
-    if (!quiet) {cat("Clustering OTUs\n")}
-    otus <- kmer::otu(x, nstart = 20, ... = ...)
+    if (!quiet) {cat(paste0("Clustering OTUs at ", threshold, "% \n"))}
+    otus <- kmer::otu(x, nstart = 20, threshold = threshold, ...)
   } else {
     if (!quiet) {cat("Obtaining OTU membership from input object\n")}
     otus <- attr(x, "OTU")
     stopifnot(length(x) == length(otus))
   }
+  if(length(unique(otus))==1) {stop("Error: only one unique cluster")}
   if (!quiet) {cat("Comparing lineage metadata within OTUs\n")}
-
+  
   # Get mixed clusters
   find_mixed <- function(y) {
     hashes <- paste0(gsub("(^.{4}).+", "\\1",
@@ -730,7 +732,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     if (length(unique(yu)) < 2) {
       return(NULL)
     }
-
+    
     tab <- sort(table(yu), decreasing = TRUE)
     if (tab[1] == tab[2]) {
       return(NULL)
@@ -743,7 +745,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
                                                          sum(mixed)), confidence = sum(!mixedu)/nu, nstudies = nu)
     return(res)
   }
-
+  
   # Loop over rank
   results <- vector("list", length=length(rank))
   for (i in 1:length(rank)){
@@ -752,7 +754,6 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
       dplyr::pull(!!rank[i])
     lins[is.na(lins)] <- ""
     names(lins) <- lineage$Acc
-
     f <- as.factor(otus)
     splitlist <- split(lins, f)
     splitlist <- splitlist[tabulate(f) > 2]
@@ -761,14 +762,14 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     mixedtab <- mixedtab[!vapply(mixedtab, is.null, logical(1))]
     if (length(mixedtab) == 0) {
       if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
-      results[[i]] <-  NULL
+      results[[i]] <-  as.data.frame(NULL)
     } else if (length(mixedtab) > 0){
       names(mixedtab) <-  NULL
       mixedtab <- do.call("rbind", mixedtab)
       mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
       if (nrow(mixedtab) == 0) {
         if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
-        results[[i]] <-  NULL
+        results[[i]] <-  as.data.frame(NULL)
       } else if(nrow(mixedtab) > 0 ) {
         mixedtab <- mixedtab[order(mixedtab$confidence, decreasing = TRUE), ]
         if (!quiet) {cat("identified", nrow(mixedtab), "potentially erroneous sequences at", rank[i],   "rank \n")}
@@ -781,11 +782,10 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
       }
     }
   }
-
+  
   out <- dplyr::bind_rows(results)
-
+  
   if (nrow(out)==0) {
     return(NULL)
   } else (return(out))
 }
-
