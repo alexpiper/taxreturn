@@ -54,7 +54,6 @@ get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
 }
 
 
-
 #' (Deprecated) Get ranked Lineage
 #'
 #' @param db
@@ -341,16 +340,22 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
   #Reformat to complete taxonomic heirarchy
   seqs <- taxreturn::reformat_heirarchy(x, db=db, quiet=FALSE, force=force)
 
+  #Remove NA's
+  if(any(names(seqs)[str_detect(names(seqs), ";NA;")])){
+    remove <- names(seqs)[str_detect(names(seqs), ";NA;")]
+    subset <- seqs[!names(seqs) %in% remove]
+    message(paste0(length(seqs) - length(subset)," Sequences with NA's in taxonomy removed"))
+    seqs <- subset
+  }
+
   #Convert to DNAstringset for DECIPHER
   seqs <- seqs %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
-
 
   # As taxonomies are encoded in the sequence names rather than a separate file, use:
   taxid <- NULL
 
   #Add Root Rank
   names(seqs) <- names(seqs)  %>% stringr::str_replace(";[;]*", ";Root;")
-
 
   # obtain the taxonomic assignments
   groups <- names(seqs) # sequence names
@@ -377,9 +382,7 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
   for (i in seq_len(maxIterations)) {
     if (!quiet) {message("Training iteration: ", i, "\n", sep="")}
     # train the classifier
-    trainingSet <- DECIPHER::LearnTaxa(seqs[!remove],
-                             names(seqs)[!remove],
-                             taxid)
+    trainingSet <- DECIPHER::LearnTaxa(seqs[!remove], names(seqs)[!remove], taxid)
 
     # look for problem sequences
     probSeqs <- trainingSet$problemSequences$Index
