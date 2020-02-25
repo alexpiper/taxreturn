@@ -229,9 +229,16 @@ reformat_dada2_spp <- function(x, quiet = FALSE) {
   if (!is(x, "DNAbin")) {
     x <- ape::as.DNAbin(x)
   }
-  seqnames <- stringr::str_split_fixed(names(x), pattern = ";", n = 2) %>%
-    as_tibble()
-  names(x) <- paste(seqnames$V1, seqnames$V2, sep = " ")
+  # Split current names
+  seqnames <- names(x) %>%
+    stringr::str_replace(";$", "") %>%
+    stringr::str_split_fixed(";", n = Inf) %>%
+    tibble::as_tibble() %>%
+    dplyr::select(1, tail(names(.), 1)) %>%
+    magrittr::set_colnames(c("acc", "species")) %>%
+    dplyr::mutate(species = stringr::str_replace(species, pattern="_", replacement=" "))
+
+  names(x) <- paste(seqnames$acc, seqnames$species, sep = " ")
   time <- Sys.time() - time
   if (!quiet) (message(paste0("Reformatted annotations for ", length(x), " sequences in ", format(time, digits = 2))))
   return(x)
