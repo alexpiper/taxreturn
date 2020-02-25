@@ -344,7 +344,7 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
   } else (seqs <- x)
 
   #Remove NA's
-  if(any(names(seqs)[str_detect(names(seqs), ";NA;")])){
+  if(length(names(seqs)[str_detect(names(seqs), ";NA;")]) > 1){
     remove <- names(seqs)[str_detect(names(seqs), ";NA;")]
     subset <- seqs[!names(seqs) %in% remove]
     message(paste0(length(seqs) - length(subset)," Sequences with NA's in taxonomy removed"))
