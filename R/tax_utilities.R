@@ -329,16 +329,19 @@ reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep
 #' @param db
 #' @param quiet
 #' @param force
+#' @param get_lineage Reformat the sequences heirarchially before training
 #'
 #' @return
 #' @export
 #'
 #' @examples
-train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  db = NULL, quiet = FALSE, force=FALSE) {
+train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  db = NULL, quiet = FALSE, force=FALSE, get_lineage=FALSE) {
   time <- Sys.time() # get time
 
   #Reformat to complete taxonomic heirarchy
+  if(get_lineage){
   seqs <- taxreturn::reformat_heirarchy(x, db=db, quiet=FALSE, force=force)
+  } else (seqs <- x)
 
   #Remove NA's
   if(any(names(seqs)[str_detect(names(seqs), ";NA;")])){

@@ -11,11 +11,12 @@ train_idtaxa(
   allowGroupRemoval = TRUE,
   db = NULL,
   quiet = FALSE,
-  force = FALSE
+  force = FALSE,
+  get_lineage = FALSE
 )
 }
 \arguments{
-\item{force}{}
+\item{get_lineage}{Reformat the sequences heirarchially before training}
 }
 \value{
 
