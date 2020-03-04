@@ -278,3 +278,34 @@ gg.THID <- THID %>%
   ylab("Sequences")
 
 ```
+
+
+```{r extra summary}
+db <- insect::readFASTA("heirarchial.fa.gz")
+
+library(tidyverse)
+names <- names(db) %>%
+  str_split_fixed(";", n=8) %>%
+  as_tibble() %>%
+  tidyr::separate(V1, into=c("Acc", "taxid")) %>%
+  magrittr::set_colnames(c("Acc", "taxid", "kingdom", "phylum", "class", "order", "family", "genus", "species")) %>%
+  mutate(species = str_replace(species, ";", ""))
+
+
+summary <- names %>%
+  summarise(sequences = n_distinct(Acc),
+            kingdom = n_distinct(kingdom),
+            phylum = n_distinct(phylum),
+            class = n_distinct(class),
+            order = n_distinct(order),
+            family = n_distinct(family),
+            genus = n_distinct(genus),
+            species = n_distinct(species)
+            )
+
+write_csv(summary, "db_summary.csv", append = FALSE)
+write_csv(names, "db_all_taxa.csv", append = FALSE)
+
+
+
+```
