@@ -96,7 +96,7 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
   if (filter_bads==TRUE){
     remap <- vroom::vroom(file, delim="\t|\t")
     bads <- remap %>%
-      filter(grepl("incertae_sedis,|incertae_sedis$|major_rank_conflict|unplaced|environmental|inconsistent|extinct|hidden|hybrid|not_otu|viral|barren", flags))
+      dplyr::filter(grepl("incertae_sedis,|incertae_sedis$|major_rank_conflict|unplaced|environmental|inconsistent|extinct|hidden|hybrid|not_otu|viral|barren", flags))
     remap <- remap %>%
       filter(!grepl("incertae_sedis,|incertae_sedis$|major_rank_conflict|unplaced|environmental|inconsistent|extinct|hidden|hybrid|not_otu|viral|barren", flags)) %>%
       dplyr::select(uid, name, sourceinfo) %>%
@@ -119,8 +119,13 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
     tibble::as_tibble() %>%
     tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
     dplyr::rename(tax_name = V2) %>%
-    dplyr::left_join (db %>% dplyr::filter(source==!!from) %>% select(-source) %>% rename(tax_name.x = tax_name), by = "id")  %>% # First map by id
-    dplyr::left_join (db %>% select(-id, -source ) %>% filter(!duplicated(tax_name)), by = "tax_name") # then map by name
+    dplyr::left_join (db %>%
+                        dplyr::filter(source==!!from) %>%
+                        dplyr::select(-source) %>%
+                        dplyr::rename(tax_name.x = tax_name), by = "id")  %>% # First map by id
+    dplyr::left_join (db %>%
+                        dplyr::select(-id, -source ) %>%
+                        dplyr::filter(!duplicated(tax_name)), by = "tax_name") # then map by name
 
   #Resolve synonyms
   if(resolve_synonyms == TRUE){
@@ -140,7 +145,7 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
 
     if (filter_bads == TRUE){ #ensure resolving synonyms didnt introduce bads
       lineage <- lineage %>%
-        mutate(tax_id = case_when( #Ensure no
+        dplyr::mutate(tax_id = case_when( #Ensure no
           tax_name %in% bads$name ~  as.numeric(NA),
           !tax_name %in% bads$name ~ tax_id
         )) %>%
@@ -174,7 +179,7 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
   # Filter NA's
   if (remove_na ==TRUE){
     remove <- lineage %>%
-      filter(is.na(tax_id)) %>%
+      dplyr::filter(is.na(tax_id)) %>%
       dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
 
     x <- x[!names(x) %in% remove$name]
@@ -238,9 +243,9 @@ get_ott_lineage <- function(x, dir, output="tax_name", ranks = c("kingdom", "phy
 
     file <- normalizePath(paste0(dir, "/taxonomy.tsv"))
   db <- vroom::vroom(file, delim="\t|\t") %>%
-    dplyr::mutate(rank = str_replace(rank, pattern="no rank - terminal", replacement="terminal")) %>%
-    rename(taxID = uid, parent_taxID = parent_uid) %>%
-    select(taxID, parent_taxID, rank, name)
+    dplyr::mutate(rank = stringr::str_replace(rank, pattern="no rank - terminal", replacement="terminal")) %>%
+    dplyr::rename(taxID = uid, parent_taxID = parent_uid) %>%
+    dplyr::select(taxID, parent_taxID, rank, name)
 
   lineage <- names %>%
     stringr::str_split_fixed(";", n = 2) %>%
@@ -311,9 +316,8 @@ get_ott_lineage <- function(x, dir, output="tax_name", ranks = c("kingdom", "phy
     }
   }
   res <- res[pointers] #re-replicate
-
   if(output =="tax_name"){
-    out <- bind_rows(res, .id="id") %>%
+    out <- dplyr::bind_rows(res, .id="id") %>%
       dplyr::select(-tax_id) %>%
       dplyr::group_by(id) %>%
       tidyr::pivot_wider(
@@ -358,7 +362,7 @@ parse_ott_lineage <- function(dir=NULL) {
 
   dat <- vroom::vroom(file, delim="\t|\t") %>%
     dplyr::rename(taxon = name, name = uid, parent = parent_uid) %>%
-    dplyr::mutate(rank = str_replace(rank, pattern="no rank - terminal", replacement="terminal")) %>%
+    dplyr::mutate(rank = stringr::str_replace(rank, pattern="no rank - terminal", replacement="terminal")) %>%
     dplyr::select(name, parent, taxon, rank, flags)
 
   l <- list() # initialize empty list
@@ -409,14 +413,14 @@ parse_ott_lineage <- function(dir=NULL) {
   # Need to get the top taxname as well along with the DT.uid
 
   # merge join DT.filt
-  DT.filt <- left_join(DT.m1, DT.uid, by="id") %>%
+  DT.filt <- dplyr::left_join(DT.m1, DT.uid, by="id") %>%
     tidyr::pivot_wider(id_cols=c("id","tax_id","tax_name"),
                 names_from="value3",
                 values_from = "value2" ,
                 #values_fn = list(value2 = length)
                 values_fn = list(value2 = max)
                 ) %>%
-    dplyr::select(tax_id,tax_name , !!rev(ranks)) %>%
+    dplyr::select(tax_id, tax_name , !!rev(ranks)) %>%
     unique()
 
   return(DT.filt)
