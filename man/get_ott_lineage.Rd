@@ -8,6 +8,7 @@ This function derives the full lineage of a taxon ID number from a given taxonom
 get_ott_lineage(
   x,
   dir,
+  output = "tax_name",
   ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
   cores = 1
 )

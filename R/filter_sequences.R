@@ -323,6 +323,7 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #'
 #' @param x	 A DNAbin list object whose names include NCBItaxonomic identification numbers.
 #' @param db A NCBI taxonomy database from get_ncbi_lineage. If missing will download new one
+#' @param source the type of database, either "ncbi" or a path to an OTT directory
 #' @param rank The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
 #' If "all", the clusters will be checked at all taxonomic ranks available.
 #' @param threshold numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.
@@ -336,14 +337,29 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' @import tibble
 #'
 #' @examples
-
-get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confidence = 0.8, quiet = FALSE, ...) {
+#' \dontrun{
+#' seqs <- insect::readFASTA("test.fa.gz")
+#'
+#' # NCBI taxonomy
+#' mixed <- get_mixed_clusters(seqs, db, source="ncbi", rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)
+#'
+#' # OTT taxonomy
+#' seqs <- map_to_ott(seqs, dir="ott3.2", from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE)
+#' mixed <- get_mixed_clusters(seqs,db=NULL, source="ott3.2", rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
+#' }
+get_mixed_clusters <- function (x, db, source="ncbi", rank = "order", threshold = 0.97, confidence = 0.8, quiet = FALSE, ...) {
   if(missing(x)) {stop("Error: x is required")}
   # Setup
-  if(missing(db)){db <- taxreturn::get_ncbi_lineage()}
-  lineage <- taxreturn::get_lineage(x, db = db)
+  if (source == "ncbi"){
+    if(missing(db)){
+      db <- taxreturn::get_ncbi_lineage()
+    }
+    lineage <- taxreturn::get_lineage(x=x, db = db)
+  } else if(!source =="ncbi"){
+    lineage <- get_ott_lineage(x=x, dir = source)
+  }
   rank <- tolower(rank)
-  if(any(rank == "all")) {rank <- colnames(db)[3:ncol(db)]}
+  #if(any(rank == "all")) {rank <- colnames(db)[3:ncol(db)]}
 
   # Cluster OTUS
   if (is.null(attr(x, "OTU"))) {

@@ -78,6 +78,7 @@ download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
 #'
 #' @return
 #' @export
+#' @import data.table
 #'
 #' @examples
 map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE){
@@ -107,6 +108,7 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
   }
 
   #Reformat to long
+  require(data.table)
   d.dt <- data.table(remap, key="tax_id")
   db <- d.dt[, list(sourceinfo = unlist(strsplit(sourceinfo, ",")), tax_name), by=tax_id][, c("source", "id") := tstrsplit(sourceinfo, ":", fixed=TRUE)][,c('sourceinfo') :=  .(NULL)]
 
@@ -210,7 +212,7 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
   return(out)
 }
 
-## OTT recursion
+# OTT Recursion -----------------------------------------------------------
 
 
 #' Recursively get lineage from OTT taxid
@@ -225,7 +227,7 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 #' @export
 #'
 #' @examples
-get_ott_lineage <- function(x, dir, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), cores = 1){
+get_ott_lineage <- function(x, dir, output="tax_name", ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), cores = 1){
 
   #Check input format
   if (is(x, "DNAbin")) {
@@ -243,9 +245,9 @@ get_ott_lineage <- function(x, dir, ranks = c("kingdom", "phylum", "class", "ord
   lineage <- names %>%
     stringr::str_split_fixed(";", n = 2) %>%
     tibble::as_tibble() %>%
-    tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|")
+    tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|")
 
-  taxIDs <- as.numeric(lineage$id)
+  taxIDs <- as.numeric(lineage$tax_id)
 
   db$rank <- as.character(db$rank)
   db$name <- as.character(db$name) # avoid stringsasfactor issues
@@ -309,7 +311,31 @@ get_ott_lineage <- function(x, dir, ranks = c("kingdom", "phylum", "class", "ord
     }
   }
   res <- res[pointers] #re-replicate
-  out <- bind_rows(res)
+
+  if(output =="tax_name"){
+    out <- bind_rows(res, .id="id") %>%
+      dplyr::select(-tax_id) %>%
+      dplyr::group_by(id) %>%
+      tidyr::pivot_wider(
+        names_from = rank,
+        values_from = tax_name) %>%
+      dplyr::ungroup() %>%
+      bind_cols(lineage) %>%
+      tidyr::unite(Acc, c(acc, tax_id), sep = "|") %>%
+      dplyr::select(Acc, all_of(ranks))
+
+  } else if(output == "tax_id"){
+    out <- bind_rows(res, .id="id") %>%
+      dplyr::select(-tax_name) %>%
+      dplyr::group_by(id) %>%
+      tidyr::pivot_wider(
+        names_from = rank,
+        values_from = tax_id) %>%
+      dplyr::ungroup() %>%
+      bind_cols(lineage) %>%
+      tidyr::unite(Acc, c(acc, tax_id), sep = "|") %>%
+      dplyr::select(Acc, all_of(ranks))
+  }
   return(out)
 }
 
