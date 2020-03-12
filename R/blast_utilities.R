@@ -190,6 +190,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
     makeblastdb(db)
     db <- stringr::str_replace(db, ".gz", "")
     db <- db
+  } else {
+    stop("Invalid BLAST database")
   }
 
   # Query
@@ -209,6 +211,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
     input <- tmpquery
   } else if (inherits(query, "character") &&  file.exists(file.path(query))){ # Handle filenames
     input <- query
+  }else {
+    stop("Invalid BLAST query")
   }
 
 
@@ -227,9 +231,9 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
   out <- results %>%
     tibble::enframe() %>%
     tidyr::separate(col = value,
-             into = c("qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"),
-             sep = "\t",
-             convert = TRUE)
+                    into = c("qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"),
+                    sep = "\t",
+                    convert = TRUE)
   time <- Sys.time() - time
   if (!quiet) (message(paste0("finished BLAST in ", format(time, digits = 2))))
 
