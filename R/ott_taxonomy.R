@@ -85,10 +85,31 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
   time <- Sys.time() # get time
   #Check input format
   if (is(x, "DNAbin")) {
-    names <- names(x)
-  } else  if (is(x, "character")) {
-    names <- x
-  } else (stop("x must be DNA bin or character vector"))
+    message("Input is DNAbin")
+    tax <- names(x) %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  } else if (is(x, "DNAStringSet")) {
+    message("Input is DNAStringSet")
+    tax <- as.DNAbin(x) %>%
+      names() %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  }else  if (is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
+    message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
+    tax <- x %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  } else  if (is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
+    message("Did not detect | and ; delimiters, assuming a vector of species names")
+    tax <- data.frame(acc = as.character(NA), id=as.character(NA), tax_name = x, stringsAsFactors = FALSE)
+  }else (stop("x must be DNA bin or character vector"))
 
   #Read in taxonomy DB
   if(!quiet){message("Building data frame\n")}
@@ -106,31 +127,27 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
       dplyr::select(uid, name, sourceinfo) %>%
       dplyr::rename(tax_id = uid, tax_name = name)
   }
-
-  #Reformat to long
   require(data.table)
   d.dt <- data.table(remap, key="tax_id")
   db <- d.dt[, list(sourceinfo = unlist(strsplit(sourceinfo, ",")), tax_name), by=tax_id][, c("source", "id") := tstrsplit(sourceinfo, ":", fixed=TRUE)][,c('sourceinfo') :=  .(NULL)]
 
-  #Get lineage
+  #Read in synonyms DB
+  if(resolve_synonyms == TRUE){ syn <- parse_ott_synonyms(dir=dir)}
+
+  #Get tax
   if (!from %in% unique(db$source)){ stop("Error: 'from' is not in db")}
-  lineage <- names %>%
-    stringr::str_split_fixed(";", n = 2) %>%
-    tibble::as_tibble() %>%
-    tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
-    dplyr::rename(tax_name = V2) %>%
-    dplyr::left_join (db %>%
+  tax <- tax %>%
+    dplyr::left_join (db %>%   # First map by id
                         dplyr::filter(source==!!from) %>%
                         dplyr::select(-source) %>%
-                        dplyr::rename(tax_name.x = tax_name), by = "id")  %>% # First map by id
-    dplyr::left_join (db %>%
+                        dplyr::rename(tax_name.x = tax_name), by = "id") %>%
+    dplyr::left_join (db %>%   # Next map by tax_name
                         dplyr::select(-id, -source ) %>%
                         dplyr::filter(!duplicated(tax_name)), by = "tax_name") # then map by name
 
   #Resolve synonyms
   if(resolve_synonyms == TRUE){
-    syn <- parse_ott_synonyms(dir=dir)
-    lineage <- lineage %>%
+    tax <- tax %>%
       dplyr::left_join(syn %>% rename(tax_name.z = tax_name, tax_name = synonym, tax_id.z = tax_id) %>% filter(!duplicated(tax_name)) , by = "tax_name") %>%
       dplyr::mutate(tax_id = case_when(
         !is.na(tax_id.z) ~ tax_id.z, #If synonym was found, use it
@@ -144,18 +161,18 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
       ))
 
     if (filter_bads == TRUE){ #ensure resolving synonyms didnt introduce bads
-      lineage <- lineage %>%
+      tax <- tax %>%
         dplyr::mutate(tax_id = case_when( #Ensure no
           tax_name %in% bads$name ~  as.numeric(NA),
           !tax_name %in% bads$name ~ tax_id
         )) %>%
         dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
     } else if (filter_bads == FALSE){
-      lineage <- lineage %>%
+      tax <- tax %>%
         dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
     }
   } else if( resolve_synonyms == FALSE){
-    lineage <- lineage %>%
+    tax <- tax %>%
       dplyr::mutate(tax_id = case_when(
         !is.na(tax_id.x) ~ tax_id.x,
         is.na(tax_id.x) & !is.na(tax_id.y) ~ tax_id.y
@@ -168,21 +185,28 @@ map_to_ott <- function(x, dir=NULL, from="ncbi", resolve_synonyms=TRUE, filter_b
   }
 
   #Replace names
-  if (is(x, "DNAbin")) {
-    names(x) <- lineage$name
+  if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
+    names(x) <- tax$name
   } else  if (is(x, "character")) {
-    x <- lineage$name
+    x <- tax$name
   }
   time <- Sys.time() - time
-  if (!quiet) (message(paste0("translated ",  length(x)," tax_ids from ",from, " to Open tree of life in ", format(time, digits = 2))))
+  if (!quiet) (message(paste0("Translated ",  length(x)," tax_ids from ",from, " to Open tree of life in ", format(time, digits = 2))))
 
   # Filter NA's
   if (remove_na ==TRUE){
-    remove <- lineage %>%
+    remove <- tax %>%
       dplyr::filter(is.na(tax_id)) %>%
       dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
 
-    x <- x[!names(x) %in% remove$name]
+    if(is(x, "DNAbin") | is(x, "DNAStringSet")){
+      #x <- x[!names(x) %in% remove$name]
+      x[names(x) %in% remove$name] <- NA
+
+    }else if (is(x, "character")){
+      #x <- x[!x %in% remove$name]
+      x[x %in% remove$name] <- NA
+    }
     if(!quiet){message(paste0("Removed ", nrow(remove), " sequences that could not be mapped to OTT\n"))}
   }
   return(x)
@@ -233,24 +257,39 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 #'
 #' @examples
 get_ott_lineage <- function(x, dir, output="tax_name", ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), cores = 1){
-
   #Check input format
   if (is(x, "DNAbin")) {
-    names <- names(x)
-  } else  if (is(x, "character")) {
-    names <- x
-  } else (stop("x must be DNA bin or character vector"))
+    message("Input is DNAbin")
+    lineage <- names(x) %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  } else if (is(x, "DNAStringSet")) {
+    message("Input is DNAStringSet")
+    lineage <- as.DNAbin(x) %>%
+      names() %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  }else  if (is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
+    message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
+    lineage <- x %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  } else  if (is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
+    message("Did not detect | and ; delimiters, assuming a vector of tax_id's")
+    lineage <- data.frame(acc = as.character(NA), tax_name=as.character(NA), tax_id = x, stringsAsFactors = FALSE)
+  }else (stop("x must be DNA bin or character vector"))
 
-    file <- normalizePath(paste0(dir, "/taxonomy.tsv"))
+  file <- normalizePath(paste0(dir, "/taxonomy.tsv"))
   db <- vroom::vroom(file, delim="\t|\t") %>%
     dplyr::mutate(rank = stringr::str_replace(rank, pattern="no rank - terminal", replacement="terminal")) %>%
     dplyr::rename(taxID = uid, parent_taxID = parent_uid) %>%
     dplyr::select(taxID, parent_taxID, rank, name)
-
-  lineage <- names %>%
-    stringr::str_split_fixed(";", n = 2) %>%
-    tibble::as_tibble() %>%
-    tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|")
 
   taxIDs <- as.numeric(lineage$tax_id)
 
@@ -316,8 +355,11 @@ get_ott_lineage <- function(x, dir, output="tax_name", ranks = c("kingdom", "phy
     }
   }
   res <- res[pointers] #re-replicate
+  names(res) <- lineage$acc
   if(output =="tax_name"){
-    out <- dplyr::bind_rows(res, .id="id") %>%
+    out <- do.call(rbind, res) %>%
+      tibble::rownames_to_column("id") %>%
+      mutate(id = id %>% stringr::str_remove(pattern="(\\.)(.*?)(?=$)")) %>%
       dplyr::select(-tax_id) %>%
       dplyr::group_by(id) %>%
       tidyr::pivot_wider(
@@ -326,10 +368,12 @@ get_ott_lineage <- function(x, dir, output="tax_name", ranks = c("kingdom", "phy
       dplyr::ungroup() %>%
       bind_cols(lineage) %>%
       tidyr::unite(Acc, c(acc, tax_id), sep = "|") %>%
-      dplyr::select(Acc, all_of(ranks))
+      dplyr::select(Acc, all_of(ranks), tax_name)
 
   } else if(output == "tax_id"){
-    out <- bind_rows(res, .id="id") %>%
+    out <- do.call(rbind, res) %>%
+      tibble::rownames_to_column("id") %>%
+      mutate(id = id %>% stringr::str_remove(pattern="(\\.)(.*?)(?=$)")) %>%
       dplyr::select(-tax_name) %>%
       dplyr::group_by(id) %>%
       tidyr::pivot_wider(
@@ -338,90 +382,7 @@ get_ott_lineage <- function(x, dir, output="tax_name", ranks = c("kingdom", "phy
       dplyr::ungroup() %>%
       bind_cols(lineage) %>%
       tidyr::unite(Acc, c(acc, tax_id), sep = "|") %>%
-      dplyr::select(Acc, all_of(ranks))
+      dplyr::select(Acc, all_of(ranks), tax_name)
   }
   return(out)
-}
-
-
-
-# ott_ranked_lineage ------------------------------------------------------
-
-## NOT EXPORTED
-
-#' Parse OTT taxonomy to ranked_lineage format
-#'
-#' @param dir a directory containing the open tree of life taxonomy files obtained from the  `download_ott_taxonomy` function
-#'
-#' @return
-#'
-#' @examples
-parse_ott_lineage <- function(dir=NULL) {
-  message("Building data frame\n")
-  file <- normalizePath(paste0(dir, "/taxonomy.tsv"))
-
-  dat <- vroom::vroom(file, delim="\t|\t") %>%
-    dplyr::rename(taxon = name, name = uid, parent = parent_uid) %>%
-    dplyr::mutate(rank = stringr::str_replace(rank, pattern="no rank - terminal", replacement="terminal")) %>%
-    dplyr::select(name, parent, taxon, rank, flags)
-
-  l <- list() # initialize empty list
-  setDT(dat)
-  setkey(dat, parent) # setting up the data as keyed data.table
-  current_lvl <- dat[is.na(parent), .(level_number = 1), keyby=.(level1 = name)]
-  current_lvl$taxon1 <- "life"
-  current_lvl$rank1 <- "root"
-  current_lvl$flags1 <- NA
-
-  time <- Sys.time()
-  while(nrow(current_lvl) > 0){
-    ind <- length(l) + 1
-    l[[ind]] <- current_lvl
-
-    #Gets current level of dat, subsets to those that arent NA level number, then add 1 to level number
-    current_lvl <- current_lvl[dat][!is.na(level_number)][,level_number := level_number + 1]
-    if(nrow(current_lvl) == 0L){
-      break
-    }
-    setnames(current_lvl, "name", paste0("level",ind+1))
-    setnames(current_lvl, "taxon", paste0("taxon",ind+1)) # Could do this for all columns
-    setnames(current_lvl, "rank", paste0("rank",ind+1))
-    setnames(current_lvl, "flags", paste0("flags",ind+1))
-    setkeyv(current_lvl, paste0("level",ind+1))
-    print(ind)
-  }
-  time <- Sys.time() - time
-  message(paste0("finished reformatting in ", format(time, digits = 2)))
-
-  res <- rbindlist(l, fill=TRUE) %>%
-    tibble::rownames_to_column("id") %>%
-    dplyr::mutate(id = as.numeric(id)) %>%
-    dplyr::rename(nlevel = level_number)
-
-  ## Dt melt & Filter
-  setDT(res)
-  ranks <- c("domain","kingdom", "phylum", "class", "order", "family", "genus", "species", "terminal")
-  DT.m1 = melt(res, id.vars="id", measure.vars = patterns("^level", "^taxon", "^rank", "^flags" ))[
-    !is.na(value1)
-    ][!grepl("incertae_sedis,|incertae_sedis$|major_rank_conflict|unplaced|environmental|inconsistent|extinct|hidden|hybrid|not_otu|viral|barren", value4) #|infraspecific
-      ][value3 %in% ranks]
-
-  # Get max value
-  DT.uid <- data.table(DT.m1)
-  DT.uid <- DT.uid[DT.uid[, .I[variable == max(as.numeric(variable))], by=id]$V1][, c('tax_id','tax_name') := .(value1, value2)][,c('variable','value1', 'value2', 'value3','value4') :=  .(NULL)]
-
-  # Need to get the top taxname as well along with the DT.uid
-
-  # merge join DT.filt
-  DT.filt <- dplyr::left_join(DT.m1, DT.uid, by="id") %>%
-    tidyr::pivot_wider(id_cols=c("id","tax_id","tax_name"),
-                names_from="value3",
-                values_from = "value2" ,
-                #values_fn = list(value2 = length)
-                values_fn = list(value2 = max)
-                ) %>%
-    dplyr::select(tax_id, tax_name , !!rev(ranks)) %>%
-    unique()
-
-  return(DT.filt)
 }
