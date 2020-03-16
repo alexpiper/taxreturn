@@ -88,9 +88,9 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
 }
 
 
-# Reformat heirarchy ------------------------------------------------------
+# Reformat hierarchy ------------------------------------------------------
 
-#' Reformat heirarchy
+#' Reformat hierarchy
 #'
 #' @param x
 #' @param quiet
@@ -100,7 +100,7 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
 #' @export
 #'
 #' @examples
-reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep = "_", force=FALSE) {
+reformat_hierarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep = "_", force=FALSE) {
   time <- Sys.time() # get time
   # Convert to DNAbin
   if (!is(x, "DNAbin")) {
@@ -146,7 +146,7 @@ reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep
 
 # Reformat DADA2 Genus ------------------------------------------------------
 
-# make this just run output heirarchy but removing species rank
+# make this just run output hierarchy but removing species rank
 
 #' Reformat DADA2 Genus
 #'
@@ -165,7 +165,7 @@ reformat_dada2_gen <- function(x, db = NULL, quiet = FALSE, ranks = NULL, force=
     ranks <- c("kingdom", "phylum", "class", "order", "family", "genus")
     message("No ranks supplied, using default ranks for DADA2 assignTaxonomy: kingdom;phylum;class;order;family;genus")
   }
-  x <- reformat_heirarchy(x, db = db, quiet = quiet, ranks = ranks)
+  x <- reformat_hierarchy(x, db = db, quiet = quiet, ranks = ranks)
   return(x)
 }
 
@@ -251,9 +251,9 @@ get_lineage <- function(x, db){
 train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  get_lineage=FALSE, db = NULL, quiet = FALSE, force=FALSE) {
   time <- Sys.time() # get time
 
-  #Reformat to complete taxonomic heirarchy
+  #Reformat to complete taxonomic hierarchy
   if(get_lineage & !is.null(db)){
-  seqs <- taxreturn::reformat_heirarchy(x, db=db, quiet=FALSE, force=force)
+  seqs <- taxreturn::reformat_hierarchy(x, db=db, quiet=FALSE, force=force)
   } else if(get_lineage &  is.null(db)){
     stop("If get_lineage is TRUE, a db needs to be provided")
   } else  (seqs <- x)
