@@ -9,10 +9,10 @@ train_idtaxa(
   maxGroupSize = 10,
   maxIterations = 3,
   allowGroupRemoval = TRUE,
+  get_lineage = FALSE,
   db = NULL,
   quiet = FALSE,
-  force = FALSE,
-  get_lineage = FALSE
+  force = FALSE
 )
 }
 \arguments{

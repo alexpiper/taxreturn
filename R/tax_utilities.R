@@ -1,100 +1,3 @@
-# Get_ranked_lineage ------------------------------------------------------
-
-#' Download NCBI taxdump
-#'
-#' @param db
-#' @param synonyms
-#'
-#' @return
-#' @export
-#'
-#' @examples
-get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
-  if (!identical(db, "NCBI")) {
-    stop("Only the NCBI taxonomy database is available in this version\n")
-  }
-  tmp <- tempdir()
-  if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp")) | !file.exists(paste0(tmp, "/tmp.tar.gz"))) {
-    message("Downloading NCBI taxonomy database")
-    fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
-    download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
-    message("Extracting data\n")
-    test <- untar(tarfile = paste0(tmp, "/tmp.tar.gz"), exdir = tmp)
-  if (!identical(test, 0L)) {
-    stop(cat(test))
-  }
-  file.remove(paste0(tmp, "/tmp.tar.gz"))
-  }
-  message("Building data frame\n")
-
-  # Read data frame
-  lin <- readr::read_tsv(paste0(tmp, "/rankedlineage.dmp"),
-    col_names = c("tax_id", "tax_name", "species", "genus", "family", "order", "class", "phylum", "kingdom", "superkingdom"),
-    col_types = ("i-c-c-c-c-c-c-c-c-c-")
-  )
-
-  # Remove synonyms
-  if (synonyms == FALSE) {
-    x <- scan(
-      file = paste0(tmp, "/names.dmp"), what = "", sep = "\n",
-      quiet = TRUE
-    )
-    syn <- x[grepl("synonym", x)]
-    syn <- strsplit(syn, split = "\t")
-    syn <- sapply(syn, function(s) s[c(1, 3)])
-    syn <- as.data.frame(t(syn), stringsAsFactors = FALSE)
-    syn[[1]] <- as.integer(syn[[1]])
-    colnames(syn) <- c("taxID", "name")
-    lin <- lin %>%
-      filter(!tax_id %in% syn[[1]])
-  }
-
-  message("Done\n")
-  return(lin)
-}
-
-
-#' (Deprecated) Get ranked Lineage
-#'
-#' @param db
-#' @param synonyms
-#' @param force
-#'
-#' @return
-#' @export
-#'
-#' @examples
-get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
-  .Deprecated("get_ncbi_lineage") #include a package argument, too
-  get_ncbi_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
-}
-
-
-
-
-# ncbi_taxid --------------------------------------------------------------
-
-#' Get ncbi taxid's for a taxon name
-#'
-#' @param x
-#' @param db
-#'
-#' @return
-#' @export
-#'
-#' @examples
-ncbi_taxid <- function(x, db=NULL) {
-
-  if (is.null(db)) { db <- get_ncbi_lineage()}
-  out <-  as.data.frame(x) %>%
-    magrittr::set_colnames("tax_name") %>%
-    dplyr::left_join (db, by = "tax_name") %>%
-    dplyr::pull(tax_id)
-
-  return(out)
-  }
-
-
 # Propagate taxonomic assignments to species level ------------------------
 
 #' Propagate taxonomy
@@ -185,6 +88,61 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
 }
 
 
+# Reformat heirarchy ------------------------------------------------------
+
+#' Reformat heirarchy
+#'
+#' @param x
+#' @param quiet
+#' @param ranks
+#'
+#' @return
+#' @export
+#'
+#' @examples
+reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep = "_", force=FALSE) {
+  time <- Sys.time() # get time
+  # Convert to DNAbin
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+  }
+  if (is.null(db)) {
+    stop("Error, a database needs to be provided")
+  }
+  if (!is.null(ranks)) {
+    ranks <- ranks
+  } else if (is.null(ranks)) {
+    ranks <- c("kingdom", "phylum", "class", "order", "family", "genus", "species")
+    message("No ranks supplied, using default ranks: kingdom;phylum;class;order;family;genus;species")
+  }
+
+  if(attr(db, "type") == "ncbi"){
+    # Split current names
+    seqnames <- names(x) %>%
+      stringr::str_replace(";$", "") %>%
+      stringr::str_split_fixed(";", n = Inf) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|")%>%
+      dplyr::select(1:2, tail(names(.), 1)) %>%
+      magrittr::set_colnames(c("acc", "tax_id", "species")) %>%
+      dplyr::mutate(tax_id = as.numeric(tax_id))
+
+    # Get lineage from taxid
+    lineage <- seqnames %>%
+      dplyr::left_join (db %>% dplyr::select(-species), by = "tax_id")  %>%
+      tidyr::unite(col = Acc, c(acc, tax_id), sep = "|") %>%
+      tidyr::unite(col = names, c(!!ranks), sep = ";")
+  } else if(attr(db, "type") == "OTT"){
+    lineage <- get_ott_lineage(x, db=db, ranks=ranks) %>%
+      tidyr::unite(col = names, c(!!ranks), sep = ";")
+
+  }
+
+  names(x) <- paste(lineage$Acc, lineage$names, "", sep = ";")
+  time <- Sys.time() - time
+  if (!quiet) (message(paste0("Reformatted annotations for ", length(x), " sequences in ", format(time, digits = 2))))
+  return(x)
+}
 
 # Reformat DADA2 Genus ------------------------------------------------------
 
@@ -210,6 +168,7 @@ reformat_dada2_gen <- function(x, db = NULL, quiet = FALSE, ranks = NULL, force=
   x <- reformat_heirarchy(x, db = db, quiet = quiet, ranks = ranks)
   return(x)
 }
+
 
 
 # Reformat DADA2 Species ----------------------------------------------------
@@ -272,59 +231,6 @@ get_lineage <- function(x, db){
 }
 
 
-# Reformat heirarchy ------------------------------------------------------
-
-#' Reformat heirarchy
-#'
-#' @param x
-#' @param quiet
-#' @param ranks
-#'
-#' @return
-#' @export
-#'
-#' @examples
-reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep = "_", force=FALSE) {
-  time <- Sys.time() # get time
-  # Convert to DNAbin
-  if (!is(x, "DNAbin")) {
-    x <- ape::as.DNAbin(x)
-  }
-  if (is.null(db)) {
-    message("No taxonomy database provided, downloading from NCBI")
-    db <- get_ncbi_lineage(force=force)
-  }
-
-  if (!is.null(ranks)) {
-    ranks <- ranks
-  } else if (is.null(ranks)) {
-    ranks <- c("kingdom", "phylum", "class", "order", "family", "genus", "species")
-    message("No ranks supplied, using default ranks: kingdom;phylum;class;order;family;genus;species")
-  }
-
-  # Split current names
-  seqnames <- names(x) %>%
-    stringr::str_replace(";$", "") %>%
-    stringr::str_split_fixed(";", n = Inf) %>%
-    tibble::as_tibble() %>%
-    tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|")%>%
-    dplyr::select(1:2, tail(names(.), 1)) %>%
-    magrittr::set_colnames(c("acc", "tax_id", "species")) %>%
-    dplyr::mutate(tax_id = as.numeric(tax_id))
-
-  # Get lineage from taxid
-  lineage <- seqnames %>%
-    dplyr::left_join (db %>% dplyr::select(-species), by = "tax_id")  %>%
-    tidyr::unite(col = V1, c(acc, tax_id), sep = "|") %>%
-    tidyr::unite(col = V2, c(!!ranks), sep = ";")
-
-  names(x) <- paste(lineage$V1, lineage$V2, "", sep = ";")
-  time <- Sys.time() - time
-  if (!quiet) (message(paste0("Reformatted annotations for ", length(x), " sequences in ", format(time, digits = 2))))
-  return(x)
-}
-
-
 # train IDTAXA -----------------------------------------------------------
 
 #' Train IDTAXA
@@ -342,13 +248,15 @@ reformat_heirarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep
 #' @export
 #'
 #' @examples
-train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  db = NULL, quiet = FALSE, force=FALSE, get_lineage=FALSE) {
+train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  get_lineage=FALSE, db = NULL, quiet = FALSE, force=FALSE) {
   time <- Sys.time() # get time
 
   #Reformat to complete taxonomic heirarchy
-  if(get_lineage){
+  if(get_lineage & !is.null(db)){
   seqs <- taxreturn::reformat_heirarchy(x, db=db, quiet=FALSE, force=force)
-  } else (seqs <- x)
+  } else if(get_lineage &  is.null(db)){
+    stop("If get_lineage is TRUE, a db needs to be provided")
+  } else  (seqs <- x)
 
   #Remove NA's
   if(length(names(seqs)[str_detect(names(seqs), ";NA;")]) > 1){

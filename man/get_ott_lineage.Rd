@@ -7,7 +7,7 @@ This function derives the full lineage of a taxon ID number from a given taxonom
 \usage{
 get_ott_lineage(
   x,
-  dir,
+  db,
   output = "tax_name",
   ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
   cores = 1
@@ -16,12 +16,12 @@ get_ott_lineage(
 \arguments{
 \item{x}{A DNAbin}
 
-\item{dir}{a directory containing the open tree of life taxonomy files obtained from the  \code{download_ott_taxonomy} function}
-
 \item{ranks}{the taxonomic ranks to filter to. Default is "kingdom", "phylum", "class", "order", "family", "genus", "species"
 To get strain level ranks, add "terminal" to ranks}
 
 \item{cores}{How many cores to use}
+
+\item{dir}{a directory containing the open tree of life taxonomy files obtained from the  \code{download_ott_taxonomy} function}
 }
 \value{
 
