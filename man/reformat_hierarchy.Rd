@@ -8,9 +8,7 @@ reformat_hierarchy(
   x,
   db = NULL,
   quiet = FALSE,
-  ranks = NULL,
-  sppsep = "_",
-  force = FALSE
+  ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species")
 )
 }
 \arguments{

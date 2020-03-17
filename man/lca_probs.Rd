@@ -6,7 +6,7 @@
 \usage{
 lca_probs(
   x,
-  sim = seq(0.9, 1, 0.01),
+  method = "mbed",
   k = 5,
   nstart = 20,
   ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
@@ -16,7 +16,9 @@ lca_probs(
 \arguments{
 \item{x}{a DNAbin object or an object coercible to DNAbin}
 
-\item{sim}{The sequence similarities to cluster at}
+\item{method}{The distance matrix computation method to use,
+accepts "mbed" which computes a distance matrix from each sequence to a subset of 'seed' sequences using the method outlined in Blacksheilds et al (2010).
+This scales well to big datasets, alternatively "kdist" computes the full n * n distance matrix.}
 
 \item{k}{integer giving the k-mer size used to generate the input matrix for k-means clustering.}
 
