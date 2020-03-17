@@ -333,6 +333,9 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
     lineage <- data.frame(acc = as.character(NA), tax_name=as.character(NA), tax_id = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
 
+  # Check for duplicated accessions
+  if(any(duplicated(lineage$acc))){stop("Duplicated sequence accessions found")}
+
   #check db
   if(missing(db) | !attr(db,'type')=="OTT") {stop("Error: requires OTT db, generate one with get_ott_taxonomy")}
 

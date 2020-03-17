@@ -100,22 +100,16 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
 #' @export
 #'
 #' @examples
-reformat_hierarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep = "_", force=FALSE) {
+reformat_hierarchy <- function(x, db = NULL, quiet = FALSE,
+                               ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species")) {
   time <- Sys.time() # get time
   # Convert to DNAbin
   if (!is(x, "DNAbin")) {
     x <- ape::as.DNAbin(x)
   }
-  if (is.null(db)) {
-    stop("Error, a database needs to be provided")
+  if (missing(db)) {
+    stop("A taxonomic database needs to be provided, generate one with get_ncbi_lineage or get_ott_taxonomy")
   }
-  if (!is.null(ranks)) {
-    ranks <- ranks
-  } else if (is.null(ranks)) {
-    ranks <- c("kingdom", "phylum", "class", "order", "family", "genus", "species")
-    message("No ranks supplied, using default ranks: kingdom;phylum;class;order;family;genus;species")
-  }
-
   if(attr(db, "type") == "ncbi"){
     # Split current names
     seqnames <- names(x) %>%
@@ -143,6 +137,7 @@ reformat_hierarchy <- function(x, db = NULL, quiet = FALSE, ranks = NULL, sppsep
   if (!quiet) (message(paste0("Reformatted annotations for ", length(x), " sequences in ", format(time, digits = 2))))
   return(x)
 }
+
 
 # Reformat DADA2 Genus ------------------------------------------------------
 
