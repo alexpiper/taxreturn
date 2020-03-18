@@ -479,7 +479,7 @@ lca_probs <- function(x, method="mbed",  k=5, nstart = 20, ranks=c("kingdom", "p
     logidf[logidf=="KEEP"] <- 1
     logidf <- logidf  %>%
       mutate_all(as.numeric) %>%
-      colSums() / length(row)
+      colSums() / length(rows)
 
     simlist[[s]]  <- data.frame(rank=names(logidf), prob=logidf, sim=sim[s])
 
