@@ -8,11 +8,12 @@ reformat_hierarchy(
   x,
   db = NULL,
   quiet = FALSE,
-  ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species")
+  ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
+  cores = 1
 )
 }
 \arguments{
-\item{ranks}{}
+\item{cores}{The number of  cores to use for get_ott_lineage}
 }
 \value{
 

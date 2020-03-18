@@ -298,10 +298,18 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 #' @param dir a directory containing the open tree of life taxonomy files obtained from the  `download_ott_taxonomy` function
 #' @param ranks the taxonomic ranks to filter to. Default is "kingdom", "phylum", "class", "order", "family", "genus", "species"
 #' To get strain level ranks, add "terminal" to ranks
-#' @param cores How many cores to use
+#' @param cores integer giving the number of CPUs to parallelize the operation over (Defaults to 1).
+#' This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation,
+#' for example by running parallel::stopCluster(cores).
+#' The string 'autodetect' is also accepted, in which case the maximum number of cores to use is one less than the total number of cores available.
+#' Note that in this case there may be a tradeoff in terms of speed depending on the number and size of sequences to be processed, due to the extra time required to initialize the cluster.
 #'
 #' @return
 #' @export
+#' @import parallel
+#' @import dplyr
+#' @import stringr
+#' @import tidyr
 #'
 #' @examples
 get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), cores = 1){
@@ -333,6 +341,12 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
     lineage <- data.frame(acc = as.character(NA), tax_name=as.character(NA), tax_id = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
 
+  # strip all accessions of punctuation characters
+  puncs <- sum(stringr::str_detect(lineage$acc, "[:punct:]"))
+  warning(paste0("Stripping punctuation characters from ", puncs, " sequence accessions"))
+  lineage <- lineage %>%
+    mutate(acc = stringr::str_remove_all(acc, "[:punct:]"))
+
   # Check for duplicated accessions
   if(any(duplicated(lineage$acc))){stop("Duplicated sequence accessions found")}
 
@@ -351,7 +365,7 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
   tax_ids <- tax_ids[!duplicated(pointers)]
 
   #Recursive function
-  gl1 <- function(tax_id, db){
+  gl1 <- function(tax_id, db, ranks){
     if(is.na(tax_id)) return(NA)
     stopifnot(length(tax_id) == 1 & mode(tax_id) == "numeric")
     res <- character(100)
@@ -386,19 +400,19 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
   db$parent_tax_index <- match(db$parent_taxid, db$tax_id)
   ## multithreading
   if(inherits(cores, "cluster")){
-    res <- parallel::parLapply(cores, tax_ids, gl1, db)
+    res <- parallel::parLapply(cores, tax_ids, gl1, db, ranks)
   }else if(cores == 1){
-    res <- lapply(tax_ids, gl1, db)
+    res <- lapply(tax_ids, gl1, db, ranks)
   }else{
     navailcores <- parallel::detectCores()
     if(identical(cores, "autodetect")) cores <- navailcores - 1
     if(!(mode(cores) %in% c("numeric", "integer"))) stop("Invalid 'cores' argument")
     if(cores > 1){
       cl <- parallel::makeCluster(cores)
-      res <- parallel::parLapply(cl, tax_ids, gl1, db)
+      res <- parallel::parLapply(cl, tax_ids, gl1, db, ranks)
       parallel::stopCluster(cl)
     }else{
-      res <- lapply(tax_ids, gl1, db)
+      res <- lapply(tax_ids, gl1, db, ranks)
     }
   }
   res <- res[pointers] #re-replicate
@@ -417,7 +431,6 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
       dplyr::bind_cols(lineage) %>%
       tidyr::unite(Acc, c(acc, tax_id), sep = "|") %>%
       dplyr::select(Acc, all_of(ranks), tax_name)
-
   } else if(output == "tax_id"){
     out <- do.call(rbind, res) %>%
       tibble::rownames_to_column("id") %>%

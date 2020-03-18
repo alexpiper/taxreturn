@@ -95,13 +95,14 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
 #' @param x
 #' @param quiet
 #' @param ranks
+#' @param cores The number of  cores to use for get_ott_lineage
 #'
 #' @return
 #' @export
 #'
 #' @examples
 reformat_hierarchy <- function(x, db = NULL, quiet = FALSE,
-                               ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species")) {
+                               ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), cores=1) {
   time <- Sys.time() # get time
   # Convert to DNAbin
   if (!is(x, "DNAbin")) {
@@ -127,9 +128,8 @@ reformat_hierarchy <- function(x, db = NULL, quiet = FALSE,
       tidyr::unite(col = Acc, c(acc, tax_id), sep = "|") %>%
       tidyr::unite(col = names, c(!!ranks), sep = ";")
   } else if(attr(db, "type") == "OTT"){
-    lineage <- get_ott_lineage(x, db=db, ranks=ranks) %>%
+    lineage <- get_ott_lineage(x, db=db, ranks=ranks, cores=cores) %>%
       tidyr::unite(col = names, c(!!ranks), sep = ";")
-
   }
 
   names(x) <- paste(lineage$Acc, lineage$names, "", sep = ";")
