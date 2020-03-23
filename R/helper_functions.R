@@ -99,7 +99,7 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
 #' @import insect
 #'
 #' @examples
-get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TRUE, minscore=10, ...) {
+get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TRUE, minscore=10, cores=1, ...) {
 
   # Ensure x is a DNAbin
   if (!inherits(x, "DNAbin")) {
@@ -108,13 +108,13 @@ get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TR
       stop("Error: Object is not coercible to DNAbin \n")
     }
   }
-  up <- aphid::derivePHMM(x)
+  up <- aphid::derivePHMM(x, cores=cores, ...=...)
   vitF <- aphid::Viterbi(model, up, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
 
   # Derive PHMM
   if(tryrc == TRUE) {
     if(!quiet){message("Deriving PHMM for reverse complement")}
-    down <- aphid::derivePHMM(ape::complement(x))
+    down <- aphid::derivePHMM(ape::complement(x), cores=cores, ...=...)
     vitR <- aphid::Viterbi(model, down, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
 
     if (vitF$score > vitR$score && vitF$score > minscore) {
@@ -156,20 +156,20 @@ get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TR
 #' @import insect
 #'
 #' @examples
-pad_alignment <- function(x, model, pad="-", tryrc=FALSE, quiet=FALSE, check_indels=TRUE, minscore=10, ...){
+pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRUE, minscore = 10, cores = 1, quiet = FALSE, ...){
 
-  path <- get_subalignment(x=x, model=model, tryrc=tryrc, quiet=quiet, check_indels = check_indels, minscore=minscore)
+  path <- get_subalignment(x = x, model = model, tryrc = tryrc, check_indels = check_indels, minscore = minscore, cores = cores, quiet = quiet, ...=...)
 
   # Find start, stop, and indels
   matchF <- match(2, path)
   matchR <- (length(path) - (match(2, rev(path))-1))
-  indels <- which(path ==0, arr.ind=FALSE)
+  indels <- which(path == 0, arr.ind=FALSE)
   # potentially could have indels as 1's as well, due to potential for indels to be recorded in PhMM?
   # Do another check for which(path ==1, arr.ind=FALSE), and make sure they are more than matchF and less than matchR to be recorded as indels
 
   # Pad Left
   if (matchF > 1){
-    left_pad <- which(path ==1, arr.ind=FALSE)
+    left_pad <- which(path == 1, arr.ind=FALSE)
     left_pad <- left_pad[which(left_pad < matchF)]
   } else(left_pad <- NULL)
 
@@ -180,7 +180,7 @@ pad_alignment <- function(x, model, pad="-", tryrc=FALSE, quiet=FALSE, check_ind
     split <- splitAt(indels, which(diff(indels) > 1, arr.ind=FALSE)+1)
 
     # Confirm all indels are 1 codon deletions
-    if (check_indels==TRUE && !all(sapply(split, length) %in% seq(3,12,3))) {
+    if (check_indels == TRUE && !all(sapply(split, length) %in% seq(3,12,3))) {
       stop("ERROR: Indels are not in multiples of 3!")
     }
   } else (indels <- NULL)
