@@ -261,12 +261,10 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, pad = TRUE, che
     if (cores > 1) {
       if (!quiet) cat("Multithreading with", cores, "cores\n")
 
-      cores <- parallel::makeCluster(cores, outfile = "out.txt")
-      # parallel::clusterExport(cores, c("model", "minscore"))
-      junk <- parallel::clusterEvalQ(cores, sapply(c("aphid", "insect", "ape"), require, character.only = TRUE)) # Discard result
-
-      x <- parallel::parLapply(cores, x, filt_phmmmodel=model, minscore=minscore, shave=shave, pad=pad, check_indels=check_indels, ...=...)
-      parallel::stopCluster(cores)
+      cl <- parallel::makeCluster(cores)
+      junk <- parallel::clusterEvalQ(cl, sapply(c("aphid", "insect", "ape", "taxreturn"), require, character.only = TRUE))
+      x <- parallel::parLapply(cl, x, filt_phmm,model=model, minscore=minscore, shave=shave, pad=pad, check_indels=check_indels, ...=...)
+      parallel::stopCluster(cl)
     } else {
       x <- lapply(x, filt_phmm, model=model, minscore=minscore, shave=shave, pad=pad, check_indels=check_indels, ...=...)
     }
@@ -293,6 +291,7 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, pad = TRUE, che
   if (!quiet) (message(paste0("finished in ", format(time, digits = 2))))
   return(x)
 }
+
 
 # Prune group sizes -------------------------------------------------------
 
