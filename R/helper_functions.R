@@ -211,3 +211,81 @@ pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRU
   return(out)
 }
 
+
+# Alignment entropy -------------------------------------------------------
+
+#' Alignment entropy
+#'
+#' @param x A DNAbin or AAbin object
+#' @param maskgaps The threshold of gaps allowed before a position in the alignment is masked
+#' @param countgaps Whether gaps should be counted within entropy calculations. Default is FALSE.
+#' @param method 	the method employed by `entropy::entropy` to estimate alignment entropy. Accepts:
+#' "ML" : maximum likelihood
+#' "MM" : bias-corrected maximum likelihood,
+#' "Jeffreys" : Dirichlet with a=1/2
+#' "Laplace" : Dirichlet with a=1
+#' "SG" : Dirichlet with a=a=1/length(y)
+#' "minimax" : Dirichlet with a=sqrt(sum(y))/length(y)
+#' "CS" : ChaoShen
+#' "NSB": Nemenman, Shafee and Biale (2002)
+#' "shrink" : Shrinkage estimator
+#' See the help page of `entropy::entropy` for more information
+#'
+#' @param unit the unit in which entropy is measured. The default is "nats" (natural units). For computing entropy in "bits" set unit="log2".
+#' @return
+#' @export
+#' @import entropy
+#' @import ape
+#' @import purrr
+#'
+#'
+#' @examples
+alignment_entropy <- function (x, maskgaps=0.2, countgaps = FALSE, method="ML", unit="log") {
+  if ((maskgaps < 0) | (maskgaps > 1)) {
+    stop("maskgaps should be a percentage (within the [0,1] range).")
+  }
+
+  if(class(x)=="DNAbin"){
+    x <- as.character(x)
+    x <- lapply(x, toupper)
+    names <- c("A", "C", "G", "T", "-")
+  } else if(class(x)=="AAbin"){
+    x <- as.character(x)
+    x <- lapply(x, toupper)
+    names <- c("A", "C", "D", "E", "F",
+               "G", "H", "I", "K", "L",
+               "M", "N", "P", "Q", "R",
+               "S", "T", "V", "W", "Y", "-")
+  }
+
+  # Remove gap characters
+  if(isFALSE(countgaps)){
+    names <- names[!names=="-"]
+  }
+
+  #Create matrix
+  suppressWarnings(MSA <- matrix(as.vector(unlist(x)), ncol = length(x[[1]]), byrow = TRUE))
+  n_pos <- length(MSA[1, ])
+  n_seq <- length(MSA[, 1])
+  colnames(MSA) <- c(1:n_pos)
+  #Summarise each position in alignment
+  i=1
+  tab <- vector("list", length=n_pos)
+  masked <- vector("list", length=n_pos)
+  for(i in 1:n_pos){
+    tab[[i]] <-  table(c(MSA[, i], names))
+    masked[[i]] <- prop.table(tab[[i]])["-"]
+    tab[[i]] <- t(tab[[i]][names])
+  }
+  ent <- tab %>% purrr::map_dbl(entropy::entropy, method=method, unit=unit)
+  names(ent) <-  c(1:n_pos)
+
+  # Mask gaps
+  masked <- unlist(masked)
+  masked[is.na(masked)] <- 0
+  names(masked) <-  c(1:n_pos)
+  ent[masked > maskgaps] <- NA
+  message("Masked ", sum(is.na(ent)), " alignment positions with gaps above ", maskgaps, "%")
+  return(ent)
+}
+
