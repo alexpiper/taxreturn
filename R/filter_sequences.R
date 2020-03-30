@@ -498,8 +498,7 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' Get mixed clusters
 #'
 #' @param x	 A DNAbin list object whose names include NCBItaxonomic identification numbers.
-#' @param db A NCBI taxonomy database from get_ncbi_lineage. If missing will download new one
-#' @param source the type of database, either "ncbi" or a path to an OTT directory
+#' @param db A taxonomic database from `get_ncbi_lineage` or `get_ott_lineage`
 #' @param rank The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
 #' If "all", the clusters will be checked at all taxonomic ranks available.
 #' @param threshold numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.
@@ -517,25 +516,25 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' seqs <- insect::readFASTA("test.fa.gz")
 #'
 #' # NCBI taxonomy
-#' mixed <- get_mixed_clusters(seqs, db, source="ncbi", rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)
+#' mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)
 #'
 #' # OTT taxonomy
 #' seqs <- map_to_ott(seqs, dir="ott3.2", from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE)
-#' mixed <- get_mixed_clusters(seqs,db=NULL, source="ott3.2", rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
+#' mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
 #' }
-get_mixed_clusters <- function (x, db, source="ncbi", rank = "order", threshold = 0.97, confidence = 0.8, quiet = FALSE, ...) {
+get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confidence = 0.8, quiet = FALSE, ...) {
   if(missing(x)) {stop("Error: x is required")}
-  # Setup
-  if (source == "ncbi"){
-    if(missing(db)){
-      db <- taxreturn::get_ncbi_lineage()
-    }
+
+  #Check type of DB
+  if(attr(db, "type")  == "ncbi"){
+    source <- "ncbi"
     lineage <- taxreturn::get_lineage(x=x, db = db)
-  } else if(!source =="ncbi"){
-    lineage <- get_ott_lineage(x=x, dir = source)
+  } else if(attr(db, "type")  == "OTT"){
+    source <- "OTT"
+    lineage <- get_ott_lineage(x=x, db = db)
   }
+  # Setup
   rank <- tolower(rank)
-  #if(any(rank == "all")) {rank <- colnames(db)[3:ncol(db)]}
 
   # Cluster OTUS
   if (is.null(attr(x, "OTU"))) {
@@ -566,8 +565,9 @@ get_mixed_clusters <- function (x, db, source="ncbi", rank = "order", threshold 
     mixed <- y != consensus
     mixedu <- yu != consensus
     nu <- length(mixedu)
-    res <- data.frame(listed = y[mixed], suggested = rep(consensus,
-                                                         sum(mixed)), confidence = sum(!mixedu)/nu, nstudies = nu)
+    res <- data.frame(listed = y[mixed], suggested = rep(consensus,sum(mixed)),
+                      confidence = sum(!mixedu)/nu, nstudies = nu,
+                      stringsAsFactors = FALSE)
     return(res)
   }
 
@@ -585,22 +585,21 @@ get_mixed_clusters <- function (x, db, source="ncbi", rank = "order", threshold 
 
     mixedtab <- lapply(splitlist, find_mixed)
     mixedtab <- mixedtab[!vapply(mixedtab, is.null, logical(1))]
+    mixedtab <- lapply(mixedtab, rownames_to_column, "Acc")
     if (length(mixedtab) == 0) {
       if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
       results[[i]] <-  as.data.frame(NULL)
     } else if (length(mixedtab) > 0){
-      names(mixedtab) <-  NULL
-      mixedtab <- do.call("rbind", mixedtab)
+      mixedtab <- dplyr::bind_rows(mixedtab, .id="cluster")
+
       mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
       if (nrow(mixedtab) == 0) {
         if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
         results[[i]] <-  as.data.frame(NULL)
       } else if(nrow(mixedtab) > 0 ) {
         mixedtab <- mixedtab[order(mixedtab$confidence, decreasing = TRUE), ]
-        if (!quiet) {cat("identified", nrow(mixedtab), "potentially erroneous sequences at", rank[i],   "rank \n")}
+        if (!quiet) {cat("identified", nrow(mixedtab), "mixed clusters at", rank[i],   "rank \n")}
         results[[i]] <-  mixedtab %>%
-          as.data.frame() %>%
-          tibble::rownames_to_column("Acc") %>%
           dplyr::mutate(rank = rank[i],
                         threshold = threshold) %>%
           dplyr::mutate_if(is.factor, as.character)

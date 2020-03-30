@@ -7,7 +7,6 @@
 get_mixed_clusters(
   x,
   db,
-  source = "ncbi",
   rank = "order",
   threshold = 0.97,
   confidence = 0.8,
@@ -18,9 +17,7 @@ get_mixed_clusters(
 \arguments{
 \item{x}{A DNAbin list object whose names include NCBItaxonomic identification numbers.}
 
-\item{db}{A NCBI taxonomy database from get_ncbi_lineage. If missing will download new one}
-
-\item{source}{the type of database, either "ncbi" or a path to an OTT directory}
+\item{db}{A taxonomic database from \code{get_ncbi_lineage} or \code{get_ott_lineage}}
 
 \item{rank}{The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
 If "all", the clusters will be checked at all taxonomic ranks available.}
@@ -45,10 +42,10 @@ Get mixed clusters
 seqs <- insect::readFASTA("test.fa.gz")
 
 # NCBI taxonomy
-mixed <- get_mixed_clusters(seqs, db, source="ncbi", rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)
+mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)
 
 # OTT taxonomy
 seqs <- map_to_ott(seqs, dir="ott3.2", from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE)
-mixed <- get_mixed_clusters(seqs,db=NULL, source="ott3.2", rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
+mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
 }
 }

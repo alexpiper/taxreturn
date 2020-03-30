@@ -343,7 +343,7 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
 
   # strip all accessions of punctuation characters
   puncs <- sum(stringr::str_detect(lineage$acc, "[:punct:]"))
-  warning(paste0("Stripping punctuation characters from ", puncs, " sequence accessions"))
+  if (puncs > 0) {warning(paste0("Stripping punctuation characters from ", puncs, " sequence accessions"))}
   lineage <- lineage %>%
     mutate(acc = stringr::str_remove_all(acc, "[:punct:]"))
 
