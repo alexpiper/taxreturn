@@ -502,14 +502,18 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' @param rank The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
 #' If "all", the clusters will be checked at all taxonomic ranks available.
 #' @param threshold numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.
-#' @param confidence The minimum confidence value for a sequence to be purged. For example, if confidence = 0.8 (the default value)
-#'  a sequence will only be purged if its taxonomy differs from at least four other independent sequences in its cluster.
+#' @param confidence The minimum confidence value for a mixed cluster to be flagged. For example, if confidence = 0.8 (the default value)
+#'  a cluster will only be flagged if the taxonomy of a sequence within the cluster differs from at least four other independent sequences in its cluster.
+#'  @param nstart how many random sets should be chosen for `kmeans`, It is recommended to set the value of nstart to at least 20.
+#'  While this can increase computation time, it can improve clustering accuracy considerably.
+#' @param return_all_taxa Option to return all unique taxa within mixed clusters as a list column.
 #' @param quiet logical indicating whether progress should be printed to the console.
-#' @param ... further arguments to pass to kmer::otu (not including nstart).
+#' @param ... further arguments to pass to kmer::otu.
 #'
 #' @return
 #' @export
 #' @import tibble
+#' @import dplyr
 #'
 #' @examples
 #' \dontrun{
@@ -522,19 +526,22 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' seqs <- map_to_ott(seqs, dir="ott3.2", from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE)
 #' mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
 #' }
-get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confidence = 0.8, quiet = FALSE, ...) {
+get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confidence = 0.8, return_all_taxa=FALSE, nstart=20, quiet = FALSE, ...) {
   if(missing(x)) {stop("Error: x is required")}
 
-  #Check type of DB
+  #Check inputs
+  if(!is.numeric(threshold) | !dplyr::between(threshold, 0,1)) { stop("Threshold must be a numeric between 0 and 1")}
+  if(!is.numeric(confidence) | !dplyr::between(confidence, 0,1)) { stop("Confidence must be a numeric between 0 and 1")}
+  rank <- tolower(rank)
+
+  #Get lineage
   if(attr(db, "type")  == "ncbi"){
     source <- "ncbi"
-    lineage <- taxreturn::get_lineage(x=x, db = db)
+    lineage <- taxreturn::get_lineage(x = x, db = db)
   } else if(attr(db, "type")  == "OTT"){
     source <- "OTT"
-    lineage <- get_ott_lineage(x=x, db = db)
-  }
-  # Setup
-  rank <- tolower(rank)
+    lineage <- get_ott_lineage(x = x, db = db)
+  } else (stop("db type is not supported"))
 
   # Cluster OTUS
   if (is.null(attr(x, "OTU"))) {
@@ -545,29 +552,40 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     otus <- attr(x, "OTU")
     stopifnot(length(x) == length(otus))
   }
-  if(length(unique(otus))==1) {stop("Error: only one unique cluster")}
+  if(length(unique(otus))==1) {stop("Only one unique cluster")}
   if (!quiet) {cat("Comparing lineage metadata within OTUs\n")}
 
   # Get mixed clusters
-  find_mixed <- function(y) {
-    hashes <- paste0(gsub("(^.{4}).+", "\\1",
-                          names(y)), y)
+  find_mixed <- function(y, return_all_taxa) {
+    hashes <- paste0(gsub("\\|.*$", "\\1", names(y)), y) #Accession + name
     yu <- y[!duplicated(hashes)]
     if (length(unique(yu)) < 2) {
       return(NULL)
     }
-
     tab <- sort(table(yu), decreasing = TRUE)
-    if (tab[1] == tab[2]) {
-      return(NULL)
-    }
+
     consensus <- names(tab)[1]
-    mixed <- y != consensus
+    consensus_taxid <- gsub("^.*\\|", "\\1", names(y)[y==consensus][1])
+    mixed <- y != consensus #potential misannotated
     mixedu <- yu != consensus
     nu <- length(mixedu)
-    res <- data.frame(listed = y[mixed], suggested = rep(consensus,sum(mixed)),
-                      confidence = sum(!mixedu)/nu, nstudies = nu,
-                      stringsAsFactors = FALSE)
+
+    #Check if there is a clear consensus
+    if (tab[1] == tab[2]){
+      consensus <- NA
+      consensus_taxid <- NA
+    }
+    res <- data.frame(listed = y[mixed],
+                      suggested = rep(consensus,sum(mixed)),
+                      suggested_taxid = rep(consensus_taxid,sum(mixed)),
+                      confidence = sum(!mixedu)/nu, cluster_size = nu,
+                      stringsAsFactors = FALSE)  %>%
+      tibble::rownames_to_column("Acc")
+
+    if(return_all_taxa){
+      res <- res %>%
+        dplyr::mutate(taxa_in_cluster = list(names(tab)))
+    }
     return(res)
   }
 
@@ -583,18 +601,17 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     splitlist <- split(lins, f)
     splitlist <- splitlist[tabulate(f) > 2]
 
-    mixedtab <- lapply(splitlist, find_mixed)
+    mixedtab <- lapply(splitlist, find_mixed, return_all_taxa)
     mixedtab <- mixedtab[!vapply(mixedtab, is.null, logical(1))]
-    mixedtab <- lapply(mixedtab, rownames_to_column, "Acc")
     if (length(mixedtab) == 0) {
-      if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
+      if (!quiet) {cat("No mixed clusters at", rank[i],   "rank \n")}
       results[[i]] <-  as.data.frame(NULL)
     } else if (length(mixedtab) > 0){
       mixedtab <- dplyr::bind_rows(mixedtab, .id="cluster")
 
       mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
       if (nrow(mixedtab) == 0) {
-        if (!quiet) {cat("No erroneous sequences at", rank[i],   "rank \n")}
+        if (!quiet) {cat("No mixed clusters at", rank[i],   "rank \n")}
         results[[i]] <-  as.data.frame(NULL)
       } else if(nrow(mixedtab) > 0 ) {
         mixedtab <- mixedtab[order(mixedtab$confidence, decreasing = TRUE), ]

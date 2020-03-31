@@ -10,6 +10,8 @@ get_mixed_clusters(
   rank = "order",
   threshold = 0.97,
   confidence = 0.8,
+  return_all_taxa = FALSE,
+  nstart = 20,
   quiet = FALSE,
   ...
 )
@@ -24,12 +26,16 @@ If "all", the clusters will be checked at all taxonomic ranks available.}
 
 \item{threshold}{numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.}
 
-\item{confidence}{The minimum confidence value for a sequence to be purged. For example, if confidence = 0.8 (the default value)
-a sequence will only be purged if its taxonomy differs from at least four other independent sequences in its cluster.}
+\item{confidence}{The minimum confidence value for a mixed cluster to be flagged. For example, if confidence = 0.8 (the default value)
+a cluster will only be flagged if the taxonomy of a sequence within the cluster differs from at least four other independent sequences in its cluster.
+@param nstart how many random sets should be chosen for \code{kmeans}, It is recommended to set the value of nstart to at least 20.
+While this can increase computation time, it can improve clustering accuracy considerably.}
+
+\item{return_all_taxa}{Option to return all unique taxa within mixed clusters as a list column.}
 
 \item{quiet}{logical indicating whether progress should be printed to the console.}
 
-\item{...}{further arguments to pass to kmer::otu (not including nstart).}
+\item{...}{further arguments to pass to kmer::otu.}
 }
 \value{
 
