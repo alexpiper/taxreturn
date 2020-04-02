@@ -29,7 +29,17 @@ Imports:
     ape,
     stringr,
     bold,
-    parallel
+    parallel,
+    data.table,
+    data.tree,
+    dplyr,
+    entropy,
+    magrittr,
+    pbapply,
+    purrr,
+    taxize,
+    tibble,
+    tidyr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
