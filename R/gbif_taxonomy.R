@@ -13,6 +13,7 @@
 #' @param resolve_taxonomy
 #'
 #' @import taxize
+#' @import purrr
 #' @return
 #'
 #' @examples
@@ -26,7 +27,7 @@ resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALS
   temp <- x %>%
     purrr::map(safely(taxize::get_gbifid_)) %>%
     purrr::map("result") %>%
-    flatten()
+    purrr::flatten()
 
   i <- 1
   for (i in 1:length(temp)) {
@@ -57,15 +58,13 @@ resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALS
     }
     if (any(temp[[i]]$status == "ACCEPTED")) {
       temp[[i]] <- subset(temp[[i]], status == "ACCEPTED")
-      temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
-                            max(temp[[i]]$confidence))
+      temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence == max(temp[[i]]$confidence))
       if (nrow(temp[[i]]) > 1) {
         temp[[i]] <- temp[[i]][1, ]
         warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
       }
     }
-    if (!any(temp[[i]]$status == "ACCEPTED") & any(temp[[i]]$status ==
-                                                   "SYNONYM")) {
+    if (!any(temp[[i]]$status == "ACCEPTED") & any(temp[[i]]$status == "SYNONYM")) {
       if (resolve_taxonomy) {
         keep <- temp[i]
         if (!is.null(temp[[i]]$species) && !is.na(temp[[i]]$species)) {
@@ -86,8 +85,7 @@ resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALS
         if (temp[[i]][1, ]$status == "ACCEPTED" & !temp[[i]][1, ]$matchtype == "HIGHERRANK") {
           # if (temp[[i]][1, ]$status == "ACCEPTED") {
           temp[[i]] <- subset(temp[[i]], status == "ACCEPTED") # , matchtype == "EXACT" &
-          temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==
-                                max(temp[[i]]$confidence))
+          temp[[i]] <- subset(temp[[i]], temp[[i]]$confidence ==  max(temp[[i]]$confidence))
           if (nrow(temp[[i]]) > 1) {
             temp[[i]] <- temp[[i]][1, ]
             warning_i <- paste(warning_i, "Selected first of multiple equally ranked concepts!")
@@ -115,8 +113,7 @@ resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALS
                               max(temp[[i]]$confidence))
         warning_i <- paste(warning_i, "The provided taxon seems to be a synonym of '",
                            temp[[i]]$species, "'!",
-                           sep = ""
-        )
+                           sep = ""  )
       }
     }
     if (all(temp[[i]]$status == "DOUBTFUL")) {
@@ -178,10 +175,7 @@ resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALS
       temp[[i]] <- data.frame(
         scientificName = x[i], synonym = synonym_i,
         scientificNameStd = temp[[i]]$canonicalname,
-        author = sub(paste0(
-          temp[[i]]$canonicalname,
-          " "
-        ), "", temp[[i]]$scientificname), taxonRank = temp[[i]]$rank,
+        author = sub(paste0( temp[[i]]$canonicalname,   " "  ), "", temp[[i]]$scientificname), taxonRank = temp[[i]]$rank,
         confidence = temp[[i]]$confidence, kingdom = if (is.null(temp[[i]]$kingdom)) {
           NA
         } else {
@@ -242,7 +236,14 @@ resolve_gbif <- function(x, subspecies = TRUE, higherrank = TRUE, verbose = FALS
 #' @return This returns a DNAbin with renamed taxa
 #' @export
 #'
-#' @import tidyverse
+#' @import ape
+#' @import Biostrings
+#' @import stringr
+#' @import tibble
+#' @import tidyr
+#' @import dplyr
+#' @import insect
+#'
 #' @examples
 resolve_taxonomy <- function(x, subspecies = FALSE, quiet = TRUE, missing = "ignore", higherrank = FALSE, fuzzy = TRUE) {
   time <- Sys.time() # get time

@@ -5,6 +5,8 @@
 #'
 #' @return
 #' @export
+#' @import utils
+#' @import readr
 #'
 #' @examples
 get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
@@ -17,7 +19,7 @@ get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
     fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
     download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
     message("Extracting data\n")
-    test <- untar(tarfile = paste0(tmp, "/tmp.tar.gz"), exdir = tmp)
+    test <- utils::untar(tarfile = paste0(tmp, "/tmp.tar.gz"), exdir = tmp)
     if (!identical(test, 0L)) {
       stop(cat(test))
     }
@@ -64,7 +66,7 @@ get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
 #'
 #' @examples
 get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
-  .Deprecated("get_ncbi_lineage") #include a package argument, too
+  .Deprecated(new="get_ncbi_lineage", old="get_ranked_lineage")
   get_ncbi_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
 }
 
@@ -78,6 +80,8 @@ get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
 #'
 #' @return
 #' @export
+#' @import magrittr
+#' @import dplyr
 #'
 #' @examples
 ncbi_taxid <- function(x, db=NULL) {

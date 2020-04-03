@@ -20,7 +20,6 @@ Suggests:
     rmarkdown
 Language: en-US
 Imports: 
-    tidyverse,
     rentrez,
     aphid,
     insect,
@@ -39,7 +38,14 @@ Imports:
     purrr,
     taxize,
     tibble,
-    tidyr
+    tidyr,
+    vroom,
+    xml2,
+    utils,
+    rvest,
+    kmer,
+    httr,
+    DECIPHER
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr

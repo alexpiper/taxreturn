@@ -14,6 +14,8 @@
 #' @export
 #' @import aphid
 #' @import insect
+#' @import stringr
+#' @import ape
 #'
 #' @examples
 get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, minscore = 10, ...) {
@@ -99,6 +101,8 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
 #' @export
 #' @import aphid
 #' @import insect
+#' @import ape
+#'
 #'
 #' @examples
 get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TRUE, minscore=10, omit.endgaps	= FALSE, cores=1, ...) {
@@ -155,9 +159,10 @@ get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TR
 #'
 #' @return
 #' @export
-#' @import stringr
 #' @import aphid
 #' @import insect
+#' @import ape
+#' @import stringr
 #'
 #' @examples
 pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRUE, minscore = 10, omit.endgaps	= FALSE, cores = 1,  quiet = FALSE, ...){
@@ -203,7 +208,7 @@ pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRU
     for(i in 1:length(index)) {
       stringr::str_sub(x, start = index[i], end = index[i]-1) <- pad
     }
-    x <- str_to_upper(x)
+    x <- stringr::str_to_upper(x)
     return(x)
   }
   out <- sapply(x, insert_at, insert)

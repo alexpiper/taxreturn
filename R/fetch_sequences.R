@@ -14,15 +14,10 @@
 #' @param out.dir Output directory to write fasta files to
 #'
 #' @import bold
-#' @import tidyverse
-#' @import rentrez
-#' @import aphid
-#' @import insect
-#' @import biofiles
-#' @import Biostrings
-#' @import ape
+#' @import dplyr
+#' @import tidyr
 #' @import stringr
-#' @import parallel
+#' @import Biostrings
 #'
 #' @return
 #' @export
@@ -175,16 +170,13 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
 #' @param out.dir Output directory to write fasta files to
 #'
 #'
-#' @import bold
-#' @import tidyverse
 #' @import rentrez
-#' @import aphid
-#' @import insect
 #' @import biofiles
 #' @import Biostrings
-#' @import ape
+#' @import tidyr
+#' @import dplyr
 #' @import stringr
-#' @import parallel
+#' @import purrr
 #'
 #' @return
 #' @export
@@ -222,18 +214,18 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
     }
   if (is.null(out.file)) {
     name <- marker %>%
-      str_replace_all(pattern="\\[GENE]", replacement ="") %>%
-      str_replace_all(pattern="OR ", replacement ="") %>%
-      str_replace_all(pattern=" ", replacement ="_")
+      stringr::str_replace_all(pattern="\\[GENE]", replacement ="") %>%
+      stringr::str_replace_all(pattern="OR ", replacement ="") %>%
+      stringr::str_replace_all(pattern=" ", replacement ="_")
 
     if (!is.null(out.dir) && compress == FALSE) {
-      out.file <- paste0(getwd(), "/", out.dir, "/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa")
+      out.file <- paste0(getwd(), "/", out.dir, "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa")
     } else if (!is.null(out.dir) && compress == TRUE) {
-      out.file <- paste0(getwd(), "/", out.dir, "/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
+      out.file <- paste0(getwd(), "/", out.dir, "/", stringr::str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
     } else if (is.null(out.dir) && compress == FALSE) {
-      out.file <- paste0(getwd(), "/", "genbank/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa")
+      out.file <- paste0(getwd(), "/", "genbank/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa")
     } else if (is.null(out.dir) && compress == TRUE) {
-      out.file <- paste0(getwd(), "/", "genbank/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
+      out.file <- paste0(getwd(), "/", "genbank/", stringr::str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
     }
     if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
     if (!file.exists("genbank")) {
@@ -323,8 +315,8 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
 
           #Check if names match
           names(seqs) <- names[names %>%
-                                 str_replace(pattern="(?<=\\|)(?s)(.*$)", replacement="") %>%
-                                 str_replace(pattern="\\|", replacement="")
+                                 stringr::str_replace(pattern="(?<=\\|)(?s)(.*$)", replacement="") %>%
+                                 stringr::str_replace(pattern="\\|", replacement="")
                                %in% names(seqs)]
           if (compress == TRUE) {
             Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
@@ -368,16 +360,13 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
 #' @param out.dir Output directory to write fasta files to
 #'
 #'
-#' @import bold
-#' @import tidyverse
 #' @import rentrez
-#' @import aphid
-#' @import insect
+#' @import dplyr
+#' @import tidyr
+#' @import stringr
+#' @import purrr
 #' @import biofiles
 #' @import Biostrings
-#' @import ape
-#' @import stringr
-#' @import parallel
 #'
 #' @return
 #' @export
@@ -399,18 +388,18 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
   }
   if (is.null(out.file)) {
     name <- marker %>%
-      str_replace_all(pattern="\\[GENE]", replacement ="") %>%
-      str_replace_all(pattern="OR ", replacement ="") %>%
-      str_replace_all(pattern=" ", replacement ="_")
+      stringr::str_replace_all(pattern="\\[GENE]", replacement ="") %>%
+      stringr::str_replace_all(pattern="OR ", replacement ="") %>%
+      stringr::str_replace_all(pattern=" ", replacement ="_")
 
     if (!is.null(out.dir) & compress == FALSE) {
-      out.file <- paste0(getwd(), "/", out.dir, "/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa")
+      out.file <- paste0(getwd(), "/", out.dir, "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa")
     } else if (!is.null(out.dir) & compress == TRUE) {
-      out.file <- paste0(getwd(), "/", out.dir, "/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
+      out.file <- paste0(getwd(), "/", out.dir, "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa.gz")
     } else if (is.null(out.dir) & compress == FALSE) {
-      out.file <- paste0(getwd(), "/", "genbank/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa")
+      out.file <- paste0(getwd(), "/", "genbank/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa")
     } else if (is.null(out.dir) & compress == TRUE) {
-      out.file <- paste0(getwd(), "/", "genbank/", str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
+      out.file <- paste0(getwd(), "/", "genbank/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa.gz")
     }
     if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
     if (!file.exists("genbank")) {
@@ -458,7 +447,7 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
           # Hierarchial output
           if (output == "h") {
             lineage <- biofiles::getTaxonomy(gb) %>%
-              str_split_fixed(pattern = ";", n = Inf) %>%
+              stringr::str_split_fixed(pattern = ";", n = Inf) %>%
               trimws(which = "both") %>%
               as_tibble() %>%
               dplyr::mutate(Species = biofiles::getOrganism(gb)) %>%
@@ -540,19 +529,15 @@ gbSearch_subsample <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALS
 #' @param compress Option to compress output fasta files using gzip
 #' @param cores Number of cores to use
 #'
-
-
 #' @import bold
 #' @import dplyr
 #' @import tidyr
 #' @import stringr
+#' @import purrr
 #' @import rentrez
 #' @import parallel
-#' @import aphid
-#' @import insect
 #' @import biofiles
 #' @import Biostrings
-#' @import ape
 #' @import taxize
 #'
 #'
@@ -581,7 +566,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
 
       if (!quiet) cat("Multithreading with", cores, "cores\n")
       cores <- parallel::makeCluster(cores, outfile = "out.txt")
-      junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "tidyverse", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
+      junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "dplyr", "stringr", "purrr", "tidyr", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
       para <- TRUE
       stopclustr <- TRUE
     }
@@ -705,7 +690,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
 #
 #    if (!quiet) cat("Multithreading with", cores, "cores\n")
 #    cores <- parallel::makeCluster(cores, outfile = "out.txt")
-#    junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "taxizedb", "tidyverse", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
+#    junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "taxizedb", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
 #    para <- TRUE
 #    stopclustr <- TRUE
 #  }

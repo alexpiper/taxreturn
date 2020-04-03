@@ -8,6 +8,11 @@
 #'
 #' @return
 #' @export
+#' @import xml2
+#' @import rvest
+#' @import httr
+#' @import stringr
+#' @import utils
 #'
 #' @examples
 download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
@@ -76,6 +81,8 @@ download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
 #' @return
 #' @export
 #' @import data.table
+#' @import vroom
+#' @import dplyr
 #'
 #' @examples
 get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_bads=TRUE) {
@@ -140,6 +147,9 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_bads=TRUE) {
 #' @export
 #' @import data.table
 #' @import dplyr
+#' @import stringr
+#' @import tidyr
+#' @import tibble
 #'
 #' @examples
 map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = FALSE, quiet=FALSE){
@@ -269,6 +279,9 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, filter_bads=TR
 #'
 #' @return
 #' @export
+#' @import vroom
+#' @import stringr
+#' @import dplyr
 #'
 #' @examples
 parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
@@ -310,6 +323,7 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 #' @import dplyr
 #' @import stringr
 #' @import tidyr
+#' @import tibble
 #'
 #' @examples
 get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), cores = 1){
@@ -329,14 +343,14 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  }else  if (is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
+  }else  if (is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
     lineage <- x %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else  if (is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
+  } else  if (is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of tax_id's")
     lineage <- data.frame(acc = as.character(NA), tax_name=as.character(NA), tax_id = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
@@ -345,7 +359,7 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
   puncs <- sum(stringr::str_detect(lineage$acc, "[:punct:]"))
   if (puncs > 0) {warning(paste0("Stripping punctuation characters from ", puncs, " sequence accessions"))}
   lineage <- lineage %>%
-    mutate(acc = stringr::str_remove_all(acc, "[:punct:]"))
+    dplyr::mutate(acc = stringr::str_remove_all(acc, "[:punct:]"))
 
   # Check for duplicated accessions
   if(any(duplicated(lineage$acc))){stop("Duplicated sequence accessions found")}

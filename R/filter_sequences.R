@@ -10,7 +10,6 @@
 #' @param quiet Whether progress should be printed to the console.
 #'
 #'
-#' @import tidyverse
 #' @import aphid
 #' @import insect
 #' @import Biostrings
@@ -68,6 +67,7 @@ clean_seqs <- function(x, model, minscore = 100, shave = TRUE, maxNs = 0, cores 
   nseq <- length(x)
 
   if (cores == 1 && progress == TRUE) {
+    requireNamespace("pbapply", quietly = TRUE)
     x <- pbapply::pblapply(x, filt_phmm, model, minscore)
   } else if (cores == 1 && progress == FALSE) {
     x <- lapply(x, filt_phmm, model, minscore)
@@ -136,11 +136,9 @@ clean_seqs <- function(x, model, minscore = 100, shave = TRUE, maxNs = 0, cores 
 #' @param ... Any further arguments to be passed to `aphid::Viterbi`
 #'
 #'
-#' @import tidyverse
 #' @import aphid
 #' @import insect
 #' @import Biostrings
-#' @import ape
 #' @import stringr
 #' @import parallel
 #' @import pbapply
@@ -310,7 +308,14 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, pad = TRUE, che
 #' @return
 #' @export
 #'
-#' @import tidyverse
+#' @import insect
+#' @import magrittr
+#' @import dplyr
+#' @import stringr
+#' @import tibble
+#' @import tidyr
+#'
+#'
 #' @examples
 prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random", quiet = FALSE) {
   if (dedup) {
@@ -320,10 +325,10 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random"
   }
 
   groups <- names(x) %>%
-    str_split_fixed(";", n = 2) %>%
-    as_tibble() %>%
-    separate(V1, into = c("acc", "taxid")) %>%
-    pull(taxid)
+    stringr::str_split_fixed(";", n = 2) %>%
+    tibble::as_tibble() %>%
+    tidyr::separate(V1, into = c("acc", "taxid")) %>%
+    dplyr::pull(taxid)
   groupCounts <- table(groups) # Count number of seqs per group
   u_groups <- names(groupCounts) # Get unique groups
 
@@ -340,7 +345,6 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random"
   } else if (discardby == "length") {
     for (i in which(groupCounts > maxGroupSize)) {
       index <- which(groups == u_groups[i])
-
       rem <- lengths(x[index])
       names(rem) <- index
       rem <- sort(rem, decreasing = TRUE)
@@ -368,6 +372,9 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random"
 #'
 #' @return
 #' @export
+#'
+#' @import ape
+#' @import Biostrings
 #'
 #' @examples
 get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, resolve_draws="majority") {
@@ -424,6 +431,8 @@ get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FA
 #'
 #' @return
 #' @export
+#' @import ape
+#' @import Biostrings
 #'
 #' @examples
 codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, remove.ambiguities=TRUE){
@@ -449,8 +458,6 @@ codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, 
   return(out)
 }
 
-
-
 # Codon entropy  -----------------------------------------------------------
 
 #' Codon entropy
@@ -463,6 +470,11 @@ codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, 
 #'
 #' @return
 #' @export
+#' @import ape
+#' @import Biostrings
+#' @import entropy
+#' @import purrr
+#'
 #'
 #' @examples
 codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, codon.filter = TRUE, method="ML") {
@@ -514,6 +526,8 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' @export
 #' @import tibble
 #' @import dplyr
+#' @import kmer
+#' @import tibble
 #'
 #' @examples
 #' \dontrun{
@@ -540,7 +554,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     lineage <- taxreturn::get_lineage(x = x, db = db)
   } else if(attr(db, "type")  == "OTT"){
     source <- "OTT"
-    lineage <- get_ott_lineage(x = x, db = db)
+    lineage <- taxreturn::get_ott_lineage(x = x, db = db)
   } else (stop("db type is not supported"))
 
   # Cluster OTUS

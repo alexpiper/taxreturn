@@ -10,6 +10,7 @@
 #'
 #' @examples
 propagate_tax <- function(tax, from = "Family") {
+  .Deprecated(new="seqateurs::propagate_tax", package="seqateurs", old="taxreturn::propagate_tax")
   col.prefix <- substr(colnames(tax), 1, 1) # Assumes named Kingdom, ...
 
   # Highest level to propagate from
@@ -31,10 +32,6 @@ propagate_tax <- function(tax, from = "Family") {
   tax
 }
 
-
-# summarise fasta ---------------------------------------------------------
-
-
 #' summarise_fasta
 #'
 #' @param x The location of a fasta file or gzipped fasta file.
@@ -43,15 +40,19 @@ propagate_tax <- function(tax, from = "Family") {
 #'
 #' @return
 #' @export
+#' @import Biostrings
+#' @import stringr
+#' @import dplyr
+#'
 #'
 #' @examples
 summarise_fasta <- function(x, label=NULL, origin=NULL) {
   if(is.null(origin)){
-    out <- fasta.index(x) %>%
-      mutate(taxid = desc %>%
-               str_replace(pattern="(;)(.*?)(?=$)", replacement="")  %>%
-               str_replace(pattern="(^)(.*?)(?<=\\|)", replacement="")) %>%
-      summarise(nseqs = n(),
+    out <- Biostrings::fasta.index(x) %>%
+      dplyr::mutate(taxid = desc %>%
+               stringr::str_remove(pattern="(;)(.*?)(?=$)")  %>%
+               stringr::str_remove(pattern="(^)(.*?)(?<=\\|)")) %>%
+      dplyr::summarise(nseqs = n(),
                 nspecies=n_distinct(taxid),
                 mean_length = mean(seqlength),
                 q0 = quantile(seqlength, probs=0),
@@ -62,15 +63,15 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
       )
 
   } else if(is.data.frame(origin) | is_tibble(origin)){
-    out <- fasta.index(x) %>%
-      mutate(taxid = desc %>%
-               str_replace(pattern="(;)(.*?)(?=$)", replacement="")  %>%
-               str_replace(pattern="(^)(.*?)(?<=\\|)", replacement="")) %>%
-      mutate(seqid = desc %>%
-               str_replace(pattern="(\\|)(.*?)(?=$)", replacement=""))  %>%
-      left_join(origin, by="seqid") %>%
-      group_by(origin) %>%
-      summarise(nseqs = n(),
+    out <- Biostrings::fasta.index(x) %>%
+      dplyr::mutate(taxid = desc %>%
+               stringr::str_remove(pattern="(;)(.*?)(?=$)")  %>%
+               stringr::str_remove(pattern="(^)(.*?)(?<=\\|)")) %>%
+      dplyr::mutate(seqid = desc %>%
+               stringr::str_remove(pattern="(\\|)(.*?)(?=$)"))  %>%
+      dplyr::left_join(origin, by="seqid") %>%
+      dplyr::group_by(origin) %>%
+      dplyr::summarise(nseqs = n(),
                 nspecies=n_distinct(taxid),
                 mean_length = mean(seqlength),
                 q0 = quantile(seqlength, probs=0),
@@ -82,7 +83,7 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
   }
   if(is.character(label)) {
     out <- out %>%
-      mutate(label  = label)
+      dplyr::mutate(label  = label)
   }
   return(out)
 }
@@ -99,6 +100,13 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
 #'
 #' @return
 #' @export
+#' @import ape
+#' @import stringr
+#' @import tidyr
+#' @import tibble
+#' @import dplyr
+#' @import magrittr
+#'
 #'
 #' @examples
 reformat_hierarchy <- function(x, db = NULL, quiet = FALSE,
@@ -165,7 +173,6 @@ reformat_dada2_gen <- function(x, db = NULL, quiet = FALSE, ranks = NULL, force=
 }
 
 
-
 # Reformat DADA2 Species ----------------------------------------------------
 
 #' Reformat DADA2 Species
@@ -175,6 +182,11 @@ reformat_dada2_gen <- function(x, db = NULL, quiet = FALSE, ranks = NULL, force=
 #'
 #' @return
 #' @export
+#' @import ape
+#' @import stringr
+#' @import tibble
+#' @import magrittr
+#' @import dplyr
 #'
 #' @examples
 reformat_dada2_spp <- function(x, quiet = FALSE) {
@@ -208,6 +220,10 @@ reformat_dada2_spp <- function(x, quiet = FALSE) {
 #'
 #' @return
 #' @export
+#' @import stringr
+#' @import tibble
+#' @import dplyr
+#' @import tidyr
 #'
 #' @examples
 get_lineage <- function(x, db){
@@ -221,7 +237,7 @@ get_lineage <- function(x, db){
     dplyr::mutate(tax_id = as.numeric(tax_id))  %>%
     dplyr::left_join (db %>% dplyr::select(-species), by = "tax_id")  %>%
     tidyr::unite(col = V1, c(acc, tax_id), sep = "|")  %>%
-    rename(Acc = V1)
+    dplyr::rename(Acc = V1)
   return(lineage)
 }
 
@@ -241,6 +257,10 @@ get_lineage <- function(x, db){
 #'
 #' @return
 #' @export
+#' @import Biostrings
+#' @import ape
+#' @import DECIPHER
+#' @import stringr
 #'
 #' @examples
 train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  get_lineage=FALSE, db = NULL, quiet = FALSE, force=FALSE) {
@@ -348,6 +368,11 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 #'
 #' @return a phylo, data.tree, newick, or treedf object
 #' @import data.tree
+#' @import ape
+#' @import stringr
+#' @import dplyr
+#' @import tidyr
+#' @import magrittr
 #' @export
 #'
 #' @examples
@@ -397,8 +422,6 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
   return(out)
 }
 
-
-
 # LCA probs ---------------------------------------------------------------
 
 #' Probabilitys of sharing a rank as a function of sequence identity
@@ -414,6 +437,11 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
 #'
 #' @return
 #' @export
+#' @import ape
+#' @import stringr
+#' @import kmer
+#' @import dplyr
+#'
 #'
 #' @examples
 lca_probs <- function(x, method="mbed",  k=5, nstart = 20, ranks=c("kingdom", "phylum", "class", "order", "family", "genus", "species"), delim=";"){
@@ -457,15 +485,15 @@ lca_probs <- function(x, method="mbed",  k=5, nstart = 20, ranks=c("kingdom", "p
       filter(dist==sim[s])
 
     df1 <- subsets %>%
-      tidyr::separate(X1, into=c("Acc",ranks), sep=";")%>%
-      select(rev(ranks))
+      tidyr::separate(X1, into=c("Acc",ranks), sep=";") %>%
+      dplyr::select(rev(ranks))
 
     df2 <- subsets %>%
-      tidyr::separate(X2, into=c("Acc",ranks), sep=";")%>%
-      select(rev(ranks))
+      tidyr::separate(X2, into=c("Acc",ranks), sep=";") %>%
+      dplyr::select(rev(ranks))
 
     #Get all shared ranks
-    logidf <- as.data.frame(df1 == df2)  #
+    logidf <- as.data.frame(df1 == df2)
 
     #Get lowest common rank
     keepvec <- apply(logidf, 1, which.max)
@@ -485,12 +513,8 @@ lca_probs <- function(x, method="mbed",  k=5, nstart = 20, ranks=c("kingdom", "p
 
   }
   names(simlist) <- sim
-  out <- bind_rows(simlist) %>%
-    group_by(rank, sim) %>%
-    summarise(prob = mean(prob))
+  out <- dplyr::bind_rows(simlist) %>%
+    dplyr::group_by(rank, sim) %>%
+    dplyr::summarise(prob = mean(prob))
   return(out)
 }
-
-
-
-
