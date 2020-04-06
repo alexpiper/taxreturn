@@ -117,7 +117,8 @@ makeblastdb <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
     message("Unzipping file")
     compressed <- TRUE
     R.utils::gunzip(file, remove=FALSE)
-    file <- stringr::str_replace(file, ".gz", "")}
+    file <- stringr::str_replace(file, ".gz", "")
+  }else (compressed <- FALSE)
   results <- system2(command = .findExecutable("makeblastdb"),
                      args = c("-in", file, "-dbtype", dbtype, args),
                      wait = TRUE,
@@ -158,8 +159,7 @@ blast_params <- function(type = "blastn") {
 #' @export
 #'
 #' @examples
-blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FALSE){
-
+blast <- function (query, db, type="blastn", evalue = 1e-6, output_format = "tabular", args=NULL, quiet=FALSE){
   time <- Sys.time() # get time
   # Create temp files
   tmp <- tempdir()
@@ -167,6 +167,17 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
   tmpdb <- paste0(tmp, "/tmpquery.fa")
 
   .findExecutable(type) # check blast is installed
+
+  # Check outfmt
+  if(output_format=="tabular"){
+    outfmt <- 6
+  } else if (output_format=="lulu"){
+    outfmt <- "'6 qseqid sseqid pident'"
+  } else if(!output_format==6 && is.numeric(output_format)){
+    outfmt <- output_format
+  } else if(!output_format %in% c("tabular", "lulu") && is.character(output_format)){
+    outfmt <- paste0("'",output_format, "'")
+  }
 
   # Database
   if(inherits(db, "DNAbin")){
@@ -215,25 +226,38 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, args=NULL, quiet=FAL
     stop("Invalid BLAST query")
   }
 
-
   #  Conduct BLAST search
   if (!quiet) { message("Running BLAST") }
   results <- system2(command = .findExecutable(type),
                      args = c("-db", db,
                               "-query", input,
-                              "-outfmt 6",
+                              "-outfmt ", outfmt,
                               "-evalue", evalue,
                               "-ungapped", args),
                      wait = TRUE,
                      stdout = TRUE)
 
   # Parse BLAST results
-  out <- results %>%
-    tibble::enframe() %>%
-    tidyr::separate(col = value,
-                    into = c("qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"),
-                    sep = "\t",
-                    convert = TRUE)
+  if(output_format=="tabular"){
+    out <- results %>%
+      tibble::enframe() %>%
+      tidyr::separate(col = value,
+                      into = c("qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"),
+                      sep = "\t",
+                      convert = TRUE)
+  } else if(output_format =="lulu"){
+    out <- results %>%
+      tibble::enframe() %>%
+      tidyr::separate(col = value,
+                      into = c("qseqid", "sseqid", "pident"),
+                      sep = "\t",
+                      convert = TRUE)
+  } else{
+    message("Warning, result parsing is currently only supported for output_format = 'tabular'
+            and output_format = 'lulu', returning raw results")
+    out <- results %>%
+      tibble::enframe()
+  }
   time <- Sys.time() - time
   if (!quiet) (message(paste0("finished BLAST in ", format(time, digits = 2))))
 
