@@ -10,7 +10,7 @@ get_mixed_clusters(
   rank = "order",
   threshold = 0.97,
   confidence = 0.8,
-  return_all_taxa = FALSE,
+  return = "consensus",
   nstart = 20,
   quiet = FALSE,
   ...
@@ -31,7 +31,10 @@ a cluster will only be flagged if the taxonomy of a sequence within the cluster 
 @param nstart how many random sets should be chosen for \code{kmeans}, It is recommended to set the value of nstart to at least 20.
 While this can increase computation time, it can improve clustering accuracy considerably.}
 
-\item{return_all_taxa}{Option to return all unique taxa within mixed clusters as a list column.}
+\item{return}{What type of data about the data should be returned. Options include:
+Consensus - The consensus taxonomy for each cluster and associated confidence level
+All - Return all taxa in mixed clusters and their sequence accession numbers
+Count - Return counts of all taxa within each cluster}
 
 \item{quiet}{logical indicating whether progress should be printed to the console.}
 
