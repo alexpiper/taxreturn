@@ -44,7 +44,7 @@ Count - Return counts of all taxa within each cluster}
 
 }
 \description{
-Get mixed clusters
+Cluster sequences at a certain taxonomic similarity, and find clusters that contain mixed taxonomic names
 }
 \examples{
 \dontrun{

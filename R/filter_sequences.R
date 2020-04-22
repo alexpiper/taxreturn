@@ -509,6 +509,7 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 
 #' Get mixed clusters
 #'
+#' @description Cluster sequences at a certain taxonomic similarity, and find clusters that contain mixed taxonomic names
 #' @param x	 A DNAbin list object whose names include NCBItaxonomic identification numbers.
 #' @param db A taxonomic database from `get_ncbi_lineage` or `get_ott_lineage`
 #' @param rank The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
@@ -576,11 +577,13 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
 
   # Get mixed clusters
   find_mixed <- function(y, return) {
-    hashes <- paste0(gsub("\\|.*$", "\\1", names(y)), y) #Accession + name
+    # Ensure no duplicated accessions+names to bias confidence
+    hashes <- paste0(gsub("\\|.*$", "\\1", names(y)), y)
     yu <- y[!duplicated(hashes)]
     if (length(unique(yu)) < 2) {
       return(NULL)
     }
+    # Tabulate taxon names
     tab <- sort(table(yu), decreasing = TRUE)
 
     if(return == "consensus"){

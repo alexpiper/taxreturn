@@ -537,14 +537,14 @@ filter_unplaced <- function(x, db, quiet=FALSE){
     dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
 
   if(is(x, "DNAbin") | is(x, "DNAStringSet")){
-    #x <- x[!names(x) %in% remove$name]
-    x[names(x) %in% remove$name] <- NA
+    names(x) <- tax$name
+    x <- x[!names(x) %in% remove$name]
 
   }else if (is(x, "character")){
-    #x <- x[!x %in% remove$name]
-    x[x %in% remove$name] <- NA
+    x <- tax$name
+    x <- x[!x %in% remove$name]
   }
-  if(!quiet){message(paste0("Removed ", nrow(remove), " infraspecifthat could not be mapped to OTT\n"))}
+  if(!quiet){message(paste0("Removed ", nrow(remove), " unplaced flagged taxa\n"))}
   return(x)
 
 }
@@ -604,15 +604,22 @@ filter_infraspecifc <- function(x, db, quiet=FALSE){
     dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
 
   if(is(x, "DNAbin") | is(x, "DNAStringSet")){
-    #x <- x[!names(x) %in% remove$name]
-    x[names(x) %in% remove$name] <- NA
+    names(x) <- tax$name
+    x <- x[!names(x) %in% remove$name]
 
   }else if (is(x, "character")){
-    #x <- x[!x %in% remove$name]
-    x[x %in% remove$name] <- NA
+    x <- tax$name
+    x <- x[!x %in% remove$name]
   }
-  if(!quiet){message(paste0("Removed ", nrow(remove), " infraspecifthat could not be mapped to OTT\n"))}
-  return(x)
+  if(!quiet){message(paste0("Removed ", nrow(remove), " infraspecific taxa\n"))}
 
+  # check for multiple taxids per name remaining
+  checks <- tax %>%
+    dplyr::filter(!is.na(tax_id)) %>%
+    dplyr::group_by(tax_name) %>%
+    dplyr::summarise(count = n_distinct(tax_id))
+
+  if (any(checks$count >1 )) {warning("Multiple tax_ids remain for some tax_names, please check manually")}
+  return(x)
 }
 
