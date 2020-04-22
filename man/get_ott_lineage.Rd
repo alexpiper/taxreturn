@@ -14,7 +14,9 @@ get_ott_lineage(
 )
 }
 \arguments{
-\item{x}{A DNAbin}
+\item{x}{A DNAbin, DNAStringSet, taxonomy headers formnatted Acc|taxid;taxonomy, or vector of taxids}
+
+\item{db}{an OTT taxonomic database}
 
 \item{ranks}{the taxonomic ranks to filter to. Default is "kingdom", "phylum", "class", "order", "family", "genus", "species"
 To get strain level ranks, add "terminal" to ranks}
@@ -24,8 +26,6 @@ This argument may alternatively be a 'cluster' object, in which case it is the u
 for example by running parallel::stopCluster(cores).
 The string 'autodetect' is also accepted, in which case the maximum number of cores to use is one less than the total number of cores available.
 Note that in this case there may be a tradeoff in terms of speed depending on the number and size of sequences to be processed, due to the extra time required to initialize the cluster.}
-
-\item{dir}{a directory containing the open tree of life taxonomy files obtained from the  \code{download_ott_taxonomy} function}
 }
 \value{
 

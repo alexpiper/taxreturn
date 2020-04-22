@@ -4,14 +4,14 @@
 \alias{get_ott_taxonomy}
 \title{get_ott_taxonomy}
 \usage{
-get_ott_taxonomy(dir = NULL, quiet = FALSE, filter_bads = TRUE)
+get_ott_taxonomy(dir = NULL, quiet = FALSE, filter_unplaced = TRUE)
 }
 \arguments{
 \item{dir}{a directory containing the open tree of life taxonomy files obtained from the  \code{download_ott_taxonomy} function}
 
 \item{quiet}{Whether progress should be printed to console}
 
-\item{filter_bads}{Whether to filter 'bad' entries. These include
+\item{filter_unplaced}{Whether to filter 'bad' entries. These include
 incertae_sedis
 major_rank_conflict
 unplaced

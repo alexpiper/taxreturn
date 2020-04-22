@@ -64,7 +64,7 @@ download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
 #'
 #' @param dir a directory containing the open tree of life taxonomy files obtained from the  `download_ott_taxonomy` function
 #' @param quiet Whether progress should be printed to console
-#' @param filter_bads Whether to filter 'bad' entries. These include
+#' @param filter_unplaced Whether to filter 'bad' entries. These include
 #' incertae_sedis
 #' major_rank_conflict
 #' unplaced
@@ -85,7 +85,7 @@ download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
 #' @import dplyr
 #'
 #' @examples
-get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_bads=TRUE) {
+get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
   if (is.null(dir)){
     input <- NA
     while(!isTRUE(input == "1") && !isTRUE(input == "2")) {
@@ -98,7 +98,7 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_bads=TRUE) {
   if(!quiet){message("Building data frame\n")}
   file <- normalizePath(paste0(dir, "/taxonomy.tsv"))
 
-  if (filter_bads==TRUE){
+  if (filter_unplaced==TRUE){
     remap <- vroom::vroom(file, delim="\t|\t") %>%
       dplyr::filter(!grepl("incertae_sedis|incertae_sedis$|major_rank_conflict|unplaced|environmental|inconsistent|extinct|hidden|hybrid|not_otu|viral|barren", flags)) %>%
       dplyr::mutate(rank = stringr::str_replace(rank, pattern="no rank - terminal", replacement="terminal")) %>%
@@ -124,10 +124,10 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_bads=TRUE) {
 #' Map taxa to open tree of life
 #'
 #' @param x a DNAbin
-#' @param dir a directory containing the open tree of life taxonomy files obtained from the  `download_ott_taxonomy` function
+#' @param db an OTT taxonomic database
 #' @param from the existing taxonomic ID format
 #' @param resolve_synonyms Whether to resolve synonyms
-#' @param filter_bads Whether to filter 'bad' entries. These include
+#' @param filter_unplaced Whether to filter 'bad' entries. These include
 #' incertae_sedis
 #' major_rank_conflict
 #' unplaced
@@ -152,7 +152,7 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_bads=TRUE) {
 #' @import tibble
 #'
 #' @examples
-map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = FALSE, quiet=FALSE){
+map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, filter_unplaced=TRUE, remove_na = FALSE, quiet=FALSE){
   time <- Sys.time() # get time
   #Check input format
   if (is(x, "DNAbin")) {
@@ -216,7 +216,7 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, filter_bads=TR
         is.na(tax_name.x) & is.na(tax_name.z) ~ tax_name  #If no synonym was found, and no ID match, retain current name
       ))
 
-    if (filter_bads == TRUE){ #ensure resolving synonyms didnt introduce bads
+    if (filter_unplaced == TRUE){ #ensure resolving synonyms didnt introduce bads
       bads <- db %>%
         dplyr::filter(grepl("incertae_sedis,|incertae_sedis$|major_rank_conflict|unplaced|environmental|inconsistent|extinct|hidden|hybrid|not_otu|viral|barren", flags))
       tax <- tax %>%
@@ -225,7 +225,7 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, filter_bads=TR
           !tax_name %in% bads$name ~ tax_id
         )) %>%
         dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
-    } else if (filter_bads == FALSE){
+    } else if (filter_unplaced == FALSE){
       tax <- tax %>%
         dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
     }
@@ -307,8 +307,8 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 
 #' Recursively get lineage from OTT taxid
 #' This function derives the full lineage of a taxon ID number from a given taxonomy database
-#' @param x A DNAbin
-#' @param dir a directory containing the open tree of life taxonomy files obtained from the  `download_ott_taxonomy` function
+#' @param x A DNAbin, DNAStringSet, taxonomy headers formnatted Acc|taxid;taxonomy, or vector of taxids
+#' @param db an OTT taxonomic database
 #' @param ranks the taxonomic ranks to filter to. Default is "kingdom", "phylum", "class", "order", "family", "genus", "species"
 #' To get strain level ranks, add "terminal" to ranks
 #' @param cores integer giving the number of CPUs to parallelize the operation over (Defaults to 1).
@@ -462,3 +462,157 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
   }
   return(out)
 }
+
+
+# Filter ott ---------------------------------------------------------
+
+#' Filter unplaced taxonomic labels
+#' @description
+#' Filter flags indicating unplaced taxa in the taxonomic tree. These include:
+#' incertae_sedis
+#' major_rank_conflict
+#' unplaced
+#' environmental
+#' inconsistent
+#' extinct
+#' hidden
+#' hybrid
+#' not_otu
+#' viral
+#' barren
+#' See: https://github.com/OpenTreeOfLife/reference-taxonomy/blob/master/doc/taxon-flags.md for more info
+#'
+#' @param x A DNAbin, DNAStringSet, taxonomy headers formnatted Acc|taxid;taxonomy, or vector of taxids
+#' @param db an OTT taxonomic database
+#' @param quiet
+#'
+#' @return
+#' @export
+#'
+#' @examples
+filter_unplaced <- function(x, db, quiet=FALSE){
+  #Check input format
+  if (is(x, "DNAbin")) {
+    message("Input is DNAbin")
+    tax <- names(x) %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  } else if (is(x, "DNAStringSet")) {
+    message("Input is DNAStringSet")
+    tax <- as.DNAbin(x) %>%
+      names() %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  }else  if (is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
+    message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
+    tax <- x %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  } else  if (is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
+    message("Did not detect | and ; delimiters, assuming a vector of species names")
+    tax <- data.frame(acc = as.character(NA), tax_id=as.character(NA), tax_name = x, stringsAsFactors = FALSE)
+  }else (stop("x must be DNA bin or character vector"))
+
+  #check db
+  if(missing(db) | !attr(db,'type')=="OTT") {stop("Error: requires OTT db, generate one with get_ott_taxonomy")}
+  bads <- db %>%
+    dplyr::filter(grepl("incertae_sedis,|incertae_sedis$|major_rank_conflict|unplaced|environmental|inconsistent|extinct|hidden|hybrid|not_otu|viral|barren", flags))
+  if(nrow(bads)==0){stop("Database is already filtered for bad flags, rerun get_ott_taxonomy() with filter_unplaced=FALSE")}
+  tax <- tax %>%
+    dplyr::mutate(tax_id = dplyr::case_when( #Ensure no
+      tax_id %in% bads$tax_id ~  as.character(NA),
+      !tax_id %in% bads$tax_id ~ tax_id
+    )) %>%
+    dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
+
+  # Filter NA's
+  remove <- tax %>%
+    dplyr::filter(is.na(tax_id)) %>%
+    dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
+
+  if(is(x, "DNAbin") | is(x, "DNAStringSet")){
+    #x <- x[!names(x) %in% remove$name]
+    x[names(x) %in% remove$name] <- NA
+
+  }else if (is(x, "character")){
+    #x <- x[!x %in% remove$name]
+    x[x %in% remove$name] <- NA
+  }
+  if(!quiet){message(paste0("Removed ", nrow(remove), " infraspecifthat could not be mapped to OTT\n"))}
+  return(x)
+
+}
+
+#' Filter infraspecific taxonomic labels
+#' @param x A DNAbin, DNAStringSet, taxonomy headers formnatted Acc|taxid;taxonomy, or vector of taxids
+#' @param db an OTT taxonomic database
+#' @param quiet
+#'
+#' @return
+#' @export
+#'
+#' @examples
+filter_infraspecifc <- function(x, db, quiet=FALSE){
+  #Check input format
+  if (is(x, "DNAbin")) {
+    message("Input is DNAbin")
+    tax <- names(x) %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  } else if (is(x, "DNAStringSet")) {
+    message("Input is DNAStringSet")
+    tax <- as.DNAbin(x) %>%
+      names() %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  }else  if (is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
+    message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
+    tax <- x %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(tax_name = V2)
+  } else  if (is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
+    message("Did not detect | and ; delimiters, assuming a vector of species names")
+    tax <- data.frame(acc = as.character(NA), tax_id=as.character(NA), tax_name = x, stringsAsFactors = FALSE)
+  }else (stop("x must be DNA bin or character vector"))
+
+  #check db
+  if(missing(db) | !attr(db,'type')=="OTT") {stop("Error: requires OTT db, generate one with get_ott_taxonomy")}
+  bads <- db %>%
+    dplyr::filter(grepl("infraspecific", flags))
+  tax <- tax %>%
+    dplyr::mutate(tax_id = dplyr::case_when( #Ensure no
+      tax_id %in% bads$tax_id ~  as.character(NA),
+      !tax_id %in% bads$tax_id ~ tax_id
+    )) %>%
+    dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
+
+  # Filter NA's
+  remove <- tax %>%
+    dplyr::filter(is.na(tax_id)) %>%
+    dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
+
+  if(is(x, "DNAbin") | is(x, "DNAStringSet")){
+    #x <- x[!names(x) %in% remove$name]
+    x[names(x) %in% remove$name] <- NA
+
+  }else if (is(x, "character")){
+    #x <- x[!x %in% remove$name]
+    x[x %in% remove$name] <- NA
+  }
+  if(!quiet){message(paste0("Removed ", nrow(remove), " infraspecifthat could not be mapped to OTT\n"))}
+  return(x)
+
+}
+

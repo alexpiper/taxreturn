@@ -9,7 +9,7 @@ map_to_ott(
   db,
   from = "ncbi",
   resolve_synonyms = TRUE,
-  filter_bads = TRUE,
+  filter_unplaced = TRUE,
   remove_na = FALSE,
   quiet = FALSE
 )
@@ -17,11 +17,13 @@ map_to_ott(
 \arguments{
 \item{x}{a DNAbin}
 
+\item{db}{an OTT taxonomic database}
+
 \item{from}{the existing taxonomic ID format}
 
 \item{resolve_synonyms}{Whether to resolve synonyms}
 
-\item{filter_bads}{Whether to filter 'bad' entries. These include
+\item{filter_unplaced}{Whether to filter 'bad' entries. These include
 incertae_sedis
 major_rank_conflict
 unplaced
@@ -38,8 +40,6 @@ See: https://github.com/OpenTreeOfLife/reference-taxonomy/blob/master/doc/taxon-
 \item{remove_na}{Whether taxa that could not be mapped to the open tree of life should be removed}
 
 \item{quiet}{Whether progress should be printed to console}
-
-\item{dir}{a directory containing the open tree of life taxonomy files obtained from the  \code{download_ott_taxonomy} function}
 }
 \value{
 
