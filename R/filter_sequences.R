@@ -327,7 +327,7 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random"
   groups <- names(x) %>%
     stringr::str_split_fixed(";", n = 2) %>%
     tibble::as_tibble() %>%
-    tidyr::separate(V1, into = c("acc", "taxid")) %>%
+    tidyr::separate(V1, into = c("acc", "taxid"), sep="\\|") %>%
     dplyr::pull(taxid)
   groupCounts <- table(groups) # Count number of seqs per group
   u_groups <- names(groupCounts) # Get unique groups
