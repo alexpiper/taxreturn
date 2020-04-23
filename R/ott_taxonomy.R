@@ -355,12 +355,6 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
     lineage <- data.frame(acc = as.character(NA), tax_name=as.character(NA), tax_id = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
 
-  # strip all accessions of punctuation characters
-  puncs <- sum(stringr::str_detect(lineage$acc, "[:punct:]"))
-  if (puncs > 0) {warning(paste0("Stripping punctuation characters from ", puncs, " sequence accessions"))}
-  lineage <- lineage %>%
-    dplyr::mutate(acc = stringr::str_remove_all(acc, "[:punct:]"))
-
   # Check for duplicated accessions
   if(any(duplicated(lineage$acc))){stop("Duplicated sequence accessions found")}
 
@@ -389,7 +383,10 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
     index <- match(tax_id, db$tax_id)
     if(is.na(index)){
       # warning(paste("Taxon ID", tax_id, "not found in database\n"))
-      return(NA)
+      return(data.frame(rank= NA,
+                        tax_name=NA,
+                        tax_id=NA,
+                        stringsAsFactors = FALSE))
     }
     repeat{
       if(is.na(index)) break
@@ -432,10 +429,7 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
   res <- res[pointers] #re-replicate
   names(res) <- lineage$acc
   if(output =="tax_name"){
-    out <- do.call(rbind, res) %>%
-      tibble::rownames_to_column("id") %>%
-      dplyr::mutate(id = id %>%
-                      stringr::str_remove(pattern="(\\.)(.*?)(?=$)")) %>%
+    out <- bind_rows(res, .id="id") %>%
       dplyr::select(-tax_id) %>%
       dplyr::group_by(id) %>%
       tidyr::pivot_wider(
@@ -446,10 +440,7 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
       tidyr::unite(Acc, c(acc, tax_id), sep = "|") %>%
       dplyr::select(Acc, all_of(ranks), tax_name)
   } else if(output == "tax_id"){
-    out <- do.call(rbind, res) %>%
-      tibble::rownames_to_column("id") %>%
-      mutate(id = id %>%
-               stringr::str_remove(pattern="(\\.)(.*?)(?=$)")) %>%
+    out <- bind_rows(res, .id="id") %>%
       dplyr::select(-tax_name) %>%
       dplyr::group_by(id) %>%
       tidyr::pivot_wider(
