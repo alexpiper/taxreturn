@@ -300,9 +300,9 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, pad = TRUE, che
 #' @param dedup Whether completetely identical sequences should be discarded first
 #' @param quiet Whether progress should be printed to the console.
 #' @param discardby How sequences from groups with size above maxGroupSize should be discarded.
-#' Options include "random" which will randomly pick sequences to discard until the group is below maxGroupSize,
-#' "length" which will discard sequences from smallest to largest until the group is below maxGroupSize, and
-#' "novelty" which will conduct a local alignment, and discard the least unique sequences first until all sequences are unique,
+#' Options include "length" (Default) which will discard sequences from smallest to largest until the group is below maxGroupSize,
+#' "random" which will randomly pick sequences to discard until the group is below maxGroupSize,
+#' and "novelty" which will conduct a local alignment, and discard the least unique sequences first until all sequences are unique,
 #' then discard sequences by length until the group is below maxGroupSize (Note: "novelty" is not yet implemented)
 #'
 #' @return
@@ -317,7 +317,7 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, pad = TRUE, che
 #'
 #'
 #' @examples
-prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random", quiet = FALSE) {
+prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "length", quiet = FALSE) {
   if (dedup) {
     dup <- length(x)
     x <- insect::subset.DNAbin(x, subset = !insect::duplicated.DNAbin(x, point = TRUE))
@@ -326,8 +326,8 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random"
 
   groups <- names(x) %>%
     stringr::str_split_fixed(";", n = 2) %>%
-    tibble::as_tibble() %>%
-    tidyr::separate(V1, into = c("acc", "taxid"), sep="\\|") %>%
+    tibble::as_tibble(.name_repair = ~ c("acc", "taxon")) %>%
+    tidyr::separate(acc, into = c("acc", "taxid"), sep="\\|") %>%
     dplyr::pull(taxid)
   groupCounts <- table(groups) # Count number of seqs per group
   u_groups <- names(groupCounts) # Get unique groups
@@ -343,12 +343,12 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "random"
       remove[index[-keep]] <- TRUE
     }
   } else if (discardby == "length") {
+    y <- dna2char(x)
     for (i in which(groupCounts > maxGroupSize)) {
       index <- which(groups == u_groups[i])
-      rem <- lengths(x[index])
+      rem <- stringr::str_count(y[index], "A|C|T|G")
       names(rem) <- index
       rem <- sort(rem, decreasing = TRUE)
-
       keep <- as.integer(names(rem[1:maxGroupSize]))
       remove[index[!index %in% keep]] <- TRUE
     }
