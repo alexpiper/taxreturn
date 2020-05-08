@@ -509,12 +509,15 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 
 #' Get mixed clusters
 #'
-#' @description Cluster sequences at a certain taxonomic similarity, and find clusters that contain mixed taxonomic names
+#' @description Cluster sequences at a certain taxonomic similarity, and find clusters that contain mixed taxonomic names,
+#' @description Note, it is recommended to set a unique seed using set.seed()
 #' @param x	 A DNAbin list object whose names include NCBItaxonomic identification numbers.
 #' @param db A taxonomic database from `get_ncbi_lineage` or `get_ott_lineage`
 #' @param rank The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
 #' If "all", the clusters will be checked at all taxonomic ranks available.
 #' @param threshold numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.
+#' @param rngseed	(Optional). A single integer value passed to set.seed, which is used to fix a seed for reproducibly random number generation for the kmeans clustering.
+#' If set to FALSE, then no fiddling with the RNG seed is performed, and it is up to the user to appropriately call set.seed beforehand to achieve reproducible results.
 #' @param confidence The minimum confidence value for a mixed cluster to be flagged. For example, if confidence = 0.8 (the default value)
 #'  a cluster will only be flagged if the taxonomy of a sequence within the cluster differs from at least four other independent sequences in its cluster.
 #'  @param nstart how many random sets should be chosen for `kmeans`, It is recommended to set the value of nstart to at least 20.
@@ -544,7 +547,7 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' seqs <- map_to_ott(seqs, dir="ott3.2", from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE)
 #' mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
 #' }
-get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confidence = 0.8, return = "consensus", nstart=20, quiet = FALSE, ...) {
+get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed = FALSE, confidence = 0.8, return = "consensus", nstart=20, quiet = FALSE, ...) {
   if(missing(x)) {stop("Error: x is required")}
 
   #Check inputs
@@ -553,7 +556,22 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
   rank <- tolower(rank)
   return <- tolower(return)
   if(!return %in% c("consensus", "all", "counts")){stop("Return must be one of: 'consensus', 'all', or 'counts'")}
-
+  if (as(rngseed, "logical")) {
+    set.seed(rngseed)
+    if (!quiet) {
+      message("`set.seed(", rngseed, ")` was used to initialize repeatable random subsampling.")
+      message("Please record this for your records so others can reproduce.")
+      message("Try `set.seed(", rngseed, "); .Random.seed` for the full vector",
+              sep = "")
+      message("...")
+    }
+  }
+  else if (!quiet) {
+    message("You set `rngseed` to FALSE. Make sure you've set & recorded\n",
+            " the random seed of your session for reproducibility.\n",
+            "See `?set.seed`\n")
+    message("...")
+  }
   #Get lineage
   if(attr(db, "type")  == "ncbi"){
     source <- "ncbi"
@@ -572,7 +590,10 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     otus <- attr(x, "OTU")
     stopifnot(length(x) == length(otus))
   }
-  if(length(unique(otus))==1) {stop("Only one unique cluster")}
+  if(length(unique(otus))==1) {
+    warning("Only one unique cluster")
+    return(NULL)
+  }
   if (!quiet) {cat("Comparing lineage metadata within OTUs\n")}
 
   # Get mixed clusters
@@ -661,3 +682,4 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, confide
     return(NULL)
   } else (return(out))
 }
+
