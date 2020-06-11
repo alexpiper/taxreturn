@@ -17,11 +17,21 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, echo=FALSE}
 library(taxreturn)
 library(Biostrings)
 library(tidyverse)
 ```
+
+
+# Install & load package
+
+```{r eval=FALSE}
+install.packages("devtools")
+devtools::install_github("alexpiper/taxreturn")
+library(taxreturn)
+```
+
 
 ## Fetching sequences from GenBank and BOLD
 
@@ -36,7 +46,7 @@ The compress option toggles whether to output as a gzipped fasta file to save sp
 
 Finally, the cores option determines how many cores to use when downloading sequences, using more cores can speed up searches. *note - i dont believe cores is currently working properly so use 1 core for now* 
 
-Depending on the amount of sequences you are downloading, and the speed of your internet connection this step can take from minutes to hours, i suggest running this overnight for large searches.
+Depending on the amount of sequences you are downloading, and the speed of your internet connection this step can take from minutes to hours, i suggest running this overnight for large searches with over a million sequences.
 
 ## Download sequences from NCBI GenBank
 
