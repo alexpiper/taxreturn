@@ -23,15 +23,33 @@ library(Biostrings)
 library(tidyverse)
 ```
 
+# Introduction
 
-# Install & load package
+As with conventional DNA barcoding, accurate taxonomic assignment in metabarcoding studies relies on a well-curated reference database of DNA marker sequences to compare query sequences against. The primary public nucleotide databases of relevance to eukaryotic metabarcoding are the NCBI GenBank database and the Barcode of Life Data System (BOLD), both of which taxreturn supports. While GenBank hosts greater overall sequence data, BOLD represents a more curated DNA barcoding database that aims to maintain consistent links between sequences, validated morphological specimens, and associated specimen collection metadata.
+
+Despite the best efforts of submitters, both these databases have well documented issues with barcode sequences being either insufficiently annotated, annotated with the incorrect species, or multiple morpho-species assigned to the same DNA barcode, which may reflect misidentifications or the existence of species complexes.While some metabarcoding studies have responded to the aforementioned issues by exclusively using in-house reference databases for taxonomic assignment [90, 93–95], because many insect surveillance programmes aim to detect species that are not locally present, the reliance on public data to supplement in-house sequences may be unavoidable. Curating public reference data is therefore crucial for ensuring the robustness of a metabarcoding analysis, and this is the role that the taxreturn package aims to fulfil.
+
+The main steps of the taxreturn workflow are as follows:
+
+* Download relevant barcode sequences and Mitochondrial genomes from BOLD and Genbank
+* Use a profile hidden markov model trained on a reference alignment for the locus to remove non-homologous loci and cut the desired region from mitogenomes/longer sequences
+* Use sequence similarity clustering to remove misannotated sequences (ie 99% similar sequences should share species level taxononmy)
+* Resolve taxonomic synonyms using a reference taxonomy database (NCBI or open tree of life)
+* Prune sequences from over-represented groups
+* Reformat into a taxonomic hierarchy format (ie Kingdom;phylum….;Species) appropriate for metabarcoding classifiers.
+
+# A Worked example
+
+The following vignette will run through an example analysis of retrieving insect COI barcode sequences and mitochondrial genomes, curating these, and outputting a reference database.
+
+## Install & load package
+
+First, make sure that the devtools, Biostrings and ape packages are installed and up to date. Then install and load the latest development version of the taxreturn package from GitHub as follows:
 
 ```{r eval=FALSE}
-install.packages("devtools")
 devtools::install_github("alexpiper/taxreturn")
 library(taxreturn)
 ```
-
 
 ## Fetching sequences from GenBank and BOLD
 
@@ -40,7 +58,6 @@ The first step is to retrieve public reference data sequences from NCBI Genbank 
 The downstream option lets the function know if you want to conduct searches and output fasta files using the input rank, or at a taxonomic rank downstream of it, i.e. Species. The downto option then determines what that downstream rank is. This functionality is important for getting around server limits when conducting large searches for example 'Insecta', however comes with some computational overhead when downloading few taxa.
 
 The marker option determines what will be in the search, note that the naming of loci differs between Genbank and bold so i suggest conducting a test search on their respective websites to confirm the desired marker.
-*note - add functionality for checking if marker exists* 
 
 The compress option toggles whether to output as a gzipped fasta file to save space. All further functions in this package should be capable of handling gzipped files.
 
@@ -48,78 +65,89 @@ Finally, the cores option determines how many cores to use when downloading sequ
 
 Depending on the amount of sequences you are downloading, and the speed of your internet connection this step can take from minutes to hours, i suggest running this overnight for large searches with over a million sequences.
 
-## Download sequences from NCBI GenBank
+## Download sequences from NCBI GenBank 
 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
-## Fetch sequences from GenBank 
-fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream="species", quiet=FALSE, output = "gb-binom", compress=TRUE, cores=1)
+## Fetch sequences from GenBank by searching for a taxon name
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream="species", marker="COI OR COI OR COX1 OR COXI", quiet=FALSE, output = "gb-binom", compress=TRUE)
+
+## OR fetch sequences from a species list
+spp_list <- readLines("species_list.txt")
+fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output = "gb-binom", marker="COI OR COI OR COX1 OR COXI", compress=TRUE)
 ```
 
 
 ## Download sequences from BOLD
 
 ```{r Download BOLD Sequences, eval=FALSE, include=TRUE}
-## Fetch sequences from BOLD
-fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream="species", quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, cores=1)
+## Fetch sequences from BOLD by searching for a taxon name
+fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream="species", quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE)
 
+## OR fetch sequences from a species list
+spp_list <- readLines("species_list.txt")
+fetchSeqs(spp_list, database="bold", out.dir="bold", quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE)
 ```
 
 ## Download mitochondrial genomes from GenBank
 
-We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region
+We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region from the genome.
+
+The fetchSeqs function accepts a special input argument of marker="mitochondria" to do this.
+
 ```{r Download mitochondria, eval=FALSE, include=TRUE}
-# Fetch mitochondria from genbank
-fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE, cores=1)
+# Fetch mitochondrial genomes from genbank by searching for a taxon name
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE)
+
+# Fetch mitochondrial genomes from genbank by searching for a taxon name
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE)
 ```
-
-# Get some outgroups using random subsampling of entrez query results
-```{r outgroups}
-outgroup_classes <- dplyr::bind_rows(taxize::downstream("Arthropoda", db="itis", downto="Class")) %>%
-  filter(!taxonname=="Insecta") %>%
-  pull(taxonname)
-outgroup_phyla <- dplyr::bind_rows(taxize::upstream("Insecta", db="itis", upto="Phylum")) %>%
-  pull(taxonname)
-outgroup_kingdoms <- c("Bacteria", "Fungi")
-
-outgroups <- c(outgroup_classes, outgroup_phyla, outgroup_kingdoms)
-
-fetchSeqs(outgroups, database="genbank", out.dir="outgroups", quiet=FALSE, marker="COI[GENE] OR CO1[GENE] OR COX1[GENE]", output = "gb-binom", subsample = 10, compress=TRUE, cores=1)
-```
-
 
 # Curating public reference sequences
 
+Due to the aforementioned issues with misannotated sequences in public reference databases we will use a number of filtering steps.
 
 ## Removing non-homologous sequences
 
-Due to the prevalence of misannotated data on public reference data we will use a number of filtering steps to try and curate this to only the markers desired. The first curation step we wish to use is to remove non-homologous markers
+The first 
+
+
 
 In order to reduce bias involved in mapping sequences to a single reference sequence, we will align them to a profile hidden markov model of the gene that uses a probablistic framework to take into account a wider range of diversity. To make this model we will use the aphid R package, and a curated alignment of insect COI sequences obtained from the Midori dataset and trimmed to the folmer region.
 
-This model can be loaded from the package data as below:
+A pretrained model of the conventional COI barcode or 'folmer' region can be loaded from the package data as below. This model was trained on the midori longest dataset of all COI sequences.
 
 ```{r load model}
 #model <- data("model", package="taxreturn")
 load("C:/Users/ap0y/Dropbox/R/taxreturn/data/model.rda")
 ```
 
-Or a new model can be trained on a new dataset or loci using:
+However if you are workign with a different barcode locus, or if you wish to improve accuracy by training on a specific taxonomic group you can train a new PHMM model using the aphid R package as below:
 
-```{r build PHMM,eval=FALSE}
-#build PHMM from midori longest - sequences need to be same length
-midori <-  Biostrings::readDNAStringSet("MIDORI_LONGEST_20180221_COI.fasta")
-insecta_midori <- as.DNAbin(midori[str_detect(names(midori),pattern=";Insecta;"),])
-folmer <- insect::virtualPCR(insecta_midori, up = "TITCIACIAAYCAYAARGAYATTGG", down= "TAIACYTCIGGRTGICCRAARAAYCA", 
-                             cores=2, rcdown = TRUE, trimprimers = TRUE)
+Note: if you are using a public dataset as a reference alignment to build the model, it may be worth further curating it manually first, as a poor reference alignment will produce a poor model and greatly affect downstream analysis
 
-filt <- folmer[lengths(folmer)==658]
+```{r build PHMM, eval=FALSE}
+# Load necessary packages
+library(Biostrings)
+library(insect)
+library(aphid)
 
-#alignment was then manually curated in geneious prime
-folmer_curated <-  ape::read.dna("folmer_insecta_fullength_aligned_curated.fa",format="fasta")
-model <- aphid::derivePHMM(folmer_curated)
+# Read in sequence dataset to be used in model training
+seqs <-  readDNAStringSet("MIDORI_LONGEST_20180221_COI.fasta")
+
+# Trim the sequences to the amplified region using a virtual PCR
+amplicon <- insect::virtualPCR(seqs,
+                               up = "TITCIACIAAYCAYAARGAYATTGG",  #Forward primer
+                               down= "TAIACYTCIGGRTGICCRAARAAYCA", #Reverse primer
+                             cores=1, rcdown = TRUE, trimprimers = TRUE)
+
+#Only retain amplicons of the appropriate length (in this case 658bp)
+amplicon_filtered <- amplicon[lengths(amplicon) == 658]
+model <- aphid::derivePHMM(amplicon_filtered)
 ```
 
-We will now use the cleanseqs function, and this model in order to remove putatively non-homolgous sequences. Firstly we will merge the sequences from each database together. As BOLD and GenBank share a number of sequences, we subset the merged file to only the unique sequences to speed things up.
+Now that we have our train PHMM model, we will use the cleanseqs function with the model to remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.
+
+Firstly we will merge the sequences from each database together. As BOLD and GenBank share a number of sequences, we subset the merged file to only the unique sequences to speed things up.
 
 As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases to the left and right of the model.
 
@@ -128,8 +156,7 @@ As we only wish to look at the sequence data contained within the range of our a
 library(Biostrings)
 
 seqs <- c(readDNAStringSet(list.files("genbank", pattern = ".fa", full.names = TRUE)),
-                readDNAStringSet(list.files("bold", pattern = ".fa", full.names = TRUE)),
-                readDNAStringSet(list.files("outgroups", pattern = ".fa", full.names = TRUE))
+                readDNAStringSet(list.files("bold", pattern = ".fa", full.names = TRUE))
                 )
 
 uniqSeqs <- seqs[unique(names(seqs)),] # Remove those sequnce names that are identical across both databases

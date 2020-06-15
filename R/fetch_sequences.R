@@ -1,4 +1,3 @@
-
 #' boldSearch
 #' @param x A taxon name or vector of taxa to download sequences for
 #' @param marker the barcode marker used as a search term for the database
@@ -84,8 +83,8 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
           sep = ";"
           ) %>%
           dplyr::mutate(name = name %>%
-            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-            trimws(which = "both"))
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
 
         # Binomial output
       } else if (output == "binom") {
@@ -93,8 +92,8 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
           na.omit() %>%
           tidyr::unite("name", c("sampleid", "species_name"), sep = ";") %>%
           dplyr::mutate(name = name %>%
-            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-            trimws(which = "both"))
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
 
         # BOLD taxID output
       } else if (output == "bold") {
@@ -102,8 +101,8 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
           na.omit() %>%
           tidyr::unite("name", c("sampleid", "species_taxID"), sep = ";") %>%
           dplyr::mutate(name = name %>%
-            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-            trimws(which = "both"))
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
 
         # Genbank taxID output
       } else if (output == "gb") {
@@ -117,13 +116,13 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h", out.file =
         # gb-binom
       } else if (output == "gb-binom") {
 
-          data <- data %>%
-            dplyr::select(sampleid, species_name, nucleotides) %>%
-            na.omit() %>%
-            dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
-            dplyr::left_join(db, by="tax_name") %>%
-            tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
-            tidyr::unite("name", c("name", "tax_name"), sep = ";")
+        data <- data %>%
+          dplyr::select(sampleid, species_name, nucleotides) %>%
+          na.omit() %>%
+          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+          dplyr::left_join(db, by="tax_name") %>%
+          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
+          tidyr::unite("name", c("name", "tax_name"), sep = ";")
       }
 
       # Problem -some bold sequences contain an Ionisine
@@ -211,7 +210,7 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
     if (!quiet) (cat("Using default marker 'COI[GENE] OR CO1[GENE] OR COX1[GENE]' \n"))
   } else if(!is.null(marker) && !marker %in% c("Mitochondria", "mitochondria","Mito", "mito", "mitochondrion", "Mitochondrion")  ) {
     marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]")
-    }
+  }
   if (is.null(out.file)) {
     name <- marker %>%
       stringr::str_replace_all(pattern="\\[GENE]", replacement ="") %>%
@@ -251,7 +250,7 @@ gbSearch <- function(x, marker = c("COI", "CO1", "COX1"), quiet = FALSE, output 
         message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
         chunksize=1000
-        }
+      }
 
       search_results <- rentrez::entrez_search(db = "nuccore", term = searchQ, retmax = 9999999, use_history = TRUE)
 
@@ -561,15 +560,15 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
     stopclustr <- FALSE
   } else if (cores > 1) {
     #check that cores are available
-      navailcores <- parallel::detectCores()
-      if(cores > navailcores) stop("Number of cores is more than number available")
+    navailcores <- parallel::detectCores()
+    if(cores > navailcores) stop("Number of cores is more than number available")
 
-      if (!quiet) cat("Multithreading with", cores, "cores\n")
-      cores <- parallel::makeCluster(cores, outfile = "out.txt")
-      junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "dplyr", "stringr", "purrr", "tidyr", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
-      para <- TRUE
-      stopclustr <- TRUE
-    }
+    if (!quiet) cat("Multithreading with", cores, "cores\n")
+    cores <- parallel::makeCluster(cores, outfile = "out.txt")
+    junk <- parallel::clusterEvalQ(cores, sapply(c("bold", "dplyr", "stringr", "purrr", "tidyr", "rentrez", "Biostrings", "biofiles"), require, character.only = TRUE))
+    para <- TRUE
+    stopclustr <- TRUE
+  }
 
   #Define directories
   if (is.null(out.dir)) {
@@ -608,10 +607,10 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
                           minlength = minlength, maxlength = maxlength,
                           compress = compress)
 
-      } else if (para == TRUE && is.numeric(subsample)){
-        message("Multithreading with genbank - With subsampling")
-        parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
-        parallel::parLapply(cores, taxon, gbSearch_subsample, marker = marker,
+    } else if (para == TRUE && is.numeric(subsample)){
+      message("Multithreading with genbank - With subsampling")
+      parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
+      parallel::parLapply(cores, taxon, gbSearch_subsample, marker = marker,
                           quiet = quiet, out.file = NULL, subsample = subsample,
                           output = output, minlength = minlength,
                           maxlength = maxlength, compress = compress)
@@ -625,9 +624,9 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
     } else if(para == FALSE && is.numeric(subsample)){
       message("Sequential processing with genbank - With subsampling")
       lapply(taxon, gbSearch_subsample, marker = marker, quiet = quiet, out.dir = out.dir,
-            out.file = NULL, output = output, subsample = subsample,
-            minlength = minlength, maxlength = maxlength, compress = compress)
-        }
+             out.file = NULL, output = output, subsample = subsample,
+             minlength = minlength, maxlength = maxlength, compress = compress)
+    }
 
   }
   # BOLD Multithread If possible

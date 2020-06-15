@@ -46,6 +46,7 @@ Imports:
     kmer,
     httr,
     DECIPHER
+Remotes: gschofl/biofiles
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
