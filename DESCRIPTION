@@ -45,8 +45,10 @@ Imports:
     rvest,
     kmer,
     httr,
-    DECIPHER
+    DECIPHER,
+    readr
 Remotes: gschofl/biofiles
+BiocViews:
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
