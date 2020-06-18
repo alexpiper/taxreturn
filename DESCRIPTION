@@ -46,7 +46,8 @@ Imports:
     kmer,
     httr,
     DECIPHER,
-    readr
+    readr,
+    fs
 Remotes: gschofl/biofiles
 BiocViews:
 Roxygen: list(markdown = TRUE)

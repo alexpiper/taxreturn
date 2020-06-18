@@ -1,7 +1,8 @@
 #' Download NCBI taxdump
 #'
-#' @param db
-#' @param synonyms
+#' @param dest.dir A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created
+#' @param synonyms Whether synonyms should be included in the database
+#' @param force Whether already downloaded files should be overwritten
 #'
 #' @return
 #' @export
@@ -9,12 +10,16 @@
 #' @import readr
 #'
 #' @examples
-get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
-  if (!identical(db, "NCBI")) {
-    stop("Only the NCBI taxonomy database is available in this version\n")
+get_ncbi_lineage <- function(dest.dir, synonyms = TRUE, force=FALSE) {
+  if(missing(dest.dir)){
+    #message("dest.dir is missing, downloading/looking for files in working directory")
+    dest.dir <- getwd()
   }
-  tmp <- tempdir()
-  if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp")) | !file.exists(paste0(tmp, "/tmp.tar.gz"))) {
+  tmp <- paste0(dest.dir,"/ncbi_taxdump")
+  if (!dir.exists(tmp)) {
+    dir.create(tmp) # Create first directory
+  }
+  if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp"))) {
     message("Downloading NCBI taxonomy database")
     fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
     download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
@@ -25,9 +30,28 @@ get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
     }
     file.remove(paste0(tmp, "/tmp.tar.gz"))
   }
-  message("Building data frame\n")
+  message("Building NCBI taxonomy data frame\n")
 
-  # Read data frame
+  ## Read data frame
+  #lin <- readr::read_tsv(paste0(tmp, "/rankedlineage.dmp"),
+  #                    delim="\t|",
+  #                    col_names = c("tax_id", "tax_name", "species", "genus", "family", "order", "class", "phylum", "kingdom", "superkingdom", "junk"),
+  #                    col_types = list(col_integer(),
+  #                                     col_character(),
+  #                                     col_character(),
+  #                                     col_character(),
+  #                                     col_character(),
+  #                                     col_character(),
+  #                                     col_character(),
+  #                                     col_character(),
+  #                                     col_character(),
+  #                                     col_character(),
+  #                                     col_character()
+#
+  #  )
+#
+  #) %>%
+  #  select(-junk)
   lin <- readr::read_tsv(paste0(tmp, "/rankedlineage.dmp"),
                          col_names = c("tax_id", "tax_name", "species", "genus", "family", "order", "class", "phylum", "kingdom", "superkingdom"),
                          col_types = ("i-c-c-c-c-c-c-c-c-c-")
@@ -54,7 +78,128 @@ get_ncbi_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
   return(lin)
 }
 
+# NCBI synonyms -----------------------------------------------------------
+#' Get NCBI synonyms
+#'
+#' @param dir A directory containing the NCBI taxonomy that was downloaded using get_ncbi_lineage
+#' @param quiet
+#'
+#' @return
+#' @export
+#' @import fs
+#' @import readr
+#' @import dplyr
+#'
+#' @examples
+get_ncbi_synonyms <- function(dir=NULL, quiet=FALSE) {
+  if (is.null(dir)){
+    dir <- fs::dir_ls(path = getwd(), type = "directory", glob = "*ncbi_taxdump", recurse = TRUE)
+    if(length(dir) == 0){
+      stop("ERROR: provide a directory containing ncbi taxonomy")
+    }
+  }
+  if(!quiet){message("Building synonyms data frame\n")}
+  file <- normalizePath(paste0(dir, "/names.dmp"))
+  x <- scan(
+    file = file, what = "", sep = "\n",
+    quiet = TRUE
+  )
 
+  parsed <- readr::read_delim(x,  delim="|", col_names = c("tax_id","tax_name", "unique_name", "class", "junk")) %>%
+    dplyr::select(-unique_name, -junk) %>%
+    dplyr::mutate_all( ~stringr::str_remove_all(.x,"\t"))
+
+  out <- parsed %>%
+    dplyr::group_by(tax_id) %>%
+    dplyr::filter(any(class=="synonym")) %>%
+    ungroup() %>%
+    dplyr::filter(!class=="scientific name")  %>%
+    dplyr::select(-class, synonym = tax_name) %>%
+    dplyr::left_join(parsed %>%
+                  dplyr::filter(class=="scientific name") %>%
+                  dplyr::select(tax_id, tax_name))
+  return(out)
+}
+
+
+# resolve_synonyms_ncbi ---------------------------------------------------
+
+#' resolve_synonyms_ncbi
+#'
+#' @param x A DNAbin or DNAStringSet Object
+#' @param quiet
+#'
+#' @return
+#' @export
+#' @import ape
+#' @import Biostrings
+#' @import stringr
+#' @import tibble
+#' @import tidyr
+#' @import dplyr
+#'
+#' @examples
+resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE) {
+  time <- Sys.time() # get time
+  if (quiet == TRUE) {
+    verbose <- FALSE
+  } else {
+    (verbose <- TRUE)
+  }
+
+  # Check type of input
+  if (is(x, "DNAbin")) {
+    message("Input is DNAbin")
+    is.seq <- TRUE
+  } else  if (is(x, "DNAStringSet")| is(x, "DNAString")) {
+    message("Input is DNAStringSet, converting to DNAbin")
+    x <- ape::as.DNAbin(x)
+    is.seq <- TRUE
+  } else  if (is(x, "character")) {
+    message("Input is character vector, resolving Genus species binomials")
+    is.seq <- FALSE
+  }
+
+  syns <- get_ncbi_synonyms(dir=dir)
+
+  # if input has sequences, get names
+  if (is.seq) {
+    query <- names(x) %>%
+      stringr::str_split_fixed(";", n = 2) %>%
+      tibble::as_tibble() %>%
+      tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
+      dplyr::rename(query = V2)
+  } else if (!is.seq) {
+    query <- data.frame(query= x)
+    query$tax_id <- "NA" # Add dummy columns
+    query$acc <- "NA"
+  }
+
+  #Get synonyms to replace
+  to_replace <- query %>%
+    dplyr::select(-tax_id) %>%
+    dplyr::filter(query %in% syns$synonym) %>%
+    dplyr::left_join(syns %>% dplyr::rename(query = synonym)) %>%
+    dplyr::select(-query)
+
+  if(nrow(to_replace) > 0){
+  out <- query %>%
+    dplyr::rename(tax_name = query) %>%
+    dplyr::rows_update(to_replace, by="acc") %>%
+    tidyr::unite(col = V1, c("acc", "tax_id"), sep = "|")
+
+  if(is.seq) {
+      names(x) <- paste(out$V1, out$tax_name, sep = ";")
+    } else if (!is.seq) {
+      x  <- paste(out$V1, out$tax_name, sep = ";")
+    }
+  time <- Sys.time() - time
+  if (!quiet) {message(paste0("resolved ", nrow(to_replace), " synonyms in ", format(time, digits = 2)))}
+  } else (message("No synonyms detected"))
+  return(x)
+}
+
+#
 #' (Deprecated) Get ranked Lineage
 #'
 #' @param db

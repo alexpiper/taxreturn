@@ -122,7 +122,7 @@ reformat_hierarchy <- function(x, db = NULL, quiet = FALSE,
   if(attr(db, "type") == "ncbi"){
     # Split current names
     seqnames <- names(x) %>%
-      stringr::str_replace(";$", "") %>%
+      stringr::str_remove(";$") %>%
       stringr::str_split_fixed(";", n = Inf) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|")%>%
@@ -140,7 +140,8 @@ reformat_hierarchy <- function(x, db = NULL, quiet = FALSE,
       tidyr::unite(col = names, c(!!ranks), sep = ";")
   }
 
-  names(x) <- paste(lineage$Acc, lineage$names, "", sep = ";")
+  names(x) <- paste(lineage$Acc, lineage$names, "", sep = ";") %>%
+  stringr::str_remove(";$")
   time <- Sys.time() - time
   if (!quiet) (message(paste0("Reformatted annotations for ", length(x), " sequences in ", format(time, digits = 2))))
   return(x)
@@ -263,12 +264,12 @@ get_lineage <- function(x, db){
 #' @import stringr
 #'
 #' @examples
-train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  get_lineage=FALSE, db = NULL, quiet = FALSE, force=FALSE) {
+train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  get_lineage=FALSE, db = NULL, quiet = FALSE) {
   time <- Sys.time() # get time
 
   #Reformat to complete taxonomic hierarchy
   if(get_lineage & !is.null(db)){
-  seqs <- taxreturn::reformat_hierarchy(x, db=db, quiet=FALSE, force=force)
+  seqs <- taxreturn::reformat_hierarchy(x, db=db, quiet=FALSE)
   } else if(get_lineage &  is.null(db)){
     stop("If get_lineage is TRUE, a db needs to be provided")
   } else  (seqs <- x)

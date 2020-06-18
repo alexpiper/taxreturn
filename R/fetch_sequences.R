@@ -582,7 +582,9 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE, quiet = TR
   #Evaluate downstream
   if (is.character(downstream)) {
     if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
-    taxlist <- dplyr::bind_rows(taxize::downstream(x, db = "ncbi", downto = downstream)) %>%
+    taxlist <- taxize::downstream(x, db = "ncbi", downto = downstream) %>%
+      as("list") %>%
+      dplyr::bind_rows() %>%
       dplyr::filter(rank == stringr::str_to_lower(!!downstream)) %>%
       dplyr::mutate(downloaded = FALSE)
 

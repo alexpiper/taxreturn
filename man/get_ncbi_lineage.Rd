@@ -4,10 +4,14 @@
 \alias{get_ncbi_lineage}
 \title{Download NCBI taxdump}
 \usage{
-get_ncbi_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
+get_ncbi_lineage(dest.dir, synonyms = TRUE, force = FALSE)
 }
 \arguments{
-\item{synonyms}{}
+\item{dest.dir}{A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created}
+
+\item{synonyms}{Whether synonyms should be included in the database}
+
+\item{force}{Whether already downloaded files should be overwritten}
 }
 \value{
 

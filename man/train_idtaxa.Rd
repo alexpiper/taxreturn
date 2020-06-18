@@ -11,8 +11,7 @@ train_idtaxa(
   allowGroupRemoval = TRUE,
   get_lineage = FALSE,
   db = NULL,
-  quiet = FALSE,
-  force = FALSE
+  quiet = FALSE
 )
 }
 \arguments{
