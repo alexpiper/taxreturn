@@ -128,7 +128,11 @@ The first step is to remove non-homologous loci by mapping to a reference of COI
 A pretrained model of the conventional COI barcode or 'folmer' region can be loaded from the package data as below. This model was trained on the midori longest dataset of all COI sequences.
 
 ```{r load model}
+#This loads the model into the workspace
 data("model", package="taxreturn")
+
+#See what it looks like
+print(model)
 ```
 
 However if you are workign with a different barcode locus, or if you wish to improve accuracy by training on a specific taxonomic group you can train a new PHMM model using the aphid R package as below:
@@ -221,6 +225,8 @@ names(resolved)[which(!names(resolved) %in% names(purged))]
 
 In many cases groups of taxa are over-represented in databases, which can slow down and bias the taxonomic assignment process. Here we prune over-represented groups down to 5 sequences. This function has the option of discarding these sequences by length (ie removing smaller sequences first), or randomly.
 
+We can also choose to de-duplicate the sequences here, which will remove all completely identical sequences before pruning down the group sizes.
+
 ```{r prune groups}
 #Prune group sizes down to 5, removing all identical sequences first
 pruned <- prune_groups(resolved, maxGroupSize = 5, discardby="length", dedup=TRUE, quiet = FALSE)
@@ -263,7 +269,7 @@ insect::writeFASTA(hierarchy, file = "COI_reference_hierarchial.fa.gz", compress
 Finally, we can output a few summary metrics for our final curated database, such as the number of unique sequences for each taxonomic rank:
 
 ```{r summary unique}
-names(heirarchy) %>%
+names(hierarchy) %>%
   str_split_fixed(";", n=8) %>%
   as_tibble() %>%
   tidyr::separate(V1, into=c("Sequences", "taxids")) %>%
