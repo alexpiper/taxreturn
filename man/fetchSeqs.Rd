@@ -16,6 +16,7 @@ fetchSeqs(
   subsample = FALSE,
   out.dir = NULL,
   compress = TRUE,
+  force = FALSE,
   cores = 1,
   ...
 )
@@ -23,9 +24,16 @@ fetchSeqs(
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
 
+\item{database}{The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
+Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'}
+
 \item{marker}{The barcode marker used as a search term for the database.
 The default for Genbank is 'COI OR COI OR COX1 OR COXI', while the default for BOLD is 'COI-5P'.
-If this is set to "mitochondria" and database = "genbank" it will download full mitochondrial genomes.}
+If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
+If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.}
+
+\item{downstream}{Instead of search for the query sequence, this provides the option of instead searching for a downstream taxonomic rank.
+This is useful for big queries where >100k sequences will be downloaded. For example, when x is 'Insecta', and downsteam is Order, this will download all Orders within insecta and thus not overload the query. Default is FALSE.}
 
 \item{quiet}{(Optional) Print text output}
 
@@ -44,6 +52,8 @@ This can be useful for ensuring no off-target sequences are returned. Default 20
 \item{out.dir}{Output directory to write fasta files to}
 
 \item{compress}{Option to compress output fasta files using gzip}
+
+\item{force}{Option ot overwright files if they already exist}
 
 \item{cores}{Number of cores to use}
 }

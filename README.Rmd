@@ -21,6 +21,9 @@ knitr::opts_chunk$set(
 
 taxreturn is an R package for fetching DNA barcode sequences and associated taxonomic annotations from public databases such as the Barcode of Life Database (BOLD) and NCBI GenBank, curating these sequences and formatting them into training sets compatible with popular taxonomic classifiers used for metabarcoding and marker gene analysis.
 
+
+**This package is still in development and many functions are likely to change**
+
 ## Installation
 
 This package is still in development and not yet available on CRAN.  You can install development version from [GitHub](https://github.com/) with:

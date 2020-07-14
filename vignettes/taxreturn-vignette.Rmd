@@ -83,11 +83,11 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank by searching for a taxon name
-fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream=FALSE, marker="COI OR COI OR COX1 OR COXI", quiet=FALSE, output = "gb-binom", compress=TRUE)
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream=FALSE, marker="COI OR COI OR COX1 OR COXI", quiet=FALSE, output = "gb-binom", compress=TRUE, force=TRUE)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output = "gb-binom", marker="COI OR COI OR COX1 OR COXI", compress=TRUE)
+fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output = "gb-binom", marker="COI OR COI OR COX1 OR COXI", compress=TRUE, force=TRUE)
 ```
 
 
@@ -95,11 +95,11 @@ fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output =
 
 ```{r Download BOLD Sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from BOLD by searching for a taxon name
-fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream=FALSE, quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE)
+fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream=FALSE, quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(spp_list, database="bold", out.dir="bold", quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE)
+fetchSeqs(spp_list, database="bold", out.dir="bold", quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE)
 ```
 
 ## Download mitochondrial genomes from GenBank
@@ -178,9 +178,7 @@ filtered <- clean_seqs(uniqSeqs, model, minscore = 100, cores=1, shave=TRUE)
 
 ## Resolve Contaminated sequences and misannotated taxonomy
 
-The other main form of misannotation that can effect metabarcoding datasets is incorrect taxonomy for the reference sequences. To resolve this issue, we use the purge function from the insect R package, which clusters sequences at a specific similarity threshold (in this case 99% simularity), and compares the heirarchial taxonomy within clusters. When the taxonomy of a sequences diverges from the other sequences in its cluster, it is removed as a putative misannotation. The confidence required the remove a sequence can be adjusted. In this case we use a confidence threshold of 0.8, which indicates the putative misannotated sequence must diverge from 4/5 other sequences in its cluster to be removed from the dataset.
-
-insect::purge requires specifically formated names, so we do some transformations to get the names in this format, retaining the old names in the attributes. These old names are then restored following removal of missanotated sequences
+The other main form of misannotation that can effect metabarcoding datasets is incorrect taxonomy for the reference sequences. To resolve this issue, we will cluster sequences at a specific similarity threshold (in this case 97% simularity), and compares the heirarchial taxonomy within clusters. When the taxonomy of a sequences diverges from the other sequences in its cluster, it is removed as a putative misannotation. The confidence required the remove a sequence can be adjusted. In this case we use a confidence threshold of 0.8, which indicates the putative misannotated sequence must diverge from 4/5 other sequences in its cluster to be removed from the dataset.
 
 ```{r get mixed clusters}
 # Load the NCBI taxonomic lineage
@@ -194,11 +192,20 @@ mixed_clusters <- taxreturn::get_mixed_clusters(
     return = "consensus",
     confidence=0.6, quiet = FALSE) 
 
-# Gett accession numbers to remove
+# Get accession numbers to remove
 rem <- mixed_clusters$Acc
 
 purged  <- subset.DNAbin(filtered, subset = !str_replace(names(filtered), "(?:.(?!;))+$", "") %in% rem)
 ```
+
+## Optional: Blast against wolbachia genome
+
+```{r wolbachia}
+fetchSeqs("wolbachia pipientis", database="genbank", out.dir="wolbachia", quiet=FALSE, marker="genome", output = "gb-binom", compress=TRUE)
+
+```
+
+
 
 ## Optional: Filter for stop codons
 

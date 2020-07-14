@@ -6,6 +6,7 @@
 \usage{
 gbSearch(
   x,
+  database = "nuccore",
   marker = c("COI", "CO1", "COX1"),
   quiet = FALSE,
   output = "h",
@@ -14,6 +15,7 @@ gbSearch(
   subsample = NULL,
   out.file = NULL,
   compress = FALSE,
+  force = FALSE,
   out.dir = NULL
 )
 }
@@ -32,6 +34,8 @@ or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomi
 \item{out.file}{The file to write to, if empty it defaults to the search term}
 
 \item{compress}{Option to compress output fasta files using gzip}
+
+\item{force}{Option ot overwright files if they already exist}
 
 \item{out.dir}{Output directory to write fasta files to}
 }

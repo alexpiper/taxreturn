@@ -15,6 +15,9 @@ Barcode of Life Database (BOLD) and NCBI GenBank, curating these
 sequences and formatting them into training sets compatible with popular
 taxonomic classifiers used for metabarcoding and marker gene analysis.
 
+**This package is still in development and many functions are likely to
+change**
+
 ## Installation
 
 This package is still in development and not yet available on CRAN. You
@@ -30,7 +33,7 @@ library(taxreturn)
 
 The main vignette demonstrates example usage of all main functions. This
 can be accessed using the following code, or a rendered version can be
-accessed [here](https://alexpiper.github.io/taxreturn/vignettes/taxreturn-vignette.html)
+accessed here
 
 ``` r
 # Use this to view the vignette as an isolated HTML file
