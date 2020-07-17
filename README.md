@@ -33,7 +33,7 @@ library(taxreturn)
 
 The main vignette demonstrates example usage of all main functions. This
 can be accessed using the following code, or a rendered version can be
-accessed here
+accessed [here](https://alexpiper.github.io/taxreturn/vignettes/taxreturn-vignette.html)
 
 ``` r
 # Use this to view the vignette as an isolated HTML file
