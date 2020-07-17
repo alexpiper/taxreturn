@@ -237,7 +237,7 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
     } else if (is.null(out.dir) && compress == TRUE) {
       out.file <- paste0(getwd(), "/", "genbank/", stringr::str_replace_all(x,pattern=" ", replacement="_"), "_", name, ".fa.gz")
     }
-    if (!quiet) (message(paste0("No input file given, saving output file to: ", out.file)))
+    if (!quiet) (message(paste0("No output file given, saving output file to: ", out.file)))
     if (!file.exists("genbank")) {
       dir.create("genbank")
     }
@@ -271,8 +271,8 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
 
       search_results <- rentrez::entrez_search(db = database, term = searchQ, retmax = 9999999, use_history = TRUE)
 
-      if (search_results$count != 0 & !is.na(search_results$count)) {
-        if (!quiet) (message(paste0(search_results$count, " Sequences to be downloaded for: ", searchQ)))
+      if (search_results$count > 0 & !is.na(search_results$count)) {
+        if (!quiet) {message(paste0(search_results$count, " Sequences to be downloaded for: ", searchQ))}
 
         l <- 1
         start <- 0
@@ -305,20 +305,23 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
           # Hierarchial output
           if (output == "h") {
             lineage <- biofiles::getTaxonomy(gb) %>%
-              str_split_fixed(pattern = ";", n = Inf) %>%
+              stringr::str_remove(".$") %>%
+              stringr::str_split_fixed(pattern = ";", n = Inf) %>%
               trimws(which = "both") %>%
-              as_tibble() %>%
+              as.data.frame() %>%
               dplyr::mutate(Species = biofiles::getOrganism(gb)) %>%
-              dplyr::mutate(Genus = str_replace(V15, pattern = "[.]", replacement = "")) %>%
-              tidyr::unite("names", c("V1", "V2", "V4", "V6", "V10", "V14", "Genus", "Species"), sep = ";") %>%
-              dplyr::mutate(names = str_replace(names, pattern = " ", replacement = "_"))
-            names <- paste0(names(biofiles::getSequence(gb)), ";", lineage$names)
+              tidyr::unite("names", everything(), sep = ";") %>%
+              dplyr::mutate(names = names %>%
+                              stringr::str_replace_all(pattern = " ", replacement = "_")%>%
+                              stringr::str_replace_all(pattern = ";;", replacement = ";"))
+            names <- paste0(biofiles::getAccession(gb), ";", lineage$names)
 
             # Genbank taxID output
           } else if (output == "gb") {
             names <- cat_acctax(gb)
           } else if (output == "binom") {
-            names <- paste0(biofiles::getAccession(x), ";", biofiles::getOrganism(gb))
+            names <- paste0(biofiles::getAccession(gb), ";", biofiles::getOrganism(gb))%>%
+              stringr::str_replace_all(pattern = " ", replacement = "_")
           } else if (output == "gb-binom") {
             names <- paste0(cat_acctax(gb), ";", biofiles::getOrganism(gb))
           }
@@ -330,7 +333,7 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
           #Check if names match
           names(seqs) <- names[names %>%
                                  stringr::str_remove(pattern=";.*$") %>%
-                                 stringr::str_remove(pattern="\\|;.*$")
+                                 stringr::str_remove(pattern="\\|.*$")
                                %in% names(seqs)]
           if (compress == TRUE) {
             Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
@@ -343,7 +346,10 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
           Sys.sleep(2.5)
           if (l >= chunks) {
             time <- Sys.time() - time
-            if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from Genbank ", " in ", format(time, digits = 2))))
+            if (!quiet) {
+              counter <- nrow(Biostrings::fasta.index(out.file))
+              message(paste0("Downloaded ",counter, " of ", length(seqs), " ", x, " Sequences from Genbank ", " in ", format(time, digits = 2)))
+              }
           }
         }
       }
@@ -644,8 +650,8 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
   #If taxon is a vector
   # Genbank Multithread If possible
   if (database %in% c("nuccore")) {
-    taxon <- if (para == TRUE && subsample==FALSE) {
-      message("Multithreading with genbank - No subsampling")
+    if (para == TRUE && subsample==FALSE) {
+      message("Multithread downloading from genbank - No subsampling")
       parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
       parallel::parLapply(cores, taxon, gbSearch, database = database, marker = marker,
                           quiet = quiet, out.file = NULL, output = output,
@@ -653,21 +659,21 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
                           compress = compress, force=force)
 
     } else if (para == TRUE && is.numeric(subsample)){
-      message("Multithreading with genbank - With subsampling")
+      message("Multithread downloading from genbank - With subsampling")
       parallel::clusterExport(cl = cores, varlist = c("taxon", "gbSearch", "quiet", "out.dir", "output", "minlength", "maxlength", "compress"), envir = environment())
       parallel::parLapply(cores, taxon, gbSearch_subsample, database = database, marker = marker,
                           quiet = quiet, out.file = NULL, subsample = subsample,
                           output = output, minlength = minlength,
                           maxlength = maxlength, compress = compress, force=force)
     } else if(para == FALSE && subsample==FALSE){
-      message("Sequential processing with genbank - No subsampling")
+      message("Sequential downloading from genbank - No subsampling")
       lapply(taxon, gbSearch, database = database, marker = marker,
              quiet = quiet, out.dir = out.dir,
              out.file = NULL, output = output,
              minlength = minlength, maxlength = maxlength,
              compress = compress, force=force)
     } else if(para == FALSE && is.numeric(subsample)){
-      message("Sequential processing with genbank - With subsampling")
+      message("Sequential downloading from genbank - With subsampling")
       lapply(taxon, gbSearch_subsample, database = database, marker = marker, quiet = quiet, out.dir = out.dir,
              out.file = NULL, output = output, subsample = subsample,
              minlength = minlength, maxlength = maxlength, compress = compress, force=force)
@@ -683,12 +689,12 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
 
     # Multithread
     bold_taxon <- if (para == TRUE) {
-      message("Multithreading with BOLD")
+      message("Multithread downloading from BOLD")
       parallel::parLapply(cores, bold_taxon, boldSearch, marker = marker,
                           quiet = quiet, out.file = NULL, output = output,
                           compress = compress, force=force, db=db)
     } else {
-      message("Sequential processing with BOLD")
+      message("Sequential downloading from BOLD")
       lapply(bold_taxon, boldSearch, marker = marker,
              quiet = quiet, out.dir = out.dir, out.file = NULL,
              output = output, compress = compress, force=force, db=db)
