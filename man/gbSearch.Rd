@@ -13,6 +13,7 @@ gbSearch(
   minlength = 1,
   maxlength = 2000,
   subsample = NULL,
+  chunksize = NULL,
   out.file = NULL,
   compress = FALSE,
   force = FALSE,

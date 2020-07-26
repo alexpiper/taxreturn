@@ -519,3 +519,83 @@ lca_probs <- function(x, method="mbed",  k=5, nstart = 20, ranks=c("kingdom", "p
     dplyr::summarise(prob = mean(prob))
   return(out)
 }
+
+
+
+# gid_to_acc --------------------------------------------------------------
+
+
+#' Convert NCBI gene ids to accession numbers
+#'
+#' @param ids A character or numeric vector of NCBI gids
+#' @param db The origin database of the gids, default 'nuccore'
+#' @param chunksize The size of the chunked searches to conduct.
+#' Warning, chunk sizes over 300 can be too big for the NCBI servers.
+#' @param multithread Whether multithreading should be used
+#' @param quiet (Optional) Print text output
+#'
+#' @return
+#' @export
+#' @import future
+#' @import furrr
+#' @import rentrez
+#' @import purrr
+#'
+#'
+#' @examples
+gid_to_acc <- function(ids, db="nuccore", chunksize=300, multithread=TRUE, quiet=FALSE){
+  if(!class(ids) %in% c("character", "numeric")){
+    stop("input ids must be a character or numeric vector of NCBI gids")
+  }
+  time <- Sys.time() # get time
+
+  # split search into chunks
+  chunks <- split(ids, ceiling(seq_along(ids)/chunksize))
+  if(!quiet){message(paste0("Converting ", length(ids), " NCBI gids to accession numbers in ", length(chunks), " chunks"))}
+
+  # setup multithreading
+  if(multithread){
+    future::plan(future::multiprocess)
+  } else if(!multithread){
+    future::plan(future::sequential)
+  }
+
+  #Main function
+  out <- furrr::future_map(chunks, function(x){
+    upload <- rentrez::entrez_post(db=db, id=x)
+    dl <- rentrez::entrez_fetch(db = database, web_history = upload, rettype = "acc", retmax = chunksize)
+    acc <- readLines(textConnection(dl))
+    acc <- acc[!acc==""]
+    return(acc)
+  }) %>%
+    unlist(out, use.names=FALSE)
+
+  #finished
+  time <- Sys.time() - time
+  if (!quiet) {message(paste0("Sucessfully converted ", length(out), " of ", length(ids), " NCBI gids to accession numbers in ", format(time, digits = 2)))}
+  return(out)
+}
+
+# Accessions from fasta ---------------------------------------------------
+
+#' Genbank accessions from fasta
+#'
+#' @param x A filepath or vector of filepaths to fasta files
+#'
+#' @return
+#' @export
+#' @import Biostrings
+#' @import dplyr
+#'
+#' @examples
+acc_from_fasta <- function(x) {
+  if(!all(file.exists(x))){
+    stop("Input must be a filepath or vector of filepaths to fasta files")
+  }
+  out <- Biostrings::fasta.index(x) %>%
+    dplyr::mutate(acc = desc %>%
+                    stringr::str_remove(pattern="\\|.*$")) %>%
+    dplyr::pull(acc)
+
+  return(out)
+}

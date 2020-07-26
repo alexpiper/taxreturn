@@ -13,7 +13,7 @@ gbSearch_subsample(
   minlength = 1,
   maxlength = 2000,
   subsample = 1000,
-  chunk_size = 300,
+  chunksize = 300,
   out.file = NULL,
   compress = FALSE,
   force = FALSE,

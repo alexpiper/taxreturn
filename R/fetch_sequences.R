@@ -202,7 +202,7 @@ boldSearch <- function(x, marker = NULL, quiet = FALSE, output = "h",
 #'
 #' @examples
 gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h",
-                     minlength = 1, maxlength = 2000, subsample=NULL,
+                     minlength = 1, maxlength = 2000, subsample=NULL, chunksize=NULL,
                      out.file = NULL, compress = FALSE, force=FALSE, out.dir = NULL) {
 
   # function setup
@@ -258,15 +258,15 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
       # Genbank Search
       if (!tolower(marker) %in%c("mitochondria", "mitochondrion", "genome")) {
         searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
-        chunksize=10000
+        if(is.null(chunksize)) {chunksize=10000}
       } else if (tolower(marker) %in% c("mitochondria", "mitochondrion")) {
         message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
-        chunksize=1000
+        if(is.null(chunksize)) {chunksize=1000}
       } else if (tolower(marker) %in% c("genome", "mitochondrion")){
         message(paste0("Input marker is ", marker, ", Downloading full genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
-        chunksize=1
+        if(is.null(chunksize)) {chunksize=1}
       }
 
       search_results <- rentrez::entrez_search(db = database, term = searchQ, retmax = 9999999, use_history = TRUE)
@@ -327,7 +327,7 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
           }
           # Output FASTA
           seqs <- biofiles::getSequence(gb) # Something failing here - getting much less than the proper amount
-          if(is.na(names(seqs))) {
+          if(all(is.na(names(seqs)))) {
             names(seqs) <- biofiles::getAccession(gb)
           }
           #Check if names match
@@ -348,7 +348,7 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
             time <- Sys.time() - time
             if (!quiet) {
               counter <- nrow(Biostrings::fasta.index(out.file))
-              message(paste0("Downloaded ",counter, " of ", length(seqs), " ", x, " Sequences from Genbank ", " in ", format(time, digits = 2)))
+              message(paste0("Downloaded ",counter, " of ", length(search_results$ids), " ", x, " Sequences from Genbank ", " in ", format(time, digits = 2)))
               }
           }
         }
@@ -395,7 +395,7 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
 #' @examples
 gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"),
                                quiet = FALSE, output = "h", minlength = 1, maxlength = 2000,
-                               subsample=1000, chunk_size=300, out.file = NULL,
+                               subsample=1000, chunksize=300, out.file = NULL,
                                compress = FALSE, force=FALSE, out.dir = NULL) {
   # function setup
   time <- Sys.time() # get time
@@ -449,11 +449,11 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
       # Genbank Search
       if (!tolower(marker) %in%c("mitochondria", "mitochondrion", "genome")) {
         searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
-        chunksize=10000
+        chunksize=5000
       } else if (tolower(marker) %in% c("mitochondria", "mitochondrion")) {
         message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
-        chunksize=1000
+        chunksize=500
       } else if (tolower(marker) %in% c("genome", "mitochondrion")){
         message(paste0("Input marker is ", marker, ", Downloading full genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
@@ -467,7 +467,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
         if (!quiet) (message(paste0(subsample, " of: ", search_results$count, " sequences to be downloaded for: ", searchQ)))
 
         ids <- sample(search_results$ids, subsample )
-        chunks <- split(ids, ceiling(seq_along(ids)/chunk_size))
+        chunks <- split(ids, ceiling(seq_along(ids)/chunksize))
 
         l <- 1
 
@@ -529,7 +529,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
           Sys.sleep(2.5)
           if (l >= length(chunks)) {
             time <- Sys.time() - time
-            if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from Genbank ", " in ", format(time, digits = 2))))
+            if (!quiet) (message(paste0("Downloaded ", length(search_results$ids), " ", x, " Sequences from Genbank ", " in ", format(time, digits = 2))))
           }
         }
       }
@@ -586,7 +586,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
 #' @examples
 fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
                       quiet = TRUE, output = "h", minlength = 1, maxlength = 2000,
-                      subsample=FALSE, out.dir = NULL, compress = TRUE, force=FALSE, cores = 1,...) {
+                      subsample=FALSE, chunksize=NULL, out.dir = NULL, compress = TRUE, force=FALSE, cores = 1,...) {
 
   if(!database %in% c("nuccore", "genbank", "bold")) {
     stop("database is invalid. See help page for more details")
@@ -656,7 +656,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
       parallel::parLapply(cores, taxon, gbSearch, database = database, marker = marker,
                           quiet = quiet, out.file = NULL, output = output,
                           minlength = minlength, maxlength = maxlength,
-                          compress = compress, force=force)
+                          compress = compress, chunksize=chunksize, force=force, ...=...)
 
     } else if (para == TRUE && is.numeric(subsample)){
       message("Multithread downloading from genbank - With subsampling")
@@ -664,19 +664,19 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
       parallel::parLapply(cores, taxon, gbSearch_subsample, database = database, marker = marker,
                           quiet = quiet, out.file = NULL, subsample = subsample,
                           output = output, minlength = minlength,
-                          maxlength = maxlength, compress = compress, force=force)
+                          maxlength = maxlength, compress = compress, chunksize=chunksize, force=force, ...=...)
     } else if(para == FALSE && subsample==FALSE){
       message("Sequential downloading from genbank - No subsampling")
       lapply(taxon, gbSearch, database = database, marker = marker,
              quiet = quiet, out.dir = out.dir,
              out.file = NULL, output = output,
              minlength = minlength, maxlength = maxlength,
-             compress = compress, force=force)
+             compress = compress, chunksize=chunksize, force=force, ...=...)
     } else if(para == FALSE && is.numeric(subsample)){
       message("Sequential downloading from genbank - With subsampling")
       lapply(taxon, gbSearch_subsample, database = database, marker = marker, quiet = quiet, out.dir = out.dir,
              out.file = NULL, output = output, subsample = subsample,
-             minlength = minlength, maxlength = maxlength, compress = compress, force=force)
+             minlength = minlength, maxlength = maxlength, compress = compress, chunksize=chunksize, force=force, ...=...)
     }
 
   }
@@ -692,12 +692,12 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
       message("Multithread downloading from BOLD")
       parallel::parLapply(cores, bold_taxon, boldSearch, marker = marker,
                           quiet = quiet, out.file = NULL, output = output,
-                          compress = compress, force=force, db=db)
+                          compress = compress, force=force, db=db, ...=...)
     } else {
       message("Sequential downloading from BOLD")
       lapply(bold_taxon, boldSearch, marker = marker,
              quiet = quiet, out.dir = out.dir, out.file = NULL,
-             output = output, compress = compress, force=force, db=db)
+             output = output, compress = compress, force=force, db=db, ...=...)
     }
   }
 
@@ -712,4 +712,3 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
     return(x)
   }
 }
-

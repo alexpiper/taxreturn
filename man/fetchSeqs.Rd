@@ -14,6 +14,7 @@ fetchSeqs(
   minlength = 1,
   maxlength = 2000,
   subsample = FALSE,
+  chunksize = NULL,
   out.dir = NULL,
   compress = TRUE,
   force = FALSE,
