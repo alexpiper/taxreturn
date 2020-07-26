@@ -9,7 +9,6 @@ fetchSeqs(
   database,
   marker = NULL,
   downstream = FALSE,
-  quiet = TRUE,
   output = "h",
   minlength = 1,
   maxlength = 2000,
@@ -18,12 +17,14 @@ fetchSeqs(
   out.dir = NULL,
   compress = TRUE,
   force = FALSE,
-  cores = 1,
+  multithread = TRUE,
+  quiet = TRUE,
+  progress = FALSE,
   ...
 )
 }
 \arguments{
-\item{x}{A taxon name or vector of taxa to download sequences for}
+\item{x}{A taxon name or vector of taxon names to download sequences for.}
 
 \item{database}{The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'}
@@ -35,8 +36,6 @@ If this is set to "genome" and database is 'nuccore', or 'genbank'it will downlo
 
 \item{downstream}{Instead of search for the query sequence, this provides the option of instead searching for a downstream taxonomic rank.
 This is useful for big queries where >100k sequences will be downloaded. For example, when x is 'Insecta', and downsteam is Order, this will download all Orders within insecta and thus not overload the query. Default is FALSE.}
-
-\item{quiet}{(Optional) Print text output}
 
 \item{output}{The output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -54,9 +53,15 @@ This can be useful for ensuring no off-target sequences are returned. Default 20
 
 \item{compress}{Option to compress output fasta files using gzip}
 
-\item{force}{Option ot overwright files if they already exist}
+\item{force}{Option to overwrite files if they already exist}
 
-\item{cores}{Number of cores to use}
+\item{multithread}{Whether multithreading should be used.
+Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
+if x is a vector, or of downstream is being used.}
+
+\item{quiet}{(Optional) Print text output}
+
+\item{progress}{A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.}
 }
 \value{
 

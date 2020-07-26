@@ -2,6 +2,7 @@
 
 export("%>%")
 export(.findExecutable)
+export(acc_from_fasta)
 export(alignment_entropy)
 export(blast)
 export(blast_install)

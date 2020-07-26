@@ -83,11 +83,11 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank by searching for a taxon name
-fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream=FALSE, marker="COI OR COI OR COX1 OR COXI", quiet=FALSE, output = "gb-binom", compress=TRUE, force=TRUE)
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", compress=TRUE, force=TRUE, multithread = TRUE)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output = "gb-binom", marker="COI OR COI OR COX1 OR COXI", compress=TRUE, force=TRUE)
+fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output = "gb-binom", marker="COI OR COI OR COX1 OR COXI", compress=TRUE, force=TRUE, multithread = TRUE)
 ```
 
 
@@ -95,11 +95,11 @@ fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output =
 
 ```{r Download BOLD Sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from BOLD by searching for a taxon name
-fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream=FALSE, quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE)
+fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE, multithread = TRUE)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(spp_list, database="bold", out.dir="bold", quiet=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE)
+fetchSeqs(spp_list, database="bold", out.dir="bold", marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE, multithread = TRUE)
 ```
 
 ## Download mitochondrial genomes from GenBank
@@ -110,11 +110,11 @@ The fetchSeqs function accepts a special input argument of marker="mitochondria"
 
 ```{r Download mitochondria, eval=FALSE, include=TRUE}
 # Fetch mitochondrial genomes from genbank by searching for a taxon name
-fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE)
+fetchSeqs("Drosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", force=TRUE, compress=TRUE, multithread = TRUE)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", compress=TRUE)
+fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", force=TRUE, compress=TRUE, multithread = TRUE)
 ```
 
 # Curating public reference sequences

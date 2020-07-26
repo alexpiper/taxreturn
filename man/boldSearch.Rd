@@ -6,7 +6,7 @@
 \usage{
 boldSearch(
   x,
-  marker = NULL,
+  marker = "COI-5P",
   quiet = FALSE,
   output = "h",
   out.file = NULL,

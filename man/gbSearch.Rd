@@ -14,10 +14,9 @@ gbSearch(
   maxlength = 2000,
   subsample = NULL,
   chunksize = NULL,
-  out.file = NULL,
+  out.dir = NULL,
   compress = FALSE,
-  force = FALSE,
-  out.dir = NULL
+  force = FALSE
 )
 }
 \arguments{
@@ -32,13 +31,13 @@ Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Ord
 "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process}
 
-\item{out.file}{The file to write to, if empty it defaults to the search term}
+\item{out.dir}{Output directory to write fasta files to}
 
 \item{compress}{Option to compress output fasta files using gzip}
 
 \item{force}{Option ot overwright files if they already exist}
 
-\item{out.dir}{Output directory to write fasta files to}
+\item{out.file}{The file to write to, if empty it defaults to the search term}
 }
 \value{
 
