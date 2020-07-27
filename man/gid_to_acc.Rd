@@ -6,7 +6,7 @@
 \usage{
 gid_to_acc(
   ids,
-  db = "nuccore",
+  database = "nuccore",
   chunksize = 300,
   multithread = TRUE,
   progress = FALSE,
@@ -16,7 +16,7 @@ gid_to_acc(
 \arguments{
 \item{ids}{A character or numeric vector of NCBI gids}
 
-\item{db}{The origin database of the gids, default 'nuccore'}
+\item{database}{The origin database of the gids, default 'nuccore'}
 
 \item{chunksize}{The size of the chunked searches to conduct.
 Warning, chunk sizes over 300 can be too big for the NCBI servers.}

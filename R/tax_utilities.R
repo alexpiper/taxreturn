@@ -528,11 +528,11 @@ lca_probs <- function(x, method="mbed",  k=5, nstart = 20, ranks=c("kingdom", "p
 #' Convert NCBI gene ids to accession numbers
 #'
 #' @param ids A character or numeric vector of NCBI gids
-#' @param db The origin database of the gids, default 'nuccore'
+#' @param database The origin database of the gids, default 'nuccore'
 #' @param chunksize The size of the chunked searches to conduct.
 #' Warning, chunk sizes over 300 can be too big for the NCBI servers.
 #' @param multithread Whether multithreading should be used
-#' @param quiet (Optional) Print text output
+#' @param quiet (Optional) Print text outputdatabase
 #'
 #' @return
 #' @export
@@ -543,7 +543,7 @@ lca_probs <- function(x, method="mbed",  k=5, nstart = 20, ranks=c("kingdom", "p
 #'
 #'
 #' @examples
-gid_to_acc <- function(ids, db="nuccore", chunksize=300, multithread=TRUE, progress=FALSE, quiet=FALSE){
+gid_to_acc <- function(ids, database="nuccore", chunksize=300, multithread=TRUE, progress=FALSE, quiet=FALSE){
   if(!class(ids) %in% c("character", "numeric")){
     stop("input ids must be a character or numeric vector of NCBI gids")
   }
@@ -562,7 +562,7 @@ gid_to_acc <- function(ids, db="nuccore", chunksize=300, multithread=TRUE, progr
 
   #Main function
   out <- furrr::future_map(chunks, function(x){
-    upload <- rentrez::entrez_post(db=db, id=x)
+    upload <- rentrez::entrez_post(db=database, id=x)
     dl <- rentrez::entrez_fetch(db = database, web_history = upload, rettype = "acc", retmax = chunksize)
     acc <- readLines(textConnection(dl))
     acc <- acc[!acc==""]
