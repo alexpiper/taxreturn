@@ -780,6 +780,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
 #' @param force Option ot overwright files if they already exist
 #' @param out.dir Output directory to write fasta files to
 #' @param multithread Whether multithreading should be used
+#' @param progress Whether a progress bar should be shown. This reduces speed and is false by default.
 #'
 #' @return
 #' @export
@@ -793,7 +794,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
 #' @examples
 gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h", suffix="updates",
                      minlength = 1, maxlength = 2000, chunksize=300, out.dir = NULL,
-                     compress = FALSE, force=FALSE, multithread = TRUE){
+                     compress = FALSE, force=FALSE, multithread = TRUE, progress=FALSE){
 
   # function setup
   time <- Sys.time() # get time
@@ -844,6 +845,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
 
   # Get accessions from existing fastas
   current <- acc_from_fasta(fasta)
+  if(!quiet){message(length(current), " unique accessions in fastas")}
 
   # Genbank Search
   if (!tolower(marker) %in%c("mitochondria", "mitochondrion", "genome")) {
@@ -860,11 +862,15 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
   }
 
   search_results <- rentrez::entrez_search(db = database, term = searchQ, retmax = 9999999, use_history = TRUE)
+  ids <- search_results$ids
 
   #Convert search result GIDs to accession
-  accs <- gid_to_acc(search_results$ids, db = database, chunksize = chunksize,  multithread=TRUE) %>%
+  if(length(ids) > 0 ){
+    accs <- gid_to_acc(ids, db = database, chunksize = chunksize,  multithread=multithread, progress = progress) %>%
     stringr::str_remove(".[0-9]$")
-
+  } else{
+    stop("search returned no hits")
+  }
   # Find any missing accessions
   newsearch <- setdiff(accs, current)
 
@@ -919,7 +925,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
         Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000, append = TRUE)
       }
       invisible(NULL)
-    })
+    }, .progress = progress)
 
   }
   #Close all workers

@@ -543,7 +543,7 @@ lca_probs <- function(x, method="mbed",  k=5, nstart = 20, ranks=c("kingdom", "p
 #'
 #'
 #' @examples
-gid_to_acc <- function(ids, db="nuccore", chunksize=300, multithread=TRUE, quiet=FALSE){
+gid_to_acc <- function(ids, db="nuccore", chunksize=300, multithread=TRUE, progress=FALSE, quiet=FALSE){
   if(!class(ids) %in% c("character", "numeric")){
     stop("input ids must be a character or numeric vector of NCBI gids")
   }
@@ -567,7 +567,7 @@ gid_to_acc <- function(ids, db="nuccore", chunksize=300, multithread=TRUE, quiet
     acc <- readLines(textConnection(dl))
     acc <- acc[!acc==""]
     return(acc)
-  }) %>%
+  }, .progress = progress) %>%
     unlist(use.names=FALSE)
 
   #finished

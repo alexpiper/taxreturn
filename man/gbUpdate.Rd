@@ -18,7 +18,8 @@ gbUpdate(
   out.dir = NULL,
   compress = FALSE,
   force = FALSE,
-  multithread = TRUE
+  multithread = TRUE,
+  progress = FALSE
 )
 }
 \arguments{
@@ -53,6 +54,8 @@ Warning, chunk sizes over 300 can be too big for the NCBI servers.}
 \item{force}{Option ot overwright files if they already exist}
 
 \item{multithread}{Whether multithreading should be used}
+
+\item{progress}{Whether a progress bar should be shown. This reduces speed and is false by default.}
 }
 \value{
 

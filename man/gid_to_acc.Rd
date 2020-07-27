@@ -9,6 +9,7 @@ gid_to_acc(
   db = "nuccore",
   chunksize = 300,
   multithread = TRUE,
+  progress = FALSE,
   quiet = FALSE
 )
 }
