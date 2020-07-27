@@ -24,6 +24,8 @@ gbSearch(
 
 \item{marker}{The barcode marker used as a search term for the database. If this is set to "mitochondria" it will download full mitochondrial genomes.}
 
+\item{quiet}{(Optional) Print text output}
+
 \item{output}{The output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
 "binom" for just genus species binomials (SeqID;Genus Species),

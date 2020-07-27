@@ -21,6 +21,8 @@ boldSearch(
 
 \item{marker}{the barcode marker used as a search term for the database}
 
+\item{quiet}{(Optional) Print text output}
+
 \item{output}{the output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
 "binom" for just genus species binomials (SeqID;Genus Species),
