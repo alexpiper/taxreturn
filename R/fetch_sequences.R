@@ -866,7 +866,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
 
   #Convert search result GIDs to accession
   if(length(ids) > 0 ){
-    accs <- gid_to_acc(ids, db = database, chunksize = chunksize,  multithread=multithread, progress = progress) %>%
+    accs <- gid_to_acc(ids, database = database, chunksize = chunksize,  multithread=multithread, progress = progress) %>%
     stringr::str_remove(".[0-9]$")
   } else{
     stop("search returned no hits")
