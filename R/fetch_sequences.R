@@ -174,9 +174,8 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
-#' @param minlength
-#' @param maxlength
-#' @param out.file The file to write to, if empty it defaults to the search term
+#' @param minlength The minimum length of sequences to download
+#' @param maxlength The maximum length of sequences to download
 #' @param compress  Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
 #' @param out.dir Output directory to write fasta files to
@@ -376,13 +375,13 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
 #'
 #' @examples
 cat_acctax <- function(x) {
-  if(length(biofiles::getAccession(gb)) > 1){
+  if(length(biofiles::getAccession(x)) > 1){
     taxid <- purrr::map(x, biofiles::dbxref, "taxon")
     tax_chr <- purrr::map_chr(taxid, ~{
       as.character(.x[1, 1])})
     attributes(tax_chr) <- NULL
     taxout <- paste0(attributes(taxid)$names, "|", tax_chr)
-  } else if(length(biofiles::getAccession(gb)) == 1){
+  } else if(length(biofiles::getAccession(x)) == 1){
     taxout <- paste0(biofiles::getAccession(x), "|", as.character(biofiles::dbxref(x[1], "taxon")))
   }
   return(taxout)
@@ -401,9 +400,8 @@ cat_acctax <- function(x) {
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
-#' @param minlength
-#' @param maxlength
-#' @param out.file The file to write to, if empty it defaults to the search term
+#' @param minlength The minimum length of sequences to download
+#' @param maxlength The maximum length of sequences to download
 #' @param compress  Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
 #' @param out.dir Output directory to write fasta files to
@@ -423,8 +421,7 @@ cat_acctax <- function(x) {
 #' @examples
 gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"),
                                quiet = FALSE, output = "h", minlength = 1, maxlength = 2000,
-                               subsample=1000, chunksize=300, out.file = NULL,
-                               compress = FALSE, force=FALSE, out.dir = NULL) {
+                               subsample=1000, chunksize=300, compress = FALSE, force=FALSE, out.dir = NULL) {
   # function setup
   time <- Sys.time() # get time
 
@@ -525,7 +522,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
           } else if (output == "gb") {
             names <- cat_acctax(gb)
           } else if (output == "binom") {
-            names <- paste0(biofiles::getAccession(x), ";", biofiles::getOrganism(gb))
+            names <- paste0(biofiles::getAccession(gb), ";", biofiles::getOrganism(gb))
           } else if (output == "gb-binom") {
             names <- paste0(cat_acctax(gb), ";", biofiles::getOrganism(gb))
           }
@@ -565,6 +562,196 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
   )
   return(res)
 }
+
+
+
+# Update genbank database -------------------------------------------------
+
+
+#' GbUpdate
+#'
+#' @param x A taxon name or vector of taxa to download sequences for
+#' @param fasta A fasta file or list of fasta files to check for existing sequence accessions
+#' @param marker The barcode marker used as a search term for the database. If this is set to "mitochondria" it will download full mitochondrial genomes.
+#' @param quiet
+#' @param output The output format for the taxonomy in fasta headers.
+#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+#' "binom" for just genus species binomials (SeqID;Genus Species),
+#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
+#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' @param suffix The suffix to add to newly downloaded files. Defaults to 'updates'
+#' @param minlength The minimum length of sequences to download
+#' @param maxlength The maximum length of sequences to download
+#' @param chunksize The size of the chunked searches to conduct.
+#' Warning, chunk sizes over 300 can be too big for the NCBI servers.
+#' @param compress  Option to compress output fasta files using gzip
+#' @param force Option ot overwright files if they already exist
+#' @param out.dir Output directory to write fasta files to
+#' @param multithread Whether multithreading should be used
+#'
+#' @return
+#' @export
+#' @import stringr
+#' @import rentrez
+#' @import future
+#' @import furrr
+#' @import biofiles
+#' @import Biostrings
+#'
+#' @examples
+gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h", suffix="updates",
+                     minlength = 1, maxlength = 2000, chunksize=300, out.dir = NULL,
+                     compress = FALSE, force=FALSE, multithread = TRUE){
+
+  # function setup
+  time <- Sys.time() # get time
+
+  if(!database %in% c("nuccore", "genbank")){
+    stop("database is invalid: only nuccore and genbank is currently supported")
+  }
+
+  if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
+    stop("output has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details")
+  }
+  if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
+    marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]") %>%
+      stringr::str_replace_all(stringr::fixed("[GENE][GENE]"), "[GENE]")
+  }
+  #Define directories
+  if (is.null(out.dir)) {
+    out.dir <- database
+    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
+  }
+  if (!dir.exists(out.dir)) {
+    dir.create(out.dir)
+  }
+
+  # Create output file
+  name <- marker %>%
+    stringr::str_replace_all(pattern="\\[GENE]", replacement ="") %>%
+    stringr::str_replace_all(pattern="OR ", replacement ="") %>%
+    stringr::str_replace_all(pattern=" ", replacement ="_")
+
+  if (compress) {
+    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, "_", suffix, ".fa.gz")
+  } else if (!compress) {
+    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, "_", suffix, ".fa")
+  }
+
+  #Check if output exists
+  if (file.exists(out.file) && force==TRUE) {
+    file.remove(out.file)
+    cat("", file=out.file)
+  } else if (file.exists(out.file) && force==FALSE){
+    stop(paste0(out.file, " exists, set force = TRUE to overwrite"))
+  }
+
+  if(database=="genbank"){
+    database="nuccore"
+  }
+
+  # Get accessions from existing fastas
+  current <- acc_from_fasta(fasta)
+
+  # Genbank Search
+  if (!tolower(marker) %in%c("mitochondria", "mitochondrion", "genome")) {
+    searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
+    if(is.null(chunksize)) {chunksize=10000}
+  } else if (tolower(marker) %in% c("mitochondria", "mitochondrion")) {
+    message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
+    searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
+    if(is.null(chunksize)) {chunksize=1000}
+  } else if (tolower(marker) %in% c("genome", "mitochondrion")){
+    message(paste0("Input marker is ", marker, ", Downloading full genomes"))
+    searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
+    if(is.null(chunksize)) {chunksize=1}
+  }
+
+  search_results <- rentrez::entrez_search(db = database, term = searchQ, retmax = 9999999, use_history = TRUE)
+
+  #Convert search result GIDs to accession
+  accs <- gid_to_acc(search_results$ids, db = database, chunksize = chunksize,  multithread=TRUE) %>%
+    stringr::str_remove(".[0-9]$")
+
+  # Find any missing accessions
+  newsearch <- setdiff(accs, current)
+
+  # Download missing accessions
+
+  if (length(newsearch) > 0) {
+
+    if (!quiet) {message(paste0(length(newsearch), " sequences to be downloaded for: ", searchQ))}
+
+    chunks <- split(newsearch, ceiling(seq_along(newsearch)/chunksize))
+
+    # setup multithreading
+    if(multithread){
+      future::plan(future::multiprocess)
+    } else if(!multithread){
+      future::plan(future::sequential)
+    }
+
+    #Main function
+    furrr::future_map(chunks, function(x){
+      upload <- rentrez::entrez_post(db=database, id=x)
+      dl <- rentrez::entrez_fetch(db = database, web_history = upload, rettype = "gb", retmax = chunksize)
+      gb <- biofiles::gbRecord(rcd = textConnection(dl))
+
+      # Hierarchial output
+      if (output == "h") {
+        lineage <- biofiles::getTaxonomy(gb) %>%
+          str_split_fixed(pattern = ";", n = Inf) %>%
+          trimws(which = "both") %>%
+          as_tibble() %>%
+          dplyr::mutate(Species = biofiles::getOrganism(gb)) %>%
+          dplyr::mutate(Genus = str_replace(V15, pattern = "[.]", replacement = "")) %>%
+          tidyr::unite("names", c("V1", "V2", "V4", "V6", "V10", "V14", "Genus", "Species"), sep = ";") %>%
+          dplyr::mutate(names = str_replace(names, pattern = " ", replacement = "_"))
+        names <- paste0(names(biofiles::getSequence(gb)), ";", lineage$names)
+
+        # Genbank taxID output
+      } else if (output == "gb") {
+        names <- cat_acctax(gb)
+      } else if (output == "binom") {
+        names <- paste0(biofiles::getAccession(gb), ";", biofiles::getOrganism(gb))
+      } else if (output == "gb-binom") {
+        names <- paste0(cat_acctax(gb), ";", biofiles::getOrganism(gb))
+      }
+
+      # Output FASTA
+      seqs <- biofiles::getSequence(gb)
+      names(seqs) <- names
+      if (compress == TRUE) {
+        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
+      } else if (compress == FALSE) {
+        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000, append = TRUE)
+      }
+      invisible(NULL)
+    })
+
+  }
+  #Close all workers
+  future::plan(future::sequential)
+
+  #Count how many downloaded
+  if(file.exists(out.file)){
+    counter <- nrow(Biostrings::fasta.index(out.file))
+  } else {
+    counter <- 0
+  }
+  res <- data.frame(
+    taxon = x,
+    seqs_total = length(search_results$ids),
+    seqs_downloaded = counter,
+    marker = marker,
+    database = database,
+    time = format(time, digits = 2)
+  )
+  return(res)
+}
+
+
 
 
 # Fetchseqs wrapper function ----------------------------------------------

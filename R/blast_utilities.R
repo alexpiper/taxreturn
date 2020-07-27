@@ -34,6 +34,10 @@
 #'
 #' @return
 #' @export
+#' @import stringr
+#' @import RCurl
+#' @import utils
+#' @import httr
 #'
 #' @examples
 blast_install <- function(url, dest.dir = "bin", force = FALSE) {
@@ -107,6 +111,8 @@ blast_install <- function(url, dest.dir = "bin", force = FALSE) {
 #'
 #' @return
 #' @export
+#' @import R.utils
+#' @import stringr
 #'
 #' @examples
 makeblastdb <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
@@ -157,6 +163,11 @@ blast_params <- function(type = "blastn") {
 #'
 #' @return
 #' @export
+#' @import insect
+#' @import Biostrings
+#' @import stringr
+#' @import tibble
+#' @import dplyr
 #'
 #' @examples
 blast <- function (query, db, type="blastn", evalue = 1e-6, output_format = "tabular", args=NULL, quiet=FALSE){
@@ -284,6 +295,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6, output_format = "tab
 #'
 #' @return
 #' @export
+#' @import dplyr
+#' @import tidyr
 #'
 #' @examples
 blast_top_hit <- function(query, db, type="blastn", threshold=90, taxranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";", args="-max_target_seqs 5", quiet=FALSE ){
@@ -291,10 +304,11 @@ blast_top_hit <- function(query, db, type="blastn", threshold=90, taxranks=c("Ki
   result <- blast(query=query, type=type, db=db, args=args)
   #Subset to top hit
   top_hit <- result %>%
-    filter(pident > threshold) %>%
-    group_by(qseqid) %>%
-    top_n(1, bitscore) %>%
-    top_n(1, row_number(name)) %>% # Break ties by position
-    separate(sseqid, c("acc",taxranks), delim)
+    dplyr::filter(pident > threshold) %>%
+    dplyr::group_by(qseqid) %>%
+    dplyr::top_n(1, bitscore) %>%
+    dplyr::top_n(1, row_number(name)) %>% # Break ties by position
+    tidyr::separate(sseqid, c("acc",taxranks), delim) %>%
+    dplyr::ungroup()
 
 }

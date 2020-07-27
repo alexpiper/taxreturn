@@ -49,7 +49,9 @@ Imports:
     readr,
     fs,
     future,
-    furrr
+    furrr,
+    R.utils,
+    RCurl
 Remotes: gschofl/biofiles
 BiocViews:
 Roxygen: list(markdown = TRUE)

@@ -568,7 +568,7 @@ gid_to_acc <- function(ids, db="nuccore", chunksize=300, multithread=TRUE, quiet
     acc <- acc[!acc==""]
     return(acc)
   }) %>%
-    unlist(out, use.names=FALSE)
+    unlist(use.names=FALSE)
 
   #finished
   time <- Sys.time() - time

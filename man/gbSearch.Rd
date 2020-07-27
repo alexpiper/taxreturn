@@ -31,13 +31,15 @@ Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Ord
 "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process}
 
+\item{minlength}{The minimum length of sequences to download}
+
+\item{maxlength}{The maximum length of sequences to download}
+
 \item{out.dir}{Output directory to write fasta files to}
 
 \item{compress}{Option to compress output fasta files using gzip}
 
 \item{force}{Option ot overwright files if they already exist}
-
-\item{out.file}{The file to write to, if empty it defaults to the search term}
 }
 \value{
 
