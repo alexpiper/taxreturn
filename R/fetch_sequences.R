@@ -198,8 +198,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #' @import Biostrings
 #'
 #' @examples
-boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h", suffix="updates",
-                       out.file = NULL, compress = FALSE, force=FALSE,
+boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h", suffix="updates", compress = FALSE, force=FALSE,
                        out.dir = NULL, db=NULL) {
 
   # function setup
@@ -209,9 +208,9 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
     stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
 
-  # Get NCBI taxonomy database if NCBI format outputs are desired
-  if (is.null(db) && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_lineage(synonyms = TRUE, force=FALSE)
+  #Check if all inputs exists
+  if (!any(file.exists(fasta))) {
+    stop("Not all fasta files provided can be found, check the diferectory you have provided")
   }
 
   #Define directories
@@ -238,11 +237,16 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
     stop(paste0(out.file, " exists, set force = TRUE to overwrite"))
   }
 
+  # Get NCBI taxonomy database if NCBI format outputs are desired
+  if (is.null(db) && output %in% c("gb", "gb-binom")) {
+    db <- get_ncbi_lineage(synonyms = TRUE, force=FALSE)
+  }
+
   # Get accessions from existing fastas
   current <- acc_from_fasta(fasta)
 
   accs <-  bold::bold_specimens(taxon = x) %>%
-    pull(sampleid)
+    dplyr::pull(sampleid)
 
   newsearch <- setdiff(accs, current)
 
@@ -803,6 +807,11 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
     stop("database is invalid: only nuccore and genbank is currently supported")
   }
 
+  #Check if all inputs exists
+  if (!any(file.exists(fasta))) {
+    stop("Not all fasta files provided can be found, check the diferectory you have provided")
+  }
+
   if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
     stop("output has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details")
   }
@@ -1029,14 +1038,16 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
   #Evaluate downstream
   if (is.character(downstream)) {
     if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
-    taxlist <- taxize::downstream(x, db = "ncbi", downto = downstream) %>%
+
+    taxlist <- taxize::downstream(x, db = switch(database, bold = "bold", genbank = "ncbi", nuccore = "ncbi"),
+                                  downto = downstream) %>%
       as("list") %>%
       dplyr::bind_rows() %>%
       dplyr::filter(rank == stringr::str_to_lower(!!downstream)) %>%
       dplyr::mutate(downloaded = FALSE)
 
     if (nrow(taxlist) > 0) {
-      taxon <- taxlist$childtaxa_name
+      taxon <- switch(database, bold = taxlist$name, genbank = taxlist$childtaxa_name, nuccore = taxlist$childtaxa_name)
     } else {
       (taxon <- x)
     }
@@ -1072,11 +1083,24 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
     }
 
   } else if (database == "bold") {
-    checks <- bold::bold_tax_name(taxon)
-    bold_taxon <- checks$taxon[which(!is.na(checks$taxon))]
-    if (!quiet) {message(paste0(length(bold_taxon), " of ", length(taxon), " taxa found to be valid names on BOLD\n"))}
-
-    message("Downloading from BOLD")
+    #Check query sizes
+    bold_taxon <- purrr::map(taxon, function(x){
+      rcds <- bold::bold_stats(x, dataType = "overview") %>%
+        unlist()
+      if(rcds["total_records"] > 50000){
+        if(!quiet){message("Found over 50,000 records for ", x, ", getting downstream taxonomic rank to reduce query size")}
+        downstream2 <- stringr::str_remove(names(sort(rcds[c("order.count", "family.count", "genus.count", "species.count")])[2]), ".count")
+        x <- taxize::downstream(x, db = "bold", downto = downstream2) %>%
+          as("list") %>%
+          dplyr::bind_rows() %>%
+          dplyr::filter(rank == stringr::str_to_lower(!!downstream2)) %>%
+          dplyr::mutate(downloaded = FALSE) %>%
+          dplyr::pull(name)
+      }
+      return(x)
+    }) %>%
+      unlist()
+    if(!quiet) {message("Downloading ", length(bold_taxon)," taxa from BOLD")}
     res <- furrr::future_map(
       bold_taxon, boldSearch, marker = marker, db=db,
       out.dir = out.dir, out.file = NULL, output = output,

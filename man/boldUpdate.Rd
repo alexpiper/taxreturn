@@ -11,7 +11,6 @@ boldUpdate(
   quiet = FALSE,
   output = "h",
   suffix = "updates",
-  out.file = NULL,
   compress = FALSE,
   force = FALSE,
   out.dir = NULL,
@@ -36,8 +35,6 @@ or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomi
 
 \item{suffix}{The suffix to add to newly downloaded files. Defaults to 'updates'}
 
-\item{out.file}{The file to write to, if empty it defaults to the search term}
-
 \item{compress}{Option to compress output fasta files using gzip}
 
 \item{force}{Option ot overwright files if they already exist}
@@ -45,6 +42,8 @@ or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomi
 \item{out.dir}{Output directory to write fasta files to}
 
 \item{db}{}
+
+\item{out.file}{The file to write to, if empty it defaults to the search term}
 }
 \value{
 

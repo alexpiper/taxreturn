@@ -23,7 +23,7 @@ Warning, chunk sizes over 300 can be too big for the NCBI servers.}
 
 \item{multithread}{Whether multithreading should be used}
 
-\item{quiet}{(Optional) Print text output}
+\item{quiet}{(Optional) Print text outputdatabase}
 }
 \value{
 
