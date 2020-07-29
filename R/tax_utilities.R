@@ -10,7 +10,7 @@
 #'
 #' @examples
 propagate_tax <- function(tax, from = "Family") {
-  .Deprecated(new="seqateurs::propagate_tax", package="seqateurs", old="taxreturn::propagate_tax")
+  .Deprecated(new="seqateurs::na_to_unclassified", package="seqateurs", old="taxreturn::propagate_tax")
   col.prefix <- substr(colnames(tax), 1, 1) # Assumes named Kingdom, ...
 
   # Highest level to propagate from

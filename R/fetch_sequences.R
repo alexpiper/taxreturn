@@ -65,10 +65,10 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 
   # Bold search
   data <- bold::bold_seqspec(taxon = x, sepfasta = FALSE)
-  if (length(data) >0 && !class(data) == "logical") {
+  if (length(data) >0 && class(data) == "data.frame") {
     data <- data %>%
       dplyr::na_if("") %>%
-      dplyr::filter(stringr::str_detect(marker, markercode)) %>% # Remove all sequences for unwanted markers
+      dplyr::filter(markercode == marker) %>% # Remove all sequences for unwanted markers
       dplyr::mutate(domain_name = "Eukaryota") %>%
       dplyr::filter(!is.na(species_name)) %>%
       dplyr::filter(!stringr::str_detect(nucleotides, pattern = "I")) #remove inosines
@@ -1084,12 +1084,13 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
 
   } else if (database == "bold") {
     #Check query sizes
-    bold_taxon <- purrr::map(taxon, function(x){
+    bold_taxon <- furrr::future_map(taxon, function(x){
       rcds <- bold::bold_stats(x, dataType = "overview") %>%
         unlist()
-      if(rcds["total_records"] > 50000){
-        if(!quiet){message("Found over 50,000 records for ", x, ", getting downstream taxonomic rank to reduce query size")}
-        downstream2 <- stringr::str_remove(names(sort(rcds[c("order.count", "family.count", "genus.count", "species.count")])[2]), ".count")
+      if(rcds["total_records"] > 100000){
+        if(!quiet){message("Found over 100,000 records for ", x, ", getting downstream taxonomic rank to reduce query size")}
+        downstream2 <- rcds[c("order.count", "family.count", "genus.count", "species.count")]
+        downstream2 <- stringr::str_remove(names(sort(downstream2[downstream2 > 1])[1]), ".count")
         x <- taxize::downstream(x, db = "bold", downto = downstream2) %>%
           as("list") %>%
           dplyr::bind_rows() %>%
@@ -1098,7 +1099,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
           dplyr::pull(name)
       }
       return(x)
-    }) %>%
+    }, .progress = progress) %>%
       unlist()
     if(!quiet) {message("Downloading ", length(bold_taxon)," taxa from BOLD")}
     res <- furrr::future_map(
