@@ -185,7 +185,7 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filt
       dplyr::rename(tax_name = V2)
   } else if (is(x, "DNAStringSet")) {
     message("Input is DNAStringSet")
-    tax <- as.DNAbin(x) %>%
+    tax <- ape::as.DNAbin(x) %>%
       names() %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
@@ -198,7 +198,7 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filt
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else  if (is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
+  } else  if (is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of species names")
     tax <- data.frame(acc = as.character(NA), id=as.character(NA), tax_name = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
@@ -277,12 +277,9 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filt
       dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
 
     if(is(x, "DNAbin") | is(x, "DNAStringSet")){
-      #x <- x[!names(x) %in% remove$name]
-      x[names(x) %in% remove$name] <- NA
-
+      x[names(x) %in% remove$name] <- NULL
     }else if (is(x, "character")){
-      #x <- x[!x %in% remove$name]
-      x[x %in% remove$name] <- NA
+      x[x %in% remove$name] <- NULL
     }
     if(!quiet){message(paste0("Removed ", nrow(remove), " sequences that could not be mapped to OTT\n"))}
   }
