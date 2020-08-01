@@ -16,10 +16,6 @@
 #'
 #' @examples
 download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
-  if(missing(dest.dir)){
-    message("dest.dir is missing, downloading into working directory")
-    dest.dir <- getwd()
-  }
 
   if (missing(url)) {
     # find the latest version of taxonomy
@@ -31,26 +27,37 @@ download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
       link_hrefs[.] %>% .[1]
   }
 
+  version <- basename(url) %>%
+    stringr::str_remove(".tgz")
+
+  if(missing(dest.dir)){
+    message("dest.dir is missing, downloading into /", version)
+    dest.dir <- version
+  }
+
   if (!dir.exists(dest.dir)) {
     dir.create(dest.dir) # Create first directory
   }
 
-  # Check if dir exists
-  if (dir.exists(paste0(dest.dir, stringr::str_remove(basename(url),".tgz" ))) && force == FALSE) {
-    message(paste0("Skipped as ", stringr::str_remove(basename(url),".tgz" ) ," already exists in directory, to overwrite set force to TRUE"))
+  # Check if files exist already in dest.dir
+  expected_files <- c(
+    paste0(dest.dir,"/", version,".tgz" ),
+    paste0(dest.dir,"/taxonomy.tsv" ),
+    paste0(dest.dir,"/synonyms.tsv" )
+  )
+
+  if (any(file.exists(expected_files)) & force == FALSE) {
+    message(paste0("Skipped as files already exist in dest.dir, to overwrite set force to TRUE"))
     return(NULL)
-  } else  if (dir.exists(paste0(dest.dir, stringr::str_remove(basename(url),".tgz" ))) && force == TRUE) {
-    unlink(paste0(dest.dir, stringr::str_remove(basename(url),".tgz" )), recursive = TRUE) # Remove old version
+  } else  if (any(file.exists(expected_files)) && force == TRUE) {
+    unlink(expected_files, recursive = TRUE) # Remove existing version
   }
 
   destfile <- file.path(dest.dir, basename(url))
-  if (exists(destfile)) {
-    file.remove(destfile) # Remove old zip file
-  }
   httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
 
   #unzip file
-  utils::untar(destfile, exdir = dest.dir)
+  utils::untar(destfile, exdir = ".")
   #Remove download
   file.remove(destfile)
   message(paste0("Downloaded taxonomy to: ",stringr::str_remove(destfile,".tgz" ), " \n"))
@@ -127,6 +134,7 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
 #' @param db an OTT taxonomic database
 #' @param from the existing taxonomic ID format
 #' @param resolve_synonyms Whether to resolve synonyms
+#' @param dir A directory containing the OTT taxonomy, required if resolve synonyms is true
 #' @param filter_unplaced Whether to filter 'bad' entries. These include
 #' incertae_sedis
 #' major_rank_conflict
@@ -152,8 +160,21 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
 #' @import tibble
 #'
 #' @examples
-map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, filter_unplaced=TRUE, remove_na = FALSE, quiet=FALSE){
+map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filter_unplaced=TRUE, remove_na = FALSE, quiet=FALSE){
   time <- Sys.time() # get time
+
+  #input checks
+  if(resolve_synonyms && is.null(dir)){
+    stop("If resolve_synonmys is true, a directory containing the OTT taxonomy must be provided")
+  }
+  if(!attr(db,'type')=="OTT") {stop("Error: requires OTT db, generate one with get_ott_taxonomy")}
+  if(missing(db) & is.null(dir)) {stop("Error: requires OTT db, generate one with get_ott_taxonomy")}
+  if(missing(db) & file.exists(paste0(dir,"/taxonomy.tsv"))){
+    message("No db provided but dir provided, creating new db")
+    db <- get_ott_taxonomy(dir=dir, filter_unplaced = filter_unplaced)
+  }
+  if (!from %in% unique(db$source)){ stop("Error: 'from' is not in db")}
+
   #Check input format
   if (is(x, "DNAbin")) {
     message("Input is DNAbin")
@@ -182,13 +203,11 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, filter_unplace
     tax <- data.frame(acc = as.character(NA), id=as.character(NA), tax_name = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
 
-  #check db
-  if(missing(db) | !attr(db,'type')=="OTT") {stop("Error: requires OTT db, generate one with get_ott_taxonomy")}
   #Read in synonyms DB
+  #TODO: make synonyms df an attribute of the DB object
   if(resolve_synonyms == TRUE){ syn <- parse_ott_synonyms(dir=dir)}
 
   #Get tax
-  if (!from %in% unique(db$source)){ stop("Error: 'from' is not in db")}
   tax <- tax %>%
     dplyr::left_join (db %>%   # First map by id
                         dplyr::filter(source==!!from) %>%

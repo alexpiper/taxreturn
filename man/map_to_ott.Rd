@@ -9,6 +9,7 @@ map_to_ott(
   db,
   from = "ncbi",
   resolve_synonyms = TRUE,
+  dir = NULL,
   filter_unplaced = TRUE,
   remove_na = FALSE,
   quiet = FALSE
@@ -22,6 +23,8 @@ map_to_ott(
 \item{from}{the existing taxonomic ID format}
 
 \item{resolve_synonyms}{Whether to resolve synonyms}
+
+\item{dir}{A directory containing the OTT taxonomy, required if resolve synonyms is true}
 
 \item{filter_unplaced}{Whether to filter 'bad' entries. These include
 incertae_sedis
