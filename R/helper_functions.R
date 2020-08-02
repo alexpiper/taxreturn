@@ -294,3 +294,35 @@ alignment_entropy <- function (x, maskgaps=0.2, countgaps = FALSE, method="ML", 
   return(ent)
 }
 
+
+# DNAbin2DNAStringSet -----------------------------------------------------
+
+#' Convert DNABin to DNAStringSet
+#'
+#' @param x a DNABin object
+#' @param remove_gaps Whether gaps should be removed
+#'
+#' @return
+#' @export
+#' @import ape
+#' @import Biostrings
+#' @import purrr
+#'
+#' @examples
+DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
+  if(!is(x, "DNAbin")){
+    stop("Input must be a DNAbin")
+  }
+  x %>%
+    as.list() %>%
+    as.character %>%
+    purrr::map(function(y){
+      y[!y %in% tolower(Biostrings::DNA_ALPHABET)] <- "N"
+      if(isTRUE(remove_gaps)){
+        y[y=="-"] <- ""
+      }
+      paste0(y, collapse="")
+    })%>%
+    unlist %>%
+    Biostrings::DNAStringSet()
+}

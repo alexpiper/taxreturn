@@ -17,7 +17,7 @@ fetchSeqs(
   out.dir = NULL,
   compress = TRUE,
   force = FALSE,
-  multithread = TRUE,
+  multithread = FALSE,
   quiet = TRUE,
   progress = FALSE,
   ...

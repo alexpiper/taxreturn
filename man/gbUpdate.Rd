@@ -18,7 +18,7 @@ gbUpdate(
   out.dir = NULL,
   compress = FALSE,
   force = FALSE,
-  multithread = TRUE,
+  multithread = FALSE,
   progress = FALSE
 )
 }

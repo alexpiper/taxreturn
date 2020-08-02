@@ -11,7 +11,7 @@ map_to_model(
   shave = TRUE,
   check_indels = TRUE,
   maxNs = Inf,
-  multithread = TRUE,
+  multithread = FALSE,
   quiet = FALSE,
   progress = FALSE,
   ...

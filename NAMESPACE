@@ -2,6 +2,7 @@
 
 export("%>%")
 export(.findExecutable)
+export(DNAbin2DNAstringset)
 export(acc_from_fasta)
 export(alignment_entropy)
 export(blast)

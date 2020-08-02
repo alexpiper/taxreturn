@@ -368,7 +368,7 @@ prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "length"
 get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, resolve_draws="majority") {
   # Convert to DNAStringSet
   if (is(x, "DNAbin")) {
-    x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
+    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
   }
   #Check for N's
   if(hasOnlyBaseLetters(x) == FALSE) {stop("Error: Sequences contain ambiguities")}
@@ -426,7 +426,12 @@ get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FA
 codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, remove.ambiguities=TRUE){
   # Convert to DNAStringSet
   if (is(x, "DNAbin")) {
-    x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
+    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
+    format <- "DNAbin"
+  } else if(is(x, "DNAStringSet")){
+    format <- "DNAStringSet"
+  } else {
+    stop("x must be a DNAbin or DNAStringSet")
   }
   #Check for N's
   if(hasOnlyBaseLetters(x) == FALSE & remove.ambiguities == FALSE) {
@@ -440,8 +445,13 @@ codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, 
 
   #Get reading frames
   frames <- get_reading_frame(x, genetic.code = genetic.code, forward = forward, reverse = reverse)
+  x <- x[!is.na(frames)]
 
-  out <- x[!is.na(frames)]
+  if(format=="DNAbin"){
+    out <- as.DNAbin(x)
+  } else if(format=="DNAStringSet"){
+    out <- x
+  }
   message(paste0(length(x) - length(out), " Sequences containing stop codons removed"))
   return(out)
 }
@@ -467,7 +477,7 @@ codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, 
 #' @examples
 codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, codon.filter = TRUE, method="ML") {
   if (is(x, "DNAbin")) {
-    x <- x %>% as.character %>% lapply(.,paste0,collapse="") %>% unlist %>% DNAStringSet
+    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
   }
   #Filter out sequences with stop codons
   if(codon.filter == TRUE){
