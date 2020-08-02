@@ -83,7 +83,7 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank by searching for a taxon name
-fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", compress=TRUE, force=TRUE, multithread = TRUE)
+fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream=FALSE, marker="COI OR COI OR COX1 OR COXI", output = "gb-binom", compress=TRUE, force=TRUE, multithread = 3)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")

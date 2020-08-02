@@ -229,23 +229,25 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = 
   }
 
   # setup multithreading
+  ncores <- future::availableCores() -1
   if(isTRUE(multithread)){
-    cores <- future::availableCores()
+    cores <- ncores
     if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess(workers = cores))
+    future::plan(future::multiprocess, workers=cores)
   } else if (is.numeric(multithread) & multithread > 1){
     cores <- multithread
-    if(cores > future::availableCores()){
-      cores <- future::availableCores()
+    if(cores > ncores){
+      cores <- ncores
       message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
     }
     if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess(workers = cores))
+    future::plan(future::multiprocess, workers=cores)
   } else if(isFALSE(multithread) | multithread==1){
     future::plan(future::sequential)
   } else (
     stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
   )
+
 
   #Apply filt_phmm to all sequences
   res <-  furrr::future_map(x, filt_phmm, model=model, minscore=minscore, shave=shave, check_indels=check_indels,

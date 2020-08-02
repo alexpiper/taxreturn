@@ -554,18 +554,19 @@ gid_to_acc <- function(ids, database="nuccore", chunksize=300, multithread=TRUE,
   if(!quiet){message(paste0("Converting ", length(ids), " NCBI gids to accession numbers in ", length(chunks), " chunks"))}
 
   # setup multithreading
+  ncores <- future::availableCores() -1
   if(isTRUE(multithread)){
-    cores <- future::availableCores()
+    cores <- ncores
     if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess(workers = cores))
+    future::plan(future::multiprocess, workers=cores)
   } else if (is.numeric(multithread) & multithread > 1){
     cores <- multithread
-    if(cores > future::availableCores()){
-      cores <- future::availableCores()
+    if(cores > ncores){
+      cores <- ncores
       message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
     }
     if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess(workers = cores))
+    future::plan(future::multiprocess, workers=cores)
   } else if(isFALSE(multithread) | multithread==1){
     future::plan(future::sequential)
   } else (

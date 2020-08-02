@@ -892,18 +892,19 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
     chunks <- split(newsearch, ceiling(seq_along(newsearch)/chunksize))
 
     # setup multithreading
+    ncores <- future::availableCores() -1
     if(isTRUE(multithread)){
-      cores <- future::availableCores()
+      cores <- ncores
       if(!quiet){message("Multithreading with ", cores, " cores")}
-      future::plan(future::multiprocess(workers = cores))
+      future::plan(future::multiprocess, workers=cores)
     } else if (is.numeric(multithread) & multithread > 1){
       cores <- multithread
-      if(cores > future::availableCores()){
-        cores <- future::availableCores()
+      if(cores > ncores){
+        cores <- ncores
         message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
       }
       if(!quiet){message("Multithreading with ", cores, " cores")}
-      future::plan(future::multiprocess(workers = cores))
+      future::plan(future::multiprocess, workers=cores)
     } else if(isFALSE(multithread) | multithread==1){
       future::plan(future::sequential)
     } else (
@@ -1069,11 +1070,11 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
   }
 
   # setup multithreading - only makes sense if downstream = TRUE
-  ncores <- future::availableCores()
+  ncores <- future::availableCores() -1
   if(isTRUE(multithread)){
     cores <- ncores
     if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess(workers = cores))
+    future::plan(future::multiprocess, workers=cores)
   } else if (is.numeric(multithread) & multithread > 1){
     cores <- multithread
     if(cores > ncores){
@@ -1081,7 +1082,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
       message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
     }
     if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess(workers = cores))
+    future::plan(future::multiprocess, workers=cores)
   } else if(isFALSE(multithread) | multithread==1){
     future::plan(future::sequential)
   } else (
