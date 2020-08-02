@@ -9,10 +9,9 @@ map_to_model(
   model,
   minscore = 100,
   shave = TRUE,
-  pad = TRUE,
   check_indels = TRUE,
   maxNs = Inf,
-  cores = 1,
+  multithread = TRUE,
   quiet = FALSE,
   progress = FALSE,
   ...
@@ -27,13 +26,11 @@ map_to_model(
 
 \item{shave}{Whether bases that are outside (to the left or right) of the PHMM object should be shaved from sequences in the output.}
 
-\item{pad}{Whether gaps should be added to the left or right to make all sequences the same length as the PHMM.}
-
 \item{check_indels}{Whether sequences with indels not in multiples of 3 should be removed from output. Useful for coding regions such as COI.}
 
 \item{maxNs}{The max number of ambiguous N bases to retain}
 
-\item{cores}{The number of CPUs to parallelize the operation over}
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
 
 \item{quiet}{Whether progress should be printed to the console.}
 

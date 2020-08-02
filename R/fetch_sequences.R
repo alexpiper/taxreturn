@@ -783,7 +783,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
 #' @param compress  Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
 #' @param out.dir Output directory to write fasta files to
-#' @param multithread Whether multithreading should be used
+#' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' @param progress Whether a progress bar should be shown. This reduces speed and is false by default.
 #'
 #' @return
@@ -798,7 +798,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
 #' @examples
 gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h", suffix="updates",
                      minlength = 1, maxlength = 2000, chunksize=300, out.dir = NULL,
-                     compress = FALSE, force=FALSE, multithread = TRUE, progress=FALSE){
+                     compress = FALSE, force=FALSE, multithread = FALSE, progress=FALSE){
 
   # function setup
   time <- Sys.time() # get time
@@ -892,11 +892,23 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
     chunks <- split(newsearch, ceiling(seq_along(newsearch)/chunksize))
 
     # setup multithreading
-    if(multithread){
-      future::plan(future::multiprocess)
-    } else if(!multithread){
+    if(isTRUE(multithread)){
+      cores <- future::availableCores()
+      if(!quiet){message("Multithreading with ", cores, " cores")}
+      future::plan(future::multiprocess(workers = cores))
+    } else if (is.numeric(multithread) & multithread > 1){
+      cores <- multithread
+      if(cores > future::availableCores()){
+        cores <- future::availableCores()
+        message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
+      }
+      if(!quiet){message("Multithreading with ", cores, " cores")}
+      future::plan(future::multiprocess(workers = cores))
+    } else if(isFALSE(multithread) | multithread==1){
       future::plan(future::sequential)
-    }
+    } else (
+      stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
+    )
 
     #Main function
     furrr::future_map(chunks, function(x){
@@ -985,7 +997,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
 #' @param out.dir Output directory to write fasta files to
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option to overwrite files if they already exist
-#' @param multithread Whether multithreading should be used.
+#' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
 #' if x is a vector, or of downstream is being used.
 #' @param quiet (Optional) Print text output
@@ -1011,7 +1023,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
 fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
                       output = "h", minlength = 1, maxlength = 2000,
                       subsample=FALSE, chunksize=NULL, out.dir = NULL, compress = TRUE,
-                      force=FALSE, multithread = TRUE, quiet = TRUE, progress=FALSE, ...) {
+                      force=FALSE, multithread = FALSE, quiet = TRUE, progress=FALSE, ...) {
 
   if(!database %in% c("nuccore", "genbank", "bold")) {
     stop("database is invalid. See help page for more details")
@@ -1057,11 +1069,23 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
   }
 
   # setup multithreading - only makes sense if downstream = TRUE
-  if(multithread){
-    future::plan(future::multiprocess)
-  } else if(!multithread){
+  if(isTRUE(multithread)){
+    cores <- future::availableCores()
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+    future::plan(future::multiprocess(workers = cores))
+  } else if (is.numeric(multithread) & multithread > 1){
+    cores <- multithread
+    if(cores > future::availableCores()){
+      cores <- future::availableCores()
+      message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
+    }
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+    future::plan(future::multiprocess(workers = cores))
+  } else if(isFALSE(multithread) | multithread==1){
     future::plan(future::sequential)
-  }
+  } else (
+    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
+  )
 
   # Genbank
   if (database %in% c("genbank", "nuccore")) {

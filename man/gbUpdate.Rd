@@ -53,7 +53,7 @@ Warning, chunk sizes over 300 can be too big for the NCBI servers.}
 
 \item{force}{Option ot overwright files if they already exist}
 
-\item{multithread}{Whether multithreading should be used}
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
 
 \item{progress}{Whether a progress bar should be shown. This reduces speed and is false by default.}
 }

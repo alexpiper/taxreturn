@@ -55,7 +55,7 @@ This can be useful for ensuring no off-target sequences are returned. Default 20
 
 \item{force}{Option to overwrite files if they already exist}
 
-\item{multithread}{Whether multithreading should be used.
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
 if x is a vector, or of downstream is being used.}
 

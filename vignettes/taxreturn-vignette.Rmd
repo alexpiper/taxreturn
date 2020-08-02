@@ -154,11 +154,13 @@ amplicon_filtered <- amplicon[lengths(amplicon) == 658]
 model <- aphid::derivePHMM(amplicon_filtered)
 ```
 
-Now that we have our train PHMM model, we will use the cleanseqs function with the model to remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.
+Now that we have our train PHMM model, we will use the map_to_model function with the model to remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.
 
 Firstly we will merge the sequences from each database together. As BOLD and GenBank share a number of sequences, we subset the merged file to only the unique sequences to speed things up.
 
-As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases to the left and right of the model.
+As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases outside the range defined by the model. As here we are looking at a coding gene, we will set check_indels to TRUE to ensure that any insertions or deletions are in multiples of 3
+
+As this function maps each sequence to the model individually, it can take some time for large queries. To speed things up, you can set multithread to the number of cores you wish to use
 
 ```{r clean seqs}
 #read in all fastas and merge
@@ -173,7 +175,8 @@ seqs <- c(readDNAStringSet(list.files("genbank", pattern = ".fa",
 uniqSeqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" )),] 
 
 #remove non-homologous sequences
-filtered <- clean_seqs(uniqSeqs, model, minscore = 100, cores=1, shave=TRUE)
+filtered <- map_to_model(uniqSeqs, model, minscore = 100, shave=TRUE, check_indels=TRUE, maxNs=0, multithread = FALSE, quiet=FALSE)
+
 ```
 
 ## Resolve Contaminated sequences and misannotated taxonomy
