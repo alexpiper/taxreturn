@@ -442,12 +442,12 @@ codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, 
   } else if(Biostrings::hasOnlyBaseLetters(nogaps) == FALSE & remove.ambiguities==TRUE) {
     discards <- sapply(nogaps, Biostrings::hasOnlyBaseLetters)
     discards <- discards[discards == FALSE]
-    x <- x[which(!names(nogaps) %in% names(discards))]
+    x  <- x[which(!names(nogaps) %in% names(discards))]
     message(paste0(length(discards), " Sequences containing ambiguities were removed"))
   }
 
   #Get reading frames
-  frames <- get_reading_frame(x, genetic.code = genetic.code, forward = forward, reverse = reverse)
+  frames <- get_reading_frame(DECIPHER::RemoveGaps(x), genetic.code = genetic.code, forward = forward, reverse = reverse)
   x <- x[!is.na(frames)]
 
   if(format=="DNAbin"){
