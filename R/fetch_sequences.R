@@ -1069,14 +1069,15 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
   }
 
   # setup multithreading - only makes sense if downstream = TRUE
+  ncores <- future::availableCores()
   if(isTRUE(multithread)){
-    cores <- future::availableCores()
+    cores <- ncores
     if(!quiet){message("Multithreading with ", cores, " cores")}
     future::plan(future::multiprocess(workers = cores))
   } else if (is.numeric(multithread) & multithread > 1){
     cores <- multithread
-    if(cores > future::availableCores()){
-      cores <- future::availableCores()
+    if(cores > ncores){
+      cores <- ncores
       message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
     }
     if(!quiet){message("Multithreading with ", cores, " cores")}
