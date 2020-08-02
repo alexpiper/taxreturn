@@ -421,6 +421,7 @@ get_reading_frame <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FA
 #' @export
 #' @import ape
 #' @import Biostrings
+#' @import DECIPHER
 #'
 #' @examples
 codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, remove.ambiguities=TRUE){
@@ -433,13 +434,15 @@ codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, 
   } else {
     stop("x must be a DNAbin or DNAStringSet")
   }
-  #Check for N's
-  if(hasOnlyBaseLetters(x) == FALSE & remove.ambiguities == FALSE) {
+
+  #Check for Ambiguities
+  nogaps <- DECIPHER::RemoveGaps(x)
+  if(Biostrings::hasOnlyBaseLetters(nogaps) == FALSE & remove.ambiguities == FALSE) {
     stop("Error: Sequences containing ambiguities, set remove.ambiguities to TRUE")
-  } else if(hasOnlyBaseLetters(x) == FALSE & remove.ambiguities==TRUE) {
-    discards <- sapply(x, hasOnlyBaseLetters)
+  } else if(Biostrings::hasOnlyBaseLetters(nogaps) == FALSE & remove.ambiguities==TRUE) {
+    discards <- sapply(nogaps, Biostrings::hasOnlyBaseLetters)
     discards <- discards[discards == FALSE]
-    x <- x[which(!names(x) %in% names(discards))]
+    x <- x[which(!names(nogaps) %in% names(discards))]
     message(paste0(length(discards), " Sequences containing ambiguities were removed"))
   }
 
@@ -448,7 +451,7 @@ codon_filter <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE, 
   x <- x[!is.na(frames)]
 
   if(format=="DNAbin"){
-    out <- as.DNAbin(x)
+    out <- ape::as.DNAbin(x)
   } else if(format=="DNAStringSet"){
     out <- x
   }
