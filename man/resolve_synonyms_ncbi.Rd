@@ -4,7 +4,7 @@
 \alias{resolve_synonyms_ncbi}
 \title{resolve_synonyms_ncbi}
 \usage{
-resolve_synonyms_ncbi(x, dir = NULL, quiet = FALSE)
+resolve_synonyms_ncbi(x, dir = NULL, quiet = FALSE, ...)
 }
 \arguments{
 \item{x}{A DNAbin or DNAStringSet Object}

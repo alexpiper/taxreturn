@@ -82,7 +82,9 @@ get_ncbi_lineage <- function(dest.dir, synonyms = TRUE, force=FALSE) {
 #' Get NCBI synonyms
 #'
 #' @param dir A directory containing the NCBI taxonomy that was downloaded using get_ncbi_lineage
-#' @param quiet
+#' @param recurse Whether to recurse when searching for dir if dir is NULL.
+#' If TRUE recurse fully, if a positive number the number of levels to recurse.
+#' @param quiet Whether progress should be printed to console
 #'
 #' @return
 #' @export
@@ -91,23 +93,24 @@ get_ncbi_lineage <- function(dest.dir, synonyms = TRUE, force=FALSE) {
 #' @import dplyr
 #'
 #' @examples
-get_ncbi_synonyms <- function(dir=NULL, quiet=FALSE) {
+get_ncbi_synonyms <- function(dir=NULL, recurse=TRUE, quiet=FALSE) {
   if (is.null(dir)){
-    dir <- fs::dir_ls(path = getwd(), type = "directory", glob = "*ncbi_taxdump", recurse = TRUE)
-    if(length(dir) == 0){
+    if(!quiet){message("Dir is null, finding ncbi_taxdump directory using recursion")}
+    dir <- fs::dir_ls(path = getwd(), type = "directory", glob = "*ncbi_taxdump", recurse = recurse)
+    if(length(dir) >0){
+      if(!quiet){message("ncbi_taxdump found at ", dir)}
+    } else{
       stop("ERROR: provide a directory containing ncbi taxonomy")
     }
   }
   if(!quiet){message("Building synonyms data frame\n")}
   file <- normalizePath(paste0(dir, "/names.dmp"))
-  x <- scan(
-    file = file, what = "", sep = "\n",
-    quiet = TRUE
-  )
 
-  parsed <- readr::read_delim(x,  delim="|", col_names = c("tax_id","tax_name", "unique_name", "class", "junk")) %>%
-    dplyr::select(-unique_name, -junk) %>%
-    dplyr::mutate_all( ~stringr::str_remove_all(.x,"\t"))
+  #Read in
+  splitLines <- do.call(rbind, strsplit(readLines(file),"\t\\|\t?"))
+  splitLines<-splitLines[,-3]
+  colnames(splitLines) <- c("tax_id","tax_name", "class")
+  parsed <- as.data.frame(splitLines)
 
   out <- parsed %>%
     dplyr::group_by(tax_id) %>%
@@ -117,10 +120,10 @@ get_ncbi_synonyms <- function(dir=NULL, quiet=FALSE) {
     dplyr::select(-class, synonym = tax_name) %>%
     dplyr::left_join(parsed %>%
                   dplyr::filter(class=="scientific name") %>%
-                  dplyr::select(tax_id, tax_name))
+                  dplyr::select(tax_id, tax_name), by="tax_id")
+
   return(out)
 }
-
 
 # resolve_synonyms_ncbi ---------------------------------------------------
 
@@ -139,7 +142,7 @@ get_ncbi_synonyms <- function(dir=NULL, quiet=FALSE) {
 #' @import dplyr
 #'
 #' @examples
-resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE) {
+resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE, ...) {
   time <- Sys.time() # get time
   if (quiet == TRUE) {
     verbose <- FALSE
@@ -160,7 +163,7 @@ resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE) {
     is.seq <- FALSE
   }
 
-  syns <- get_ncbi_synonyms(dir=dir)
+  syns <- get_ncbi_synonyms(dir=dir) #...=...
 
   # if input has sequences, get names
   if (is.seq) {
@@ -180,13 +183,15 @@ resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE) {
     dplyr::select(-tax_id) %>%
     dplyr::filter(query %in% syns$synonym) %>%
     dplyr::left_join(syns %>% dplyr::rename(query = synonym)) %>%
-    dplyr::select(-query)
+    dplyr::select(-query) %>%
+    dplyr::filter(!duplicated(acc)) #where ar these coming from?
 
   if(nrow(to_replace) > 0){
   out <- query %>%
     dplyr::rename(tax_name = query) %>%
     dplyr::rows_update(to_replace, by="acc") %>%
     tidyr::unite(col = V1, c("acc", "tax_id"), sep = "|")
+
 
   if(is.seq) {
       names(x) <- paste(out$V1, out$tax_name, sep = ";")
