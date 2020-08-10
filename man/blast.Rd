@@ -11,26 +11,41 @@ blast(
   evalue = 1e-06,
   output_format = "tabular",
   args = NULL,
-  quiet = FALSE
+  ungapped = FALSE,
+  quiet = FALSE,
+  multithread = FALSE
 )
 }
 \arguments{
 \item{query}{(Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.}
 
 \item{db}{(Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
-If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database}
+If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database.
+If db is set to "remote", this will conduct a search against NCBI nucleotide database.}
 
 \item{type}{(Required) type of search to conduct, default 'blastn'}
 
 \item{evalue}{(Required) Minimum evalue from search}
 
+\item{output_format}{The output format to be returned.
+Default is tabular, which returns 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcov
+See https://www.ncbi.nlm.nih.gov/books/NBK279684/ for custom formatting information}
+
 \item{args}{(Optional) Extra arguments passed to BLAST}
 
+\item{ungapped}{Whether ungapped alignment should be conducted. Default is FALSE.}
+
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
+
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
 }
 \value{
 
 }
 \description{
 Run BLAST search
+}
+\examples{
+
+Add qcov length filter
 }
