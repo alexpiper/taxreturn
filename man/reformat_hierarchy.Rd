@@ -13,6 +13,12 @@ reformat_hierarchy(
 )
 }
 \arguments{
+\item{x}{A DNAbin with names formatted Accession|taxid;taxonomy}
+
+\item{quiet}{Whether progress should be printed to console}
+
+\item{ranks}{The taxonomic ranks to return in the output names}
+
 \item{cores}{The number of  cores to use for get_ott_lineage}
 }
 \value{

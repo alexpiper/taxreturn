@@ -7,7 +7,9 @@
 reformat_dada2_spp(x, quiet = FALSE)
 }
 \arguments{
-\item{quiet}{}
+\item{x}{A DNAbin with names formatted Accession|taxid;taxonomy}
+
+\item{quiet}{Whether progress should be printed to console}
 }
 \value{
 
