@@ -7,7 +7,7 @@
 gbSearch_subsample(
   x,
   database = "nuccore",
-  marker = c("COI", "CO1", "COX1"),
+  marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"),
   quiet = FALSE,
   output = "h",
   minlength = 1,

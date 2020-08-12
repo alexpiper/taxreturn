@@ -403,7 +403,7 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #'
 #'  # Return res - Taxa - x of y sequences in n chunks in n secs to output
 #' @examples
-gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h",
+gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h",
                      minlength = 1, maxlength = 2000, subsample=NULL, chunksize=NULL, out.dir = NULL,
                      compress = FALSE, force=FALSE) {
 
@@ -418,8 +418,7 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
     stop("output has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details")
   }
   if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
-    marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]") %>%
-      stringr::str_replace_all(stringr::fixed("[GENE][GENE]"), "[GENE]")
+    marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
   if (is.null(out.dir)) {
@@ -432,8 +431,8 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
 
   # Create output file
   name <- marker %>%
-     stringr::str_replace_all(pattern="\\[GENE]", replacement ="") %>%
-     stringr::str_replace_all(pattern="OR ", replacement ="") %>%
+     stringr::str_remove_all(pattern="\\[GENE]") %>%
+     stringr::str_remove_all(pattern="OR ") %>%
      stringr::str_replace_all(pattern=" ", replacement ="_")
 
   if (compress) {
@@ -469,6 +468,7 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"), 
         searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
         if(is.null(chunksize)) {chunksize=1}
       }
+      if(!quiet){message("Searching genbank with query:", searchQ)}
 
       search_results <- rentrez::entrez_search(db = database, term = searchQ, retmax = 9999999, use_history = TRUE)
 
@@ -614,7 +614,7 @@ cat_acctax <- function(x) {
 #' @export
 #'
 #' @examples
-gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1", "COX1"),
+gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"),
                                quiet = FALSE, output = "h", minlength = 1, maxlength = 2000,
                                subsample=1000, chunksize=300, compress = FALSE, force=FALSE, out.dir = NULL) {
   # function setup
@@ -628,8 +628,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
     stop("output has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details")
   }
   if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
-    marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]") %>%
-      stringr::str_replace_all(stringr::fixed("[GENE][GENE]"), "[GENE]")
+    marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
   if (is.null(out.dir)) {
@@ -642,8 +641,8 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
 
   # Create output file
   name <- marker %>%
-    stringr::str_replace_all(pattern="\\[GENE]", replacement ="") %>%
-    stringr::str_replace_all(pattern="OR ", replacement ="") %>%
+    stringr::str_remove_all(pattern="\\[GENE]") %>%
+    stringr::str_remove_all(pattern="OR ") %>%
     stringr::str_replace_all(pattern=" ", replacement ="_")
 
   if (compress) {
@@ -680,6 +679,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
         searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
         chunksize=1
       }
+      if(!quiet){message("Searching genbank with query:", searchQ)}
 
       search_results <- rentrez::entrez_search(db = database, term = searchQ, retmax = 9999999, use_history = TRUE)
 
@@ -796,7 +796,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI", "CO1",
 #' @import Biostrings
 #'
 #' @examples
-gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "COX1"), quiet = FALSE, output = "h", suffix="updates",
+gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h", suffix="updates",
                      minlength = 1, maxlength = 2000, chunksize=300, out.dir = NULL,
                      compress = FALSE, force=FALSE, multithread = FALSE, progress=FALSE){
 
@@ -816,8 +816,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
     stop("output has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details")
   }
   if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
-    marker <- paste0(paste(marker, collapse="[GENE] OR "),"[GENE]") %>%
-      stringr::str_replace_all(stringr::fixed("[GENE][GENE]"), "[GENE]")
+    marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
   if (is.null(out.dir)) {
@@ -830,8 +829,8 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
 
   # Create output file
   name <- marker %>%
-    stringr::str_replace_all(pattern="\\[GENE]", replacement ="") %>%
-    stringr::str_replace_all(pattern="OR ", replacement ="") %>%
+    stringr::str_remove_all(pattern="\\[GENE]") %>%
+    stringr::str_remove_all(pattern="OR ") %>%
     stringr::str_replace_all(pattern=" ", replacement ="_")
 
   if (compress) {
@@ -869,6 +868,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
     searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
     if(is.null(chunksize)) {chunksize=1}
   }
+  if(!quiet){message("Searching genbank with query:", searchQ)}
 
   search_results <- rentrez::entrez_search(db = database, term = searchQ, retmax = 9999999, use_history = TRUE)
   ids <- search_results$ids
@@ -980,8 +980,8 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI", "CO1", "C
 #' @param x A taxon name or vector of taxon names to download sequences for.
 #' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 #' Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'
-#' @param marker The barcode marker used as a search term for the database.
-#' The default for Genbank is 'COI OR COI OR COX1 OR COXI', while the default for BOLD is 'COI-5P'.
+#' @param marker The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix [GENE] will increase the search selectivity.
+#' The default for Genbank is 'COI[Gene] OR COX1[GENE] OR COXI[GENE]', while the default for BOLD is 'COI-5P'.
 #' If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
 #' If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.
 #' @param downstream Instead of search for the query sequence, this provides the option of instead searching for a downstream taxonomic rank.
@@ -1097,7 +1097,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
         taxon, gbSearch, database = database, marker = marker,
         output = output, minlength = minlength, maxlength = maxlength,
         compress = compress, chunksize=chunksize, out.dir= out.dir,
-        force=force, quiet = TRUE, .progress = progress, ...=...)
+        force=force, quiet = quiet, .progress = progress, ...=...)
 
     } else if (is.numeric(subsample)){
       message("Downloading from genbank - With subsampling")
@@ -1105,7 +1105,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
         taxon, gbSearch_subsample, database = database, marker = marker,
         out.dir = out.dir, output = output, subsample = subsample,
         minlength = minlength, maxlength = maxlength, chunksize=chunksize,
-        force=force, compress = compress, quiet = TRUE,  .progress = progress, ...=...)
+        force=force, compress = compress, quiet = quiet,  .progress = progress, ...=...)
     }
 
   } else if (database == "bold") {
@@ -1131,7 +1131,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
     res <- furrr::future_map(
       bold_taxon, boldSearch, marker = marker, db=db,
       out.dir = out.dir, out.file = NULL, output = output,
-      compress = compress, quiet = TRUE,  .progress = progress, force=force, ...=...)
+      compress = compress, quiet = quiet,  .progress = progress, force=force, ...=...)
   }
 
   ## Explicitly close multisession workers

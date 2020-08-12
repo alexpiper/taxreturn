@@ -29,8 +29,8 @@ fetchSeqs(
 \item{database}{The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'}
 
-\item{marker}{The barcode marker used as a search term for the database.
-The default for Genbank is 'COI OR COI OR COX1 OR COXI', while the default for BOLD is 'COI-5P'.
+\item{marker}{The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix \link{GENE} will increase the search selectivity.
+The default for Genbank is 'COI\link[=GENE]{Gene} OR COX1\link{GENE} OR COXI\link{GENE}', while the default for BOLD is 'COI-5P'.
 If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
 If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.}
 
