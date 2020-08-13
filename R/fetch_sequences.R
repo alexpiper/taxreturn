@@ -7,7 +7,8 @@
 #' "binom" for just genus species binomials (SeqID;Genus Species),
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' or "standard" which outputs the default format for each database. For bold this is `processid|species name|markercode|genbankid`
 #' @param out.file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
@@ -30,8 +31,8 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
   # function setup
   time <- Sys.time() # get time
 
-  if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
-    stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
 
   # Get NCBI taxonomy database if NCBI format outputs are desired
@@ -70,11 +71,15 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
       dplyr::na_if("") %>%
       dplyr::filter(markercode == marker) %>% # Remove all sequences for unwanted markers
       dplyr::mutate(domain_name = "Eukaryota") %>%
-      dplyr::filter(!is.na(species_name)) %>%
+      dplyr::filter(!is.na(species_name), !is.na(markercode), !is.na(nucleotides)) %>%
       dplyr::filter(!stringr::str_detect(nucleotides, pattern = "I")) #remove inosines
 
     if (nrow(data) >0) {
-      if (output == "h") {
+      if (output == "standard") {
+        data <- data %>%
+          dplyr::select(processid, species_name, markercode, genbank_accession, nucleotides) %>%
+          tidyr::unite("name", c("processid", "species_name", "markercode", "genbank_accession"), sep = "|")
+      } else if (output == "h") {
         # Hierarchial output
         data <- data %>%
           dplyr::select(sampleid, domain_name, phylum_name, class_name,
@@ -180,7 +185,8 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #' "binom" for just genus species binomials (SeqID;Genus Species),
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' or "standard" which outputs the default format for each database. For bold this is `processid|species name|markercode|genbankid`
 #' @param suffix The suffix to add to newly downloaded files. Defaults to 'updates'
 #' @param out.file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
@@ -190,7 +196,6 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #'
 #'
 #' @return
-#' @export
 #' @import bold
 #' @import dplyr
 #' @import tidyr
@@ -204,8 +209,8 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
   # function setup
   time <- Sys.time() # get time
 
-  if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
-    stop(paste0(output, " has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
 
   #Check if all inputs exists
@@ -264,7 +269,11 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
       dplyr::filter(!stringr::str_detect(nucleotides, pattern = "I")) #remove inosines
 
     if (nrow(data) >0) {
-      if (output == "h") {
+      if (output == "standard") {
+        data <- data %>%
+          dplyr::select(processid, species_name, markercode, genbank_accession, nucleotides) %>%
+          tidyr::unite("name", c("processid", "species_name", "markercode", "genbank_accession"), sep = "|")
+      } else if (output == "h") {
         # Hierarchial output
         data <- data %>%
           dplyr::select(sampleid, domain_name, phylum_name, class_name,
@@ -368,7 +377,8 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #' "binom" for just genus species binomials (SeqID;Genus Species),
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' or "standard" which outputs the default format for each database. For genbank this is `Accession Sequence definition`
 #' @param minlength The minimum length of sequences to download
 #' @param maxlength The maximum length of sequences to download
 #' @param compress  Option to compress output fasta files using gzip
@@ -414,10 +424,10 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
     stop("database is invalid: only nuccore and genbank is currently supported")
   }
 
-  if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
-    stop("output has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details")
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
-  if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
+  if (!any(tolower(marker) %in% c("mitochondria", "mitochondrion", "genome"))) {
     marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
@@ -490,7 +500,9 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
           gb <- biofiles::gbRecord(rcd = textConnection(dl))
 
           # Hierarchial output
-          if (output == "h") {
+          if (output == "standard") {
+            names <- paste0(biofiles::getAccession(gb), " ", biofiles::getDefinition(gb))
+          } else if (output == "h") {
             lineage <- biofiles::getTaxonomy(gb) %>%
               stringr::str_remove(".$") %>%
               stringr::str_split_fixed(pattern = ";", n = Inf) %>%
@@ -520,7 +532,8 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
           #Check if names match
           names(seqs) <- names[names %>%
                                  stringr::str_remove(pattern=";.*$") %>%
-                                 stringr::str_remove(pattern="\\|.*$")
+                                 stringr::str_remove(pattern="\\|.*$") %>%
+                                 stringr::str_remove(" .*$")
                                %in% names(seqs)]
           if (compress == TRUE) {
             Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
@@ -594,7 +607,8 @@ cat_acctax <- function(x) {
 #' "binom" for just genus species binomials (SeqID;Genus Species),
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' or "standard" which outputs the default format for each database. For genbank this is `Accession Sequence definition`
 #' @param minlength The minimum length of sequences to download
 #' @param maxlength The maximum length of sequences to download
 #' @param compress  Option to compress output fasta files using gzip
@@ -624,10 +638,10 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
     stop("database is invalid: only nuccore and genbank is currently supported")
   }
 
-  if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
-    stop("output has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details")
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
-  if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
+  if (!any(tolower(marker) %in% c("mitochondria", "mitochondrion", "genome"))) {
     marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
@@ -702,7 +716,9 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
           gb <- biofiles::gbRecord(rcd = textConnection(dl))
 
           # Hierarchial output
-          if (output == "h") {
+          if (output == "standard") {
+            names <- paste0(biofiles::getAccession(gb), " ", biofiles::getDefinition(gb))
+          } else if (output == "h") {
             lineage <- biofiles::getTaxonomy(gb) %>%
               str_split_fixed(pattern = ";", n = Inf) %>%
               trimws(which = "both") %>%
@@ -721,10 +737,17 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
           } else if (output == "gb-binom") {
             names <- paste0(cat_acctax(gb), ";", biofiles::getOrganism(gb))
           }
-
-          # Output FASTA
-          seqs <- biofiles::getSequence(gb)
-          names(seqs) <- names
+          #output seqs
+          seqs <- biofiles::getSequence(gb) # Something failing here - getting much less than the proper amount
+          if(all(is.na(names(seqs)))) {
+            names(seqs) <- biofiles::getAccession(gb)
+          }
+          #Check if names match
+          names(seqs) <- names[names %>%
+                                 stringr::str_remove(pattern=";.*$") %>%
+                                 stringr::str_remove(pattern="\\|.*$") %>%
+                                 stringr::str_remove(" .*$")
+                               %in% names(seqs)]
           if (compress == TRUE) {
             Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
           } else if (compress == FALSE) {
@@ -812,10 +835,10 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
     stop("Not all fasta files provided can be found, check the diferectory you have provided")
   }
 
-  if (!output %in% c("h", "binom", "gb", "bold", "gb-binom")) {
-    stop("output has to be one of: 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details")
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
-  if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
+  if (!any(tolower(marker) %in% c("mitochondria", "mitochondrion", "genome"))) {
     marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
@@ -918,7 +941,9 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
       gb <- biofiles::gbRecord(rcd = textConnection(dl))
 
       # Hierarchial output
-      if (output == "h") {
+      if (output == "standard") {
+        names <- paste0(biofiles::getAccession(gb), " ", biofiles::getDefinition(gb))
+      } else if (output == "h") {
         lineage <- biofiles::getTaxonomy(gb) %>%
           str_split_fixed(pattern = ";", n = Inf) %>%
           trimws(which = "both") %>%
@@ -937,10 +962,16 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
       } else if (output == "gb-binom") {
         names <- paste0(cat_acctax(gb), ";", biofiles::getOrganism(gb))
       }
-
-      # Output FASTA
-      seqs <- biofiles::getSequence(gb)
-      names(seqs) <- names
+      seqs <- biofiles::getSequence(gb) # Something failing here - getting much less than the proper amount
+      if(all(is.na(names(seqs)))) {
+        names(seqs) <- biofiles::getAccession(gb)
+      }
+      #Check if names match
+      names(seqs) <- names[names %>%
+                             stringr::str_remove(pattern=";.*$") %>%
+                             stringr::str_remove(pattern="\\|.*$") %>%
+                             stringr::str_remove(" .*$")
+                           %in% names(seqs)]
       if (compress == TRUE) {
         Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
       } else if (compress == FALSE) {
@@ -991,7 +1022,8 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 #' "binom" for just genus species binomials (SeqID;Genus Species),
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-#' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
+#' or "standard" which outputs the default format for each database. For bold this is `processid|species name|markercode|genbankid` while for genbank this is `Accession Sequence definition`
 #' @param minlength The maximum length of the query sequence to return. Default 1.
 #' @param maxlength The maximum length of the query sequence to return.
 #' This can be useful for ensuring no off-target sequences are returned. Default 2000.
@@ -1028,6 +1060,10 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
 
   if(!database %in% c("nuccore", "genbank", "bold")) {
     stop("database is invalid. See help page for more details")
+  }
+
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
 
   #stop if subsample and BOLD is true

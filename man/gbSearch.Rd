@@ -31,7 +31,8 @@ Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Ord
 "binom" for just genus species binomials (SeqID;Genus Species),
 "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process}
+"gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+or "standard" which outputs the default format for each database. For genbank this is \verb{Accession Sequence definition}}
 
 \item{minlength}{The minimum length of sequences to download}
 
