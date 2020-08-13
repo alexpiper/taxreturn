@@ -372,7 +372,8 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 #'
 #' @param x a DNAbin object or an object coercible to DNAbin
 #' @param ranks The taxonomic ranks currently assigned to the names
-#' @param summarise Select a taxonomic rank to summarise at
+#' @param depth The depth within the tree to return. Default NULL to return lowest input rank
+#' @param summarise Select a taxonomic rank to summarise below. Default is FALSE to return a tree of the same size as input
 #' @param output The output to return, options are:
 #' "phylo" to return an ape phylo object
 #' "data.tree" to return a data.tree node object
@@ -389,7 +390,7 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 #' @export
 #'
 #' @examples
-tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), summarise = "species", output="treedf"){
+tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), depth=NULL, summarise = FALSE, output="phylo"){
 
   # start timer
   time <- Sys.time()
@@ -403,26 +404,51 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
 
   # leave an autodetect for ranks?
   ranks <- stringr::str_to_lower(ranks)
-  summarise <- stringr::str_to_lower(summarise)
-  groupranks <- ranks[1:match(summarise, ranks)]
 
-  #Get taxonomic lineage and convert to tree
+  if (!is.null(depth)){
+    ranks <- ranks[1:depth]
+  }
+
+  if(is(summarise, "character")){
+    summarise <- stringr::str_to_lower(summarise)
+
+    if(summarise %in% ranks){
+      groupranks <- ranks[1:match(summarise, ranks)]
+    } else {
+      stop("Summarise must be one of the values in ranks")
+    }
+  }
+  #Get taxonomic lineage
   lineage <- names(x) %>%
-    stringr::str_replace(pattern=";$", replacement = "") %>%
+    stringr::str_remove(pattern=";$") %>%
     stringr::str_split_fixed(";", n=Inf) %>%
     as.data.frame() %>%
-    magrittr::set_colnames(c("Acc", ranks )) %>%
-    dplyr::select(-Acc) %>%
-    dplyr::group_by_at(groupranks) %>%
-    dplyr::summarise(sum = dplyr::n()) %>%
-    tidyr::unite(col=pathString, !!groupranks, sep="/") %>%
-    dplyr::mutate(pathString = paste0("Root/", pathString)) %>%
-    data.tree::as.Node(.)
+    magrittr::set_colnames(c("Acc", ranks ))
+
+  lineage <- lineage[,!is.na(colnames(lineage))]
+
+  if(is(summarise, "character")){
+    lineage <- lineage %>%
+      dplyr::select(-Acc) %>%
+      dplyr::group_by_at(groupranks) %>%
+      dplyr::summarise(sum = dplyr::n()) %>%
+      tidyr::unite(col=pathString, !!groupranks, sep="/") %>%
+      dplyr::mutate(pathString = paste0("Root/", pathString)) %>%
+      data.tree::as.Node(.)
+  } else if(isFALSE(summarise)){
+    lineage <- lineage %>%
+      mutate(Acc = Acc %>% str_remove("\\|.*$")) %>%
+      tidyr::unite(col=pathString, !!ranks, Acc, sep="/") %>%
+      dplyr::mutate(pathString = paste0("Root/", pathString)) %>%
+      data.tree::as.Node(.)
+  }
 
   if (output=="phylo"){
-  out <-  ape::read.tree(textConnection(data.tree::ToNewick(lineage, heightAttribute = NULL)))
-  } else if (output=="treedf"){
-  out <- data.tree::ToDataFrameTree(lineage, "sum")
+    out <-  ape::read.tree(textConnection(data.tree::ToNewick(lineage, heightAttribute = NULL)))
+  } else if (output=="treedf" & is(summarise, "character")){
+    out <- data.tree::ToDataFrameTree(lineage, "sum")
+  } else if (output=="treedf" & !is(summarise, "character")){
+    out <- data.tree::ToDataFrameTree(lineage)
   } else if (output=="data.tree"){
     out <- lineage
   } else if (output =="newick"){

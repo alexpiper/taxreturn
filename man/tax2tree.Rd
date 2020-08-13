@@ -7,8 +7,9 @@
 tax2tree(
   x,
   ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
-  summarise = "species",
-  output = "treedf"
+  depth = NULL,
+  summarise = FALSE,
+  output = "phylo"
 )
 }
 \arguments{
@@ -16,7 +17,9 @@ tax2tree(
 
 \item{ranks}{The taxonomic ranks currently assigned to the names}
 
-\item{summarise}{Select a taxonomic rank to summarise at}
+\item{depth}{The depth within the tree to return. Default NULL to return lowest input rank}
+
+\item{summarise}{Select a taxonomic rank to summarise below. Default is FALSE to return a tree of the same size as input}
 
 \item{output}{The output to return, options are:
 "phylo" to return an ape phylo object
