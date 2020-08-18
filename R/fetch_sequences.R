@@ -412,7 +412,6 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #' loprovencyclife [filter] 	Entries with LinkOut links to the Encyclopedia of Life
 #'
 #'  # Return res - Taxa - x of y sequences in n chunks in n secs to output
-#' @examples
 gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h",
                      minlength = 1, maxlength = 2000, subsample=NULL, chunksize=NULL, out.dir = NULL,
                      compress = FALSE, force=FALSE) {
@@ -625,7 +624,6 @@ cat_acctax <- function(x) {
 #' @import Biostrings
 #'
 #' @return
-#' @export
 #'
 #' @examples
 gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"),

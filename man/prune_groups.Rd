@@ -17,7 +17,7 @@ prune_groups(
 
 \item{maxGroupSize}{The maximum number of sequences with the same taxonomic annotation to keep}
 
-\item{dedup}{Whether completetely identical sequences should be discarded first}
+\item{dedup}{Whether sequences with identical taxonomic name and nucleotide bases sequences should be discarded first}
 
 \item{discardby}{How sequences from groups with size above maxGroupSize should be discarded.
 Options include "length" (Default) which will discard sequences from smallest to largest until the group is below maxGroupSize,

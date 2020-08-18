@@ -285,7 +285,7 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = 
 #'
 #' @param x A DNAbin or DNAStringset object
 #' @param maxGroupSize The maximum number of sequences with the same taxonomic annotation to keep
-#' @param dedup Whether completetely identical sequences should be discarded first
+#' @param dedup Whether sequences with identical taxonomic name and nucleotide bases sequences should be discarded first
 #' @param quiet Whether progress should be printed to the console.
 #' @param discardby How sequences from groups with size above maxGroupSize should be discarded.
 #' Options include "length" (Default) which will discard sequences from smallest to largest until the group is below maxGroupSize,
@@ -306,9 +306,25 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = 
 #'
 #' @examples
 prune_groups <- function(x, maxGroupSize = 5, dedup = TRUE, discardby = "length", quiet = FALSE) {
+  # Convert to DNAbin
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+    if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
+  }
+
   if (dedup) {
+    ## Consider taxonomic name and sequence identity in deduplication
     dup <- length(x)
-    x <- insect::subset.DNAbin(x, subset = !insect::duplicated.DNAbin(x, point = TRUE))
+    taxids <- names(x) %>%
+      stringr::str_remove("^.*;")
+
+    hashes <- purrr::map2(x, taxids, ~{
+      openssl::md5(paste(c(.y, as.vector(.x)), collapse=""))
+    }) %>%
+      unlist()
+
+    dupes <- duplicated(hashes)
+    x <- insect::subset.DNAbin(x, subset = !dupes)
     if (!quiet) cat(paste0((dup - length(x)), " duplicate sequences removed \n"))
   }
 
