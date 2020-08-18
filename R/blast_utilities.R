@@ -291,22 +291,22 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 
   #  Conduct BLAST search
   if (!quiet) { message("Running BLASTn query: ", paste(c("-db", db,
-                              "-query", input,
-                              remote,
-                              "-outfmt", outfmt,
-                              "-evalue", evalue,
-                              nthreads,
-                              ungapped,
-                              args), collapse=" "))}
+                                                          "-query", input,
+                                                          remote,
+                                                          "-outfmt", outfmt,
+                                                          "-evalue", evalue,
+                                                          args,
+                                                          nthreads,
+                                                          ungapped), collapse=" "))}
   results <- system2(command = .findExecutable(type),
                      args = c("-db", db,
                               "-query", input,
                               remote,
                               "-outfmt", outfmt,
                               "-evalue", evalue,
+                              args,
                               nthreads,
-                              ungapped,
-                              args),
+                              ungapped),
                      wait = TRUE,
                      stdout = TRUE)
 
@@ -338,7 +338,11 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @param db (Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
 #' If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database
 #' @param type (Required) type of search to conduct, default 'blastn'
-#' @param threshold (Required) Minimum identity threshold to accept
+#' @param identity (Required) Minimum percent identity cutoff.
+#' @param coverage (Required) Minimum percent query coverage cutoff.
+#' @param evalue (Required) Minimum expect value (E) for saving hits
+#' @param maxtargetseqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
+#' @param maxhsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
 #' @param taxranks (Required) The taxonomic ranks contained in the fasta headers
 #' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
 #' @param args (Optional) Extra arguments passed to BLAST
@@ -350,16 +354,34 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @import tidyr
 #'
 #' @examples
-blast_top_hit <- function(query, db, type="blastn", threshold=90, taxranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";", args="-max_target_seqs 5", quiet=FALSE ){
+blast_top_hit <- function(query, db, type="blastn", identity=95, coverage=95, evalue=1e06, maxtargetseqs=5, maxhsp=5, args=NULL, quiet=FALSE ){
+
+  # set input filters in advance to speed up blast
+  args <- paste("-perc_identity", identity, "-max_target_seqs", maxtargetseqs, "-max_hsps", maxhsp, args)
+
+
   #Conduct BLAST
-  result <- blast(query=query, type=type, db=db, args=args)
+  result <- blast(query=query, type=type, db=db,
+                  evalue = evalue,
+                  args=args,
+                  output_format = '6 qseqid sseqid stitle pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs') %>%
+    dplyr::filter(!is.na(sseqid))
+
   #Subset to top hit
   top_hit <- result %>%
-    dplyr::filter(pident > threshold) %>%
+    dplyr::filter(pident > identity, qcovs > coverage)%>%
     dplyr::group_by(qseqid) %>%
     dplyr::top_n(1, bitscore) %>%
-    dplyr::top_n(1, row_number(name)) %>% # Break ties by position
-    tidyr::separate(sseqid, c("acc",taxranks), delim) %>%
-    dplyr::ungroup()
-
+    tidyr::separate(stitle, c("acc", taxranks), delim) %>%
+    dplyr::mutate(spp = Species %>% str_remove("^.* ")) %>%
+    dplyr::summarise(spp = paste(unique(spp), collapse = "/"), Genus, pident, qcovs,evalue, bitscore, .groups="keep") %>%
+    dplyr::mutate(binomial = paste(Genus, spp)) %>%
+    dplyr::distinct() %>%
+    dplyr::add_tally() %>%
+    dplyr::mutate(binomial =  dplyr::case_when( #Leave unassigned if conflicted at genus level
+      n > 1 ~ as.character(NA),
+      n == 1 ~ binomial
+    )) %>%
+    dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, evalue, bitscore)
+  return(top_hit)
 }
