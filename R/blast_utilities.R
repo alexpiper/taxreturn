@@ -343,7 +343,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @param evalue (Required) Minimum expect value (E) for saving hits
 #' @param maxtargetseqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
 #' @param maxhsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
-#' @param taxranks (Required) The taxonomic ranks contained in the fasta headers
+#' @param ranks (Required) The taxonomic ranks contained in the fasta headers
 #' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
 #' @param args (Optional) Extra arguments passed to BLAST
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
@@ -354,7 +354,10 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @import tidyr
 #'
 #' @examples
-blast_top_hit <- function(query, db, type="blastn", identity=95, coverage=95, evalue=1e06, maxtargetseqs=5, maxhsp=5, args=NULL, quiet=FALSE ){
+blast_top_hit <- function(query, db, type="blastn",
+                          identity=95, coverage=95, evalue=1e06, maxtargetseqs=5, maxhsp=5,
+                          ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
+                          tie="first", args=NULL, quiet=FALSE ){
 
   # set input filters in advance to speed up blast
   args <- paste("-perc_identity", identity, "-max_target_seqs", maxtargetseqs, "-max_hsps", maxhsp, args)
@@ -372,8 +375,67 @@ blast_top_hit <- function(query, db, type="blastn", identity=95, coverage=95, ev
     dplyr::filter(pident > identity, qcovs > coverage)%>%
     dplyr::group_by(qseqid) %>%
     dplyr::top_n(1, bitscore) %>%
-    tidyr::separate(stitle, c("acc", taxranks), delim) %>%
-    dplyr::mutate(spp = Species %>% str_remove("^.* ")) %>%
+    tidyr::separate(stitle, c("acc", ranks), delim)
+
+  if(tie == "first"){
+    top_hit <- top_hit %>%
+      dplyr::top_n(1, row_number(name)) %>% # Break ties by position
+      dplyr::ungroup()
+  } else if(tie == "all"){
+    top_hit <- top_hit %>%
+      dplyr::ungroup()
+  }
+  return(top_hit)
+}
+
+
+# BLAST assign species ----------------------------------------------------
+
+
+#' Assign species using BLAST
+#'
+#' @description This is to be used alongside a hierarchial classifier such as IDTAXA or RDP to assign additional species level matches.
+#' This is designed to be a more flexible version of dada2's assignSpecies function
+#' @param query (Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
+#' @param db (Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
+#' If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database
+#' @param type (Required) type of search to conduct, default 'blastn'
+#' @param identity (Required) Minimum percent identity cutoff.
+#' @param coverage (Required) Minimum percent query coverage cutoff.
+#' @param evalue (Required) Minimum expect value (E) for saving hits
+#' @param maxtargetseqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
+#' @param maxhsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
+#' @param ranks (Required) The taxonomic ranks contained in the fasta headers
+#' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
+#' @param args (Optional) Extra arguments passed to BLAST
+#' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
+#'
+#' @return
+#' @export
+#' @import dplyr
+#' @import tidyr
+#' @import stringr
+#'
+#' @examples
+blast_assign_species <- function(query, db, type="blastn",
+                                 identity=975, coverage=95, evalue=1e06, maxtargetseqs=5, maxhsp=5,
+                                 ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
+                                 args=NULL, quiet=FALSE ){
+
+  #Check input contains species and genus
+  if(!any(tolower(ranks) %in% c("species", "genus"))){
+    stop("Ranks must include Genus and Species")
+  }
+
+  #Conduct BLAST
+  result <- blast_top_hit(query = query, db = db, type=type,
+                          identity=identity, coverage=coverage, evalue=evalue, maxtargetseqs=maxtargetseqs, maxhsp=maxtargetseqs,
+                          ranks=ranks, delim=delim, tie="all", args=args, quiet=quiet ) %>%
+    dplyr::filter(!is.na(Species))
+
+  top_hit <- result %>%
+    dplyr::group_by(qseqid) %>%
+    dplyr::mutate(spp = Species %>% stringr::str_remove("^.* ")) %>%
     dplyr::summarise(spp = paste(unique(spp), collapse = "/"), Genus, pident, qcovs,evalue, bitscore, .groups="keep") %>%
     dplyr::mutate(binomial = paste(Genus, spp)) %>%
     dplyr::distinct() %>%
@@ -383,5 +445,6 @@ blast_top_hit <- function(query, db, type="blastn", identity=95, coverage=95, ev
       n == 1 ~ binomial
     )) %>%
     dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, evalue, bitscore)
+
   return(top_hit)
 }
