@@ -51,7 +51,8 @@ Imports:
     future,
     furrr,
     R.utils,
-    RCurl
+    RCurl,
+    phytools
 Remotes: gschofl/biofiles
 BiocViews:
 Roxygen: list(markdown = TRUE)

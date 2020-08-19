@@ -387,6 +387,7 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 #' @import dplyr
 #' @import tidyr
 #' @import magrittr
+#' @import phytools
 #' @export
 #'
 #' @examples
@@ -444,7 +445,7 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
   }
 
   if (output=="phylo"){
-    out <-  ape::read.tree(textConnection(data.tree::ToNewick(lineage, heightAttribute = NULL)))
+    out <-  phytools::read.newick(textConnection(data.tree::ToNewick(lineage, heightAttribute = NULL)))
   } else if (output=="treedf" & is(summarise, "character")){
     out <- data.tree::ToDataFrameTree(lineage, "sum")
   } else if (output=="treedf" & !is(summarise, "character")){
