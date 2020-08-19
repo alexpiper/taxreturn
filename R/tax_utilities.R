@@ -379,6 +379,7 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 #' "data.tree" to return a data.tree node object
 #' "treedf" to return a simplified tree with taxon summaries in a data frame
 #' "newick" to return a newick file for visualisation in other software
+#' @param replace_bads An option to automatically replace invalid newick characters with '-'
 #'
 #' @return a phylo, data.tree, newick, or treedf object
 #' @import data.tree
@@ -391,17 +392,35 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 #' @export
 #'
 #' @examples
-tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), depth=NULL, summarise = FALSE, output="phylo"){
+tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), depth=NULL, summarise = FALSE,  output="phylo", replace_bads=FALSE){
 
   # start timer
   time <- Sys.time()
-  # Convert to DNAbin
+
+  #Checks
   if (!is(x, "DNAbin")) {
     x <- ape::as.DNAbin(x)
     if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
   }
-
   if (!output %in% c("phylo", "treedf", "data.tree", "newick")) { stop("Output must be 'phylo', 'data.tree', 'newick' or 'treedf'")}
+
+  if(any(stringr::str_detect(names(x) %>% stringr::str_remove("\\|.*$"), "\\,|\\;|\\:|\\(|\\)|\\[|\\]")) && output %in% c("newick", "phylo")){
+    if(replace_bads){
+      names(x) <- names(x) %>%
+        stringr::str_split_fixed("\\|", n=2) %>%
+        as.data.frame() %>%
+        dplyr::mutate(
+          V1 = V1 %>%
+            stringr::str_remove("\\|.*$") %>%
+            stringr::str_replace_all("\\,|\\;|\\:|\\(|\\)|\\[|\\]", "_")
+        ) %>%
+        tidyr::unite("names", everything(), sep="|") %>%
+        dplyr::pull(names)
+
+    }else{
+      stop("Sequence accessions contain one or more of the invalid characters , ; : ( ) [ ] charcters, set replace_bads to TRUE to replace with '-' ")
+    }
+  }
 
   # leave an autodetect for ranks?
   ranks <- stringr::str_to_lower(ranks)
@@ -442,10 +461,13 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
       tidyr::unite(col=pathString, !!ranks, Acc, sep="/") %>%
       dplyr::mutate(pathString = paste0("Root/", pathString)) %>%
       data.tree::as.Node(.)
-  }
+  } else(
+    stop("Summarise must refer to a taxonomic rank, or be FALSE")
+  )
 
   if (output=="phylo"){
-    out <-  phytools::read.newick(textConnection(data.tree::ToNewick(lineage, heightAttribute = NULL)))
+    nwk <- data.tree::ToNewick(lineage, heightAttribute = NULL)
+    out <-  phytools::read.newick(textConnection(nwk))
   } else if (output=="treedf" & is(summarise, "character")){
     out <- data.tree::ToDataFrameTree(lineage, "sum")
   } else if (output=="treedf" & !is(summarise, "character")){
@@ -459,6 +481,54 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
   time <- Sys.time() - time
   message(paste0("Generated a taxonomic tree for ", length(x), " Sequences in ", format(time, digits = 2)))
 
+  return(out)
+}
+
+
+# Subset sequences by taxonomy --------------------------------------------
+
+
+
+#' Subset sequences by taxonomy
+#'
+#' @param x A DNAbin or DNAString with heirarchial taxonomy
+#' @param filtrank The taxonomic rank to subset at i.e. 'Class'
+#' @param filtvalue The taxonomic name to subset at i.e. 'Insecta'
+#' @param ranks The taxonomic ranks currently assigned to the sequences
+#'
+#' @return
+#' @export
+#' @import stringr
+#' @import tidyr
+#' @import dplyr
+#' @import magrittr
+#' @import ape
+#' @import Biostrings
+#'
+#' @examples
+subset_tax <- function(x, filtrank, filtvalue, ranks=c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")){
+
+  # Convert to DNAbin
+  if (!class(x) %in% c("DNAbin", "DNAStringSet")  ) {
+    stop("x must be a DNAbin or DNAstringset \n")
+  }
+
+  ranklength <- length(ranks)
+  if(!stringr::str_count(names(seqs)[[1]] %>% stringr::str_remove(";$"), ";")== ranklength){
+    stop("Error, the number of semicolon delimiters do not match the length of ranks")
+  }
+
+  filtnames <- names(x) %>%
+    stringr::str_remove(";$") %>%
+    stringr::str_split_fixed(";", n=(ranklength+1)) %>%
+    as.data.frame(stringsAsFactors=FALSE) %>%
+    magrittr::set_colnames(c("acc", tolower(ranks))) %>%
+    dplyr::filter(!!sym(tolower(filtrank)) == filtvalue)%>%
+    tidyr::unite(col="names", dplyr::everything(), sep=";") %>%
+    pull(names)
+
+  out <- x[names(x) %in% filtnames]
+  message(length(x) - length(out), " sequences which did not pass the filter '", filtrank, " == ", filtvalue, "' removed")
   return(out)
 }
 

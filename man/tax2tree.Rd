@@ -9,7 +9,8 @@ tax2tree(
   ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
   depth = NULL,
   summarise = FALSE,
-  output = "phylo"
+  output = "phylo",
+  replace_bads = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ tax2tree(
 "data.tree" to return a data.tree node object
 "treedf" to return a simplified tree with taxon summaries in a data frame
 "newick" to return a newick file for visualisation in other software}
+
+\item{replace_bads}{An option to automatically replace invalid newick characters with '-'}
 }
 \value{
 a phylo, data.tree, newick, or treedf object
