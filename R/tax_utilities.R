@@ -515,7 +515,7 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
 #'
 #' @param x A DNAbin or DNAString with heirarchial taxonomy
 #' @param filtrank The taxonomic rank to subset at i.e. 'Class'
-#' @param filtvalue The taxonomic name to subset at i.e. 'Insecta'
+#' @param filtvalue A taxonomic name or vector of taxonomic names to subset filtrank at at i.e. c('Insecta', 'Arachnida')
 #' @param ranks The taxonomic ranks currently assigned to the sequences
 #'
 #' @return
@@ -528,7 +528,7 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
 #' @import Biostrings
 #'
 #' @examples
-subset_tax <- function(x, filtrank, filtvalue, ranks=c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")){
+subset_by_tax <- function(x, filtrank, filtvalue, ranks=c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")){
 
   # Convert to DNAbin
   if (!class(x) %in% c("DNAbin", "DNAStringSet")  ) {
@@ -545,12 +545,19 @@ subset_tax <- function(x, filtrank, filtvalue, ranks=c("Kingdom", "Phylum", "Cla
     stringr::str_split_fixed(";", n=(ranklength+1)) %>%
     as.data.frame(stringsAsFactors=FALSE) %>%
     magrittr::set_colnames(c("acc", tolower(ranks))) %>%
-    dplyr::filter(!!sym(tolower(filtrank)) == filtvalue)%>%
+    dplyr::filter(!!sym(tolower(filtrank)) %in% filtvalue)%>%
     tidyr::unite(col="names", dplyr::everything(), sep=";") %>%
     pull(names)
 
   out <- x[names(x) %in% filtnames]
-  message(length(x) - length(out), " sequences which did not pass the filter '", filtrank, " == ", filtvalue, "' removed")
+
+  if(length(filtvalue) > 10){
+    out_message <- paste0(paste(filtvalue[1:10], collapse= ", "),"...[TRUNCATED]")
+  } else(
+    out_message <- paste(filtvalue[1:10], collapse= ", ")
+  )
+
+  message(length(x) - length(out), " sequences which did not pass the filter '", filtrank, " %in% ", out_message, "' removed")
   return(out)
 }
 
