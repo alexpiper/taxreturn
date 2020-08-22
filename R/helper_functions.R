@@ -235,8 +235,9 @@ pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRU
 #' "NSB": Nemenman, Shafee and Biale (2002)
 #' "shrink" : Shrinkage estimator
 #' See the help page of `entropy::entropy` for more information
-#'
 #' @param unit the unit in which entropy is measured. The default is "nats" (natural units). For computing entropy in "bits" set unit="log2".
+#' @param return_extra Whether to return a dataframe including extra columns including individual base counts, gap proportions and number of bases at each position
+#'
 #' @return
 #' @export
 #' @import entropy
@@ -245,7 +246,7 @@ pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRU
 #'
 #'
 #' @examples
-alignment_entropy <- function (x, maskgaps=0.2, countgaps = FALSE, method="ML", unit="log") {
+alignment_entropy <- function (x, maskgaps=0.2, countgaps = FALSE, method="ML", unit="log", return_extra=FALSE) {
   if ((maskgaps < 0) | (maskgaps > 1)) {
     stop("maskgaps should be a percentage (within the [0,1] range).")
   }
@@ -263,37 +264,48 @@ alignment_entropy <- function (x, maskgaps=0.2, countgaps = FALSE, method="ML", 
                "S", "T", "V", "W", "Y", "-")
   }
 
-  # Remove gap characters
-  if(isFALSE(countgaps)){
-    names <- names[!names=="-"]
+  if(isTRUE(countgaps)){
+    counter <- names
+  } else if(isFALSE(countgaps)){
+    counter <- names[!names=="-"]
   }
 
   #Create matrix
   suppressWarnings(MSA <- matrix(as.vector(unlist(x)), ncol = length(x[[1]]), byrow = TRUE))
-  n_pos <- length(MSA[1, ])
-  n_seq <- length(MSA[, 1])
-  colnames(MSA) <- c(1:n_pos)
+
+  n_seq <- length(MSA[,1])
+  n_pos <- length(MSA[1,])
+
   #Summarise each position in alignment
   i=1
-  tab <- vector("list", length=n_pos)
-  masked <- vector("list", length=n_pos)
+  df <- data.frame(matrix(ncol = length(names), nrow = n_pos))
+  colnames(df) <- names
+
   for(i in 1:n_pos){
-    tab[[i]] <-  table(c(MSA[, i], names))
-    masked[[i]] <- prop.table(tab[[i]])["-"]
-    tab[[i]] <- t(tab[[i]][names])
+    df[i,names] <- sapply(names, function(x){ sum(MSA[, i] == x)})
   }
-  ent <- tab %>% purrr::map_dbl(entropy::entropy, method=method, unit=unit)
-  names(ent) <-  c(1:n_pos)
+  ent <- df %>%
+    dplyr::mutate(pos = rownames(.),
+                  bases = n_seq - `-`,
+                  prop_gaps = `-` / n_seq,
+                  together = pmap(unname(.[counter]), c)) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(ent = entropy::entropy(together, method=method, unit=unit)) %>%
+    dplyr::mutate(ent = dplyr::case_when(
+      prop_gaps > maskgaps ~ as.numeric(NA),
+      prop_gaps <= maskgaps ~ ent
+    )) %>%
+    dplyr::select(-together)
 
-  # Mask gaps
-  masked <- unlist(masked)
-  masked[is.na(masked)] <- 0
-  names(masked) <-  c(1:n_pos)
-  ent[masked > maskgaps] <- NA
-  message("Masked ", sum(is.na(ent)), " alignment positions with gaps above ", maskgaps, "%")
-  return(ent)
+  if(isTRUE(return_extra)){
+    out <- ent
+  } else if(isFALSE(return_extra)){
+    out <- ent$ent
+    names(out) <- ent$pos
+  }
+  message("Masked ", sum(is.na(ent)), " alignment positions with over ", (maskgaps*100), "% gaps")
+  return(out)
 }
-
 
 # DNAbin2DNAStringSet -----------------------------------------------------
 

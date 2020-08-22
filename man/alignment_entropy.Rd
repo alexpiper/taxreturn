@@ -9,7 +9,8 @@ alignment_entropy(
   maskgaps = 0.2,
   countgaps = FALSE,
   method = "ML",
-  unit = "log"
+  unit = "log",
+  return_extra = FALSE
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ alignment_entropy(
 See the help page of \code{entropy::entropy} for more information}
 
 \item{unit}{the unit in which entropy is measured. The default is "nats" (natural units). For computing entropy in "bits" set unit="log2".}
+
+\item{return_extra}{Whether to return a dataframe including extra columns including individual base counts, gap proportions and number of bases at each position}
 }
 \value{
 
