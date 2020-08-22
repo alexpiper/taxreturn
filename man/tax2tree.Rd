@@ -10,7 +10,8 @@ tax2tree(
   depth = NULL,
   summarise = FALSE,
   output = "phylo",
-  replace_bads = FALSE
+  replace_bads = FALSE,
+  append_sum = TRUE
 )
 }
 \arguments{
@@ -23,12 +24,15 @@ tax2tree(
 \item{summarise}{Select a taxonomic rank to summarise below. Default is FALSE to return a tree of the same size as input}
 
 \item{output}{The output to return, options are:
-"phylo" to return an ape phylo object
+"phylo" to return an ape phylo object. If summarise is set to a rank, the number of distinct taxa at that rank numbers are appended to the tip labels if append_sum is TRUE, or returned as an attribute and can be accessed with attr(tree, "sum")
 "data.tree" to return a data.tree node object
 "treedf" to return a simplified tree with taxon summaries in a data frame
-"newick" to return a newick file for visualisation in other software}
+"newick" to return a newick file for visualisation in other software. If summarise is set to a rank, the number of distinct taxa at that rank numbers are returned as an attribute and can be accessed with attr(tree, "sum")}
 
 \item{replace_bads}{An option to automatically replace invalid newick characters with '-'}
+
+\item{append_sum}{An option to append the summary number to the output trees tip labels when summarise is a rank and output is 'phylo'.
+If FALSE, summary numbers are returned as an attribute and can be accessed with attr(tree, "sum")}
 }
 \value{
 a phylo, data.tree, newick, or treedf object

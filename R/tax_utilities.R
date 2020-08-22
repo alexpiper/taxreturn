@@ -375,11 +375,13 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 #' @param depth The depth within the tree to return. Default NULL to return lowest input rank
 #' @param summarise Select a taxonomic rank to summarise below. Default is FALSE to return a tree of the same size as input
 #' @param output The output to return, options are:
-#' "phylo" to return an ape phylo object
+#' "phylo" to return an ape phylo object. If summarise is set to a rank, the number of distinct taxa at that rank numbers are appended to the tip labels if append_sum is TRUE, or returned as an attribute and can be accessed with attr(tree, "sum")
 #' "data.tree" to return a data.tree node object
 #' "treedf" to return a simplified tree with taxon summaries in a data frame
-#' "newick" to return a newick file for visualisation in other software
+#' "newick" to return a newick file for visualisation in other software. If summarise is set to a rank, the number of distinct taxa at that rank numbers are returned as an attribute and can be accessed with attr(tree, "sum")
 #' @param replace_bads An option to automatically replace invalid newick characters with '-'
+#' @param append_sum An option to append the summary number to the output trees tip labels when summarise is a rank and output is 'phylo'.
+#' If FALSE, summary numbers are returned as an attribute and can be accessed with attr(tree, "sum")
 #'
 #' @return a phylo, data.tree, newick, or treedf object
 #' @import data.tree
@@ -392,7 +394,8 @@ train_idtaxa <- function(x, maxGroupSize=10, maxIterations = 3,  allowGroupRemov
 #' @export
 #'
 #' @examples
-tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), depth=NULL, summarise = FALSE,  output="phylo", replace_bads=FALSE){
+tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
+                     depth=NULL, summarise = FALSE,  output="phylo", replace_bads=FALSE, append_sum = TRUE){
 
   # start timer
   time <- Sys.time()
@@ -451,10 +454,18 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
     lineage <- lineage %>%
       dplyr::select(-Acc) %>%
       dplyr::group_by_at(groupranks) %>%
-      dplyr::summarise(sum = dplyr::n()) %>%
+      dplyr::summarise(sum = dplyr::n())
+
+    tipsums <- lineage %>%
+      dplyr::pull(sum)
+    names(tipsums) <- lineage%>%
+      dplyr::pull(!!summarise)
+
+    lineage <- lineage %>%
       tidyr::unite(col=pathString, !!groupranks, sep="/") %>%
-      dplyr::mutate(pathString = paste0("Root/", pathString)) %>%
+      dplyr::mutate(pathString = paste0("Root/", pathString))%>%
       data.tree::as.Node(.)
+
   } else if(isFALSE(summarise)){
     lineage <- lineage %>%
       mutate(Acc = Acc %>% str_remove("\\|.*$")) %>%
@@ -466,8 +477,15 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
   )
 
   if (output=="phylo"){
-    nwk <- data.tree::ToNewick(lineage, heightAttribute = NULL)
+    nwk <- lineage  %>%
+      data.tree::ToNewick(heightAttribute = NULL)
     out <-  phytools::read.newick(textConnection(nwk))
+    if(is(summarise, "character") & append_sum){
+      out$tip.label <- paste0(out$tip.label, "-", tipsums)
+      attr(out, "sum") <- tipsums
+    }else if(is(summarise, "character") & !append_sum){
+      attr(out, "sum") <- tipsums
+    }
   } else if (output=="treedf" & is(summarise, "character")){
     out <- data.tree::ToDataFrameTree(lineage, "sum")
   } else if (output=="treedf" & !is(summarise, "character")){
@@ -475,7 +493,11 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
   } else if (output=="data.tree"){
     out <- lineage
   } else if (output =="newick"){
-    out <- data.tree::ToNewick(lineage, heightAttribute = NULL)
+    out <- lineage  %>%
+      data.tree::ToNewick(heightAttribute = NULL)
+    if(is(summarise, "character")){
+      attr(out, "sum") <- tipsums
+    }
   }
 
   time <- Sys.time() - time
