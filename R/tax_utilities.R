@@ -507,11 +507,9 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
 }
 
 
-# Subset sequences by taxonomy --------------------------------------------
+# Filter sequences by taxonomy --------------------------------------------
 
-
-
-#' Subset sequences by taxonomy
+#' Filter sequences by taxonomy
 #'
 #' @param x A DNAbin or DNAString with heirarchial taxonomy
 #' @param filtrank The taxonomic rank to subset at i.e. 'Class'
@@ -528,7 +526,7 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
 #' @import Biostrings
 #'
 #' @examples
-subset_by_tax <- function(x, filtrank, filtvalue, ranks=c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")){
+filter_by_tax <- function(x, filtrank, filtvalue, ranks=c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")){
 
   # Convert to DNAbin
   if (!class(x) %in% c("DNAbin", "DNAStringSet")  ) {
@@ -536,7 +534,7 @@ subset_by_tax <- function(x, filtrank, filtvalue, ranks=c("Kingdom", "Phylum", "
   }
 
   ranklength <- length(ranks)
-  if(!stringr::str_count(names(seqs)[[1]] %>% stringr::str_remove(";$"), ";")== ranklength){
+  if(!stringr::str_count(names(x)[[1]] %>% stringr::str_remove(";$"), ";")== ranklength){
     stop("Error, the number of semicolon delimiters do not match the length of ranks")
   }
 
@@ -554,7 +552,7 @@ subset_by_tax <- function(x, filtrank, filtvalue, ranks=c("Kingdom", "Phylum", "
   if(length(filtvalue) > 10){
     out_message <- paste0(paste(filtvalue[1:10], collapse= ", "),"...[TRUNCATED]")
   } else(
-    out_message <- paste(filtvalue[1:10], collapse= ", ")
+    out_message <- paste(filtvalue, collapse= ", ")
   )
 
   message(length(x) - length(out), " sequences which did not pass the filter '", filtrank, " %in% ", out_message, "' removed")
