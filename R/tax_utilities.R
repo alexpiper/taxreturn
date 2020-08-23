@@ -32,61 +32,6 @@ propagate_tax <- function(tax, from = "Family") {
   tax
 }
 
-#' summarise_fasta
-#'
-#' @param x The location of a fasta file or gzipped fasta file.
-#' @param label optional, Add an extra column with a label
-#' @param origin optional, a table with sequence id numbers and their database origins
-#'
-#' @return
-#' @export
-#' @import Biostrings
-#' @import stringr
-#' @import dplyr
-#'
-#'
-#' @examples
-summarise_fasta <- function(x, label=NULL, origin=NULL) {
-  if(is.null(origin)){
-    out <- Biostrings::fasta.index(x) %>%
-      dplyr::mutate(taxid = desc %>%
-               stringr::str_remove(pattern="(;)(.*?)(?=$)")  %>%
-               stringr::str_remove(pattern="(^)(.*?)(?<=\\|)")) %>%
-      dplyr::summarise(nseqs = n(),
-                nspecies=n_distinct(taxid),
-                mean_length = mean(seqlength),
-                q0 = quantile(seqlength, probs=0),
-                q25 = quantile(seqlength, probs=0.25),
-                q50 = quantile(seqlength, probs=0.5), # Q50 is median
-                q75 = quantile(seqlength, probs=0.75),
-                q100 = quantile(seqlength, probs=1)
-      )
-
-  } else if(is.data.frame(origin) | is_tibble(origin)){
-    out <- Biostrings::fasta.index(x) %>%
-      dplyr::mutate(taxid = desc %>%
-               stringr::str_remove(pattern="(;)(.*?)(?=$)")  %>%
-               stringr::str_remove(pattern="(^)(.*?)(?<=\\|)")) %>%
-      dplyr::mutate(seqid = desc %>%
-               stringr::str_remove(pattern="(\\|)(.*?)(?=$)"))  %>%
-      dplyr::left_join(origin, by="seqid") %>%
-      dplyr::group_by(origin) %>%
-      dplyr::summarise(nseqs = n(),
-                nspecies=n_distinct(taxid),
-                mean_length = mean(seqlength),
-                q0 = quantile(seqlength, probs=0),
-                q25 = quantile(seqlength, probs=0.25),
-                q50 = quantile(seqlength, probs=0.5), # Q50 is median
-                q75 = quantile(seqlength, probs=0.75),
-                q100 = quantile(seqlength, probs=1)
-      )
-  }
-  if(is.character(label)) {
-    out <- out %>%
-      dplyr::mutate(label  = label)
-  }
-  return(out)
-}
 
 
 # Reformat hierarchy ------------------------------------------------------
