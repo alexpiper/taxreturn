@@ -436,7 +436,7 @@ blast_assign_species <- function(query, db, type="blastn",
   top_hit <- result %>%
     dplyr::group_by(qseqid) %>%
     dplyr::mutate(spp = Species %>% stringr::str_remove("^.* ")) %>%
-    dplyr::summarise(spp = paste(unique(spp), collapse = "/"), Genus, pident, qcovs,evalue, bitscore, .groups="keep") %>%
+    dplyr::summarise(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs,evalue, bitscore, .groups="keep") %>%
     dplyr::mutate(binomial = paste(Genus, spp)) %>%
     dplyr::distinct() %>%
     dplyr::add_tally() %>%

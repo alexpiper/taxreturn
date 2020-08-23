@@ -386,7 +386,7 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
                       stringr::str_remove(pattern="(\\|)(.*?)(?=$)"))  %>%
       dplyr::left_join(origin, by="seqid") %>%
       dplyr::group_by(taxid) %>%
-      dplyr::mutate(origin = paste(unique(origin), collapse="/"))%>% #Combine origins to make sure they arent duplicated
+      dplyr::mutate(origin = paste(sort(unique(origin)), collapse="/"))%>% #Combine origins to make sure they arent duplicated
       dplyr::ungroup() %>%
       dplyr::group_by(origin) %>%
       dplyr::summarise(nseqs = n(),
