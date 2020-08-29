@@ -31,6 +31,7 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
 }
 
 
+
 # Accession to hexadecimal coding ----------------------------------------------
 
 
@@ -43,7 +44,6 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
 #'
 #' @return
 #' @export
-#' @import sodium
 #' @import ape
 #' @import Biostrings
 #' @import stringr
@@ -52,7 +52,7 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
 acc2hex <- function(x){
   #Define hex function
   .hex <- function(y){
-    sodium::bin2hex(charToRaw(y))
+    paste(charToRaw(y),  collapse="")
   }
   #Check input format
   if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
@@ -90,7 +90,6 @@ acc2hex <- function(x){
 #'
 #' @return
 #' @export
-#' @import sodium
 #' @import ape
 #' @import Biostrings
 #' @import stringr
@@ -99,7 +98,8 @@ acc2hex <- function(x){
 hex2acc <- function(x){
   #Define hex function
   .unhex <- function(y){
-    rawToChar(sodium::hex2bin(y))
+    h <- sapply(seq(1, nchar(y), by=2), function(x) substr(y, x, x+1))
+    rawToChar(as.raw(strtoi(h, 16L)))
   }
   #Check input format
   if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
@@ -125,3 +125,4 @@ hex2acc <- function(x){
   }else (stop("x must be DNA bin, DNAStringSet or vector of accesssions"))
   return(x)
 }
+
