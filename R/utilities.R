@@ -52,7 +52,7 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
 acc2hex <- function(x){
   #Define hex function
   .hex <- function(y){
-    bin2hex(sodium::charToRaw(y))
+    sodium::bin2hex(charToRaw(y))
   }
   #Check input format
   if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
