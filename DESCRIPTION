@@ -52,7 +52,8 @@ Imports:
     furrr,
     R.utils,
     RCurl,
-    phytools
+    phytools,
+    sodium
 Remotes: gschofl/biofiles
 BiocViews:
 Roxygen: list(markdown = TRUE)
