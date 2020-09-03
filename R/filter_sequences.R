@@ -222,7 +222,8 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = 
 
     # Insert gaps to pad sequence out to the alignment length
     out <- as.raw(path)
-    out[out==01] <- s
+    #out[out==01] <- s
+    out[out %in% c("01", "02")] <- s
     out[out==00] <- as.raw(04)
     attr(out, "score") <- vit$score
     return(out)
