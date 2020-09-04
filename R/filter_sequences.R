@@ -130,6 +130,7 @@ clean_seqs <- function(x, model, minscore = 100, shave = TRUE, maxNs = 0, cores 
 #' @param minscore The minimum specificity (log-odds score for the optimal alignment) between the query sequence and the PHMM model for the sequence to be retained in the output object.
 #' @param shave Whether bases that are outside (to the left or right) of the PHMM object should be shaved from sequences in the output.
 #' @param check_indels Whether sequences with indels not in multiples of 3 should be removed from output. Useful for coding regions such as COI.
+#' @param extra How to handle extra length sequences when insertions that were not part of the model appear. 'drop' will truncate all sequences to the shortest alignment, 'fill' will fill with gaps
 #' @param maxNs The max number of ambiguous N bases to retain
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' @param quiet Whether progress should be printed to the console.
@@ -147,18 +148,24 @@ clean_seqs <- function(x, model, minscore = 100, shave = TRUE, maxNs = 0, cores 
 #' @export
 #'
 #' @examples
-map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = TRUE, maxNs = Inf,
-                         multithread = FALSE, quiet = FALSE, progress = FALSE, ...) {
+map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = TRUE, extra=NULL, maxNs = Inf,
+                          multithread = FALSE, quiet = FALSE, progress = FALSE, ...) {
   time <- Sys.time() # get time
 
+  #Checks
+  if (!is(model, "PHMM")) {
+    stop("Model needs to be a PHMM object")
+  }
+  if(!extra %in% c(NULL, "fill", "drop")){
+    stop("extra must be 'fill', 'drop', or NULL")
+  }
   # Convert to DNAbin
   if (!is(x, "DNAbin")) {
     x <- ape::as.DNAbin(x)
     if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
   }
-  if (!is(model, "PHMM")) {
-    stop("Model needs to be a PHMM object")
-  }
+
+
   # Define PHMM function
   filt_phmm <- function(s, model, minscore = 100, shave = TRUE, check_indels=TRUE, ...) {
     s <- s[!s %in% as.raw(c(2, 4))] #Remove gaps
@@ -191,18 +198,18 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = 
 
     #Confirm all deletions are 1 codon deletions
     if (check_indels == TRUE) {
-    # get indels (0 is a deletion state, 2 is an insertion)
-    insertions <- which(path[matchF:(length(path) - matchR)] == 2, arr.ind=FALSE)
-    insertions <- (insertions+matchF) - 1
-    deletions <- which(path[matchF:(length(path) - matchR)] == 0, arr.ind=FALSE)
-    deletions <- (deletions+matchF) - 1
-    if (length(deletions) > 0 | length(insertions) > 0) {
-      # Count sequential indels
-      splitAt <- function(x, pos) unname(split(x, cumsum(seq_along(x) %in% pos)))
-      insplit <- splitAt(insertions, which(diff(insertions) > 1, arr.ind=FALSE)+1)
-      delsplit <- splitAt(deletions, which(diff(deletions) > 1, arr.ind=FALSE)+1)
+      # get indels (0 is a deletion state, 2 is an insertion)
+      insertions <- which(path[matchF:(length(path) - matchR)] == 2, arr.ind=FALSE)
+      insertions <- (insertions+matchF) - 1
+      deletions <- which(path[matchF:(length(path) - matchR)] == 0, arr.ind=FALSE)
+      deletions <- (deletions+matchF) - 1
+      if (length(deletions) > 0 | length(insertions) > 0) {
+        # Count sequential indels
+        splitAt <- function(x, pos) unname(split(x, cumsum(seq_along(x) %in% pos)))
+        insplit <- splitAt(insertions, which(diff(insertions) > 1, arr.ind=FALSE)+1)
+        delsplit <- splitAt(deletions, which(diff(deletions) > 1, arr.ind=FALSE)+1)
         if(!all(sapply(insplit, length) %in% seq(3,12,3))){
-            return(NULL)
+          return(NULL)
         }
         if(!all(sapply(delsplit, length) %in% seq(3,12,3))){
           return(NULL)
@@ -260,6 +267,26 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = 
   discards <- sapply(res, is.null)
   nseq <- sum(!discards)
 
+  #Ensure outputs are consistent length
+  size_range <- range(sapply(res, length))
+  if(!size_range[1]==size_range[2]){
+    if(extra=="fill"){
+      res <- lapply(res, function(y) {
+        z <- y[1:size_range[2]]
+        z[z==00] <- as.raw(04)
+        return(z)
+      })
+      message("Output sequences were of mixed lengths between ", size_range[1], "bp and ", size_range[2], "bp extra was filled")
+
+    } else if(extra=="drop"){
+      res <- lapply(res, function(y) {y[1:size_range[1]]})
+      message("Output sequences were of mixed lengths between ", size_range[1], "bp and ", size_range[2], "bp extra was dropped")
+    } else if(is.null(extra)){
+      warning("Output sequences are not all the same length due to insertions, set extra to 'drop' or 'fill' to handle this")
+    }
+  }
+
+  #Return to DNA bin
   if (nseq > 0) {
     if (!quiet) message("Retained ", nseq, " sequences after alignment to PHMM \n")
     scores <- unlist(lapply(res, function(s) attr(s, "score")), use.names = FALSE)
@@ -274,6 +301,8 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = 
     res <- insect::subset.DNAbin(res, subset = !discards)
     if (!quiet) message(length(res), " sequences retained after applying ambiguity filter \n")
   }
+
+
   time <- Sys.time() - time
   if (!quiet) (message(paste0("finished in ", format(time, digits = 2))))
   return(res)

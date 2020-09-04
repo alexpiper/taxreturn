@@ -10,6 +10,7 @@ map_to_model(
   minscore = 100,
   shave = TRUE,
   check_indels = TRUE,
+  extra = NULL,
   maxNs = Inf,
   multithread = FALSE,
   quiet = FALSE,
@@ -27,6 +28,8 @@ map_to_model(
 \item{shave}{Whether bases that are outside (to the left or right) of the PHMM object should be shaved from sequences in the output.}
 
 \item{check_indels}{Whether sequences with indels not in multiples of 3 should be removed from output. Useful for coding regions such as COI.}
+
+\item{extra}{How to handle extra length sequences when insertions that were not part of the model appear. 'drop' will truncate all sequences to the shortest alignment, 'fill' will fill with gaps}
 
 \item{maxNs}{The max number of ambiguous N bases to retain}
 
