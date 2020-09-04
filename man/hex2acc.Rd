@@ -4,12 +4,14 @@
 \alias{hex2acc}
 \title{Title}
 \usage{
-hex2acc(x)
+hex2acc(x, force = FALSE)
 }
 \arguments{
 \item{x}{A DNAbin or DNAStringSet with names formatted Accession|taxid;taxonomy.
 Or a character vector with names formatted Accession|taxid;taxonomy
 Or a character vector of accessions}
+
+\item{force}{override checks if string is already hexadecimal}
 }
 \value{
 

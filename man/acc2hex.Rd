@@ -4,12 +4,14 @@
 \alias{acc2hex}
 \title{Convert accession number to hexadecimal coding}
 \usage{
-acc2hex(x)
+acc2hex(x, force = FALSE)
 }
 \arguments{
 \item{x}{A DNAbin or DNAStringSet with names formatted Accession|taxid;taxonomy.
 Or a character vector with names formatted Accession|taxid;taxonomy
 Or a character vector of accessions}
+
+\item{force}{override checks if string is already hexadecimal}
 }
 \value{
 

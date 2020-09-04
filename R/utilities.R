@@ -41,6 +41,7 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
 #' @param x A DNAbin or DNAStringSet with names formatted Accession|taxid;taxonomy.
 #' Or a character vector with names formatted Accession|taxid;taxonomy
 #' Or a character vector of accessions
+#' @param force override checks if string is already hexadecimal
 #'
 #' @return
 #' @export
@@ -49,14 +50,14 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
 #' @import stringr
 #'
 #' @examples
-acc2hex <- function(x){
-  #Define hex function
-  .hex <- function(y){
-    paste(charToRaw(y),  collapse="")
-  }
+acc2hex <- function(x, force=FALSE){
   #Check input format
   if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
     message("Input is ", class(x),", assuming header is in 'Accession|taxid;taxonomy' format")
+    #Check if already hexed
+    if(.ishex(names(x)[[1]] %>% stringr::str_remove("\\|.*$")) & isFALSE(force)){
+      stop("Accessions are  already in hexadecimal format, set force = TRUE to override this error")
+      }
     acc <- names(x) %>%
       stringr::str_remove("\\|.*$") %>%
       purrr::map_chr(.hex)
@@ -65,6 +66,9 @@ acc2hex <- function(x){
       paste0(acc, .)
   }else  if (is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;taxonomy' format")
+    if(.ishex(x[[1]] %>% stringr::str_remove("\\|.*$")) & isFALSE(force)){
+      stop("Accessions are  already in hexadecimal format, set force = TRUE to override this error")
+    }
     acc <- x %>%
       stringr::str_remove("\\|.*$") %>%
       purrr::map_chr(.hex)
@@ -73,6 +77,9 @@ acc2hex <- function(x){
       paste0(acc, .)
   } else  if (is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of accessions")
+    if(.ishex(x[[1]]) & isFALSE(force)){
+      stop("Accessions are  already in hexadecimal format, set force = TRUE to override this error")
+    }
     x <- x %>%
       purrr::map_chr(.hex)
   }else (stop("x must be DNA bin, DNAStringSet or vector of accesssions"))
@@ -87,7 +94,7 @@ acc2hex <- function(x){
 #' @param x A DNAbin or DNAStringSet with names formatted Accession|taxid;taxonomy.
 #' Or a character vector with names formatted Accession|taxid;taxonomy
 #' Or a character vector of accessions
-#'
+#' @param force override checks if string is already hexadecimal
 #' @return
 #' @export
 #' @import ape
@@ -95,15 +102,13 @@ acc2hex <- function(x){
 #' @import stringr
 #'
 #' @examples
-hex2acc <- function(x){
-  #Define hex function
-  .unhex <- function(y){
-    h <- sapply(seq(1, nchar(y), by=2), function(x) substr(y, x, x+1))
-    rawToChar(as.raw(strtoi(h, 16L)))
-  }
+hex2acc <- function(x, force=FALSE){
   #Check input format
   if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
     message("Input is ", class(x),", assuming header is in 'Accession|taxid;taxonomy' format")
+    if(!.ishex(names(x)[[1]] %>% stringr::str_remove("\\|.*$")) & isFALSE(force)){
+      stop("Accessions are already in alphanumeric, set force = TRUE to override this error")
+    }
     acc <- names(x) %>%
       stringr::str_remove("\\|.*$") %>%
       purrr::map_chr(.unhex)
@@ -112,6 +117,9 @@ hex2acc <- function(x){
       paste0(acc, .)
   }else  if (is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;taxonomy' format")
+    if(!.ishex(x[[1]] %>% stringr::str_remove("\\|.*$")) & isFALSE(force)){
+      stop("Accessions are already in alphanumeric, set force = TRUE to override this error")
+    }
     acc <- x %>%
       stringr::str_remove("\\|.*$") %>%
       purrr::map_chr(.unhex)
@@ -120,9 +128,54 @@ hex2acc <- function(x){
       paste0(acc, .)
   } else  if (is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of accessions")
+    if(!.ishex(x[[1]]) & isFALSE(force)){
+      stop("Accessions are already in alphanumeric, set force = TRUE to override this error")
+    }
     x <- x %>%
       purrr::map_chr(.unhex)
   }else (stop("x must be DNA bin, DNAStringSet or vector of accesssions"))
   return(x)
 }
 
+
+# hexadecimal translation -------------------------------------------------
+
+#' convert alphanumerics to hexadecimal
+#' internal taxreturn function
+#' @param y a character string
+#'
+#' @return
+#'
+#' @examples
+.hex <- function(y){
+  paste(charToRaw(y),  collapse="")
+}
+
+#' convert hexadecimal strings to alphanumeric
+#' internal taxreturn function
+#' @param y a character string
+#'
+#' @return
+#'
+#' @examples
+.unhex <- function(y){
+  h <- sapply(seq(1, nchar(y), by=2), function(x) substr(y, x, x+1))
+  rawToChar(as.raw(strtoi(h, 16L)))
+}
+
+
+#' Check whether a string is hexadecimal
+#' internal taxreturn function
+#' @param y a character string
+#'
+#' @return
+#'
+#' @examples
+.ishex <- function(y) {
+  h <- sapply(seq(1, nchar(y), by = 2), function(x) substr(y, x, x + 1))
+  if(any(is.na(strtoi(h, 16L)))){
+    return(FALSE)
+  } else{
+    return(TRUE)
+  }
+}

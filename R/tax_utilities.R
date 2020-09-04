@@ -452,6 +452,198 @@ tax2tree <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family
 }
 
 
+# tax2phylo ---------------------------------------------------------------
+
+
+#' @param ranks The taxonomic ranks currently assigned to the names
+#' @param summarise Select a taxonomic rank to summarise below. Default is FALSE to return a tree of the same size as input
+#' @param output The output to return, options are:
+#' "phylo" to return an ape phylo object. If summarise is set to a rank, the number of distinct taxa at that rank numbers are appended to the tip labels if append_sum is TRUE, or returned as an attribute and can be accessed with attr(tree, "sum")
+#' "data.tree" to return a data.tree node object
+#' "treedf" to return a simplified tree with taxon summaries in a data frame
+#' "newick" to return a newick file for visualisation in other software. If summarise is set to a rank, the number of distinct taxa at that rank numbers are returned as an attribute and can be accessed with attr(tree, "sum")
+#' @param replace_bads An option to automatically replace invalid newick characters with '-'
+#' @param append_sum An option to append the summary number to the output trees tip labels when summarise is a rank and output is 'phylo'.
+#' If FALSE, summary numbers are returned as an attribute and can be accessed with attr(tree, "sum")
+#'
+#'
+#' tax2phylo
+#'
+#' @description A newer, faster tax2tree that grafts tips. Only returns a phylo objec
+#' @param x
+#' @param ranks The taxonomic ranks currently assigned to the names
+#' @param depth The depth within the ranks to return. Default all to return lowest input rank
+#' @param summarise Summarise the number of sequences at depth.
+#' @param append_sum Append the summary number to the output trees tip labels when summarise is TRUE
+#' @param hex Convert the accessions to hexadecimal format to avoid newick incompatible characters. Can be reversed with hex2acc
+#' @param resolve_poly Randomly resolve polytomies in tree using `ape::multi2di`. use 'all' to resolve all polytomies, or 'upper' to only resolve upper branches, useful for making constraints trees
+#'
+#' @return
+#' @export
+#' @import data.tree
+#' @import ape
+#' @import stringr
+#' @import dplyr
+#' @import tidyr
+#' @import magrittr
+#' @import phytools
+#'
+#' @examples
+tax2phylo <- function(x, ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), depth="all",
+                      summarise = FALSE, append_sum = TRUE, hex=FALSE, resolve_poly=FALSE){
+
+  # start timer
+  time <- Sys.time()
+
+  #Checks
+  if (!is(x, "DNAbin")) {
+    x <- ape::as.DNAbin(x)
+    if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
+  }
+
+  if(isTRUE(hex)){
+    x <- acc2hex(x)
+  }
+
+  if(any(stringr::str_detect(names(x) %>% stringr::str_remove("\\|.*$"), "\\,|\\;|\\:|\\(|\\)|\\[|\\]"))) {
+    stop("Sequence accessions contain one or more of the invalid characters , ; : ( ) [ ] charcters, set hex to TRUE to convert to hexadecimal encoding ")
+  }
+
+  if(is.character(resolve_poly) & !resolve_poly %in% c("upper", "all")){
+    stop("resolve_poly must either be FALSE, 'upper', or 'all ")
+  }
+
+  # leave an autodetect for ranks?
+  ranks <- stringr::str_to_lower(ranks)
+  depth <- stringr::str_to_lower(depth)
+
+  if (depth %in% ranks){
+    groupranks <- ranks[1:match(depth, ranks)]
+    message("Ranks included at depth ", depth," : ", paste(ranks, collapse=" "))
+  } else if(depth==all){
+    groupranks <- ranks
+  } else {
+    stop("Depth must be 'all' or one of the values in ranks")
+  }
+
+  #Get taxonomic lineage
+  lineage <- names(x) %>%
+    stringr::str_remove(pattern=";$") %>%
+    stringr::str_split_fixed(";", n=Inf) %>%
+    as.data.frame() %>%
+    magrittr::set_colnames(c("Acc", ranks ))
+
+  #lineage <- lineage[,!is.na(colnames(lineage))]
+
+  if(isTRUE(summarise)){
+    lineage <- lineage %>%
+      dplyr::select(-Acc) %>%
+      dplyr::group_by_at(groupranks) %>%
+      dplyr::summarise(sum = dplyr::n())
+
+    tipsums <- lineage %>%
+      dplyr::pull(sum)
+    names(tipsums) <- lineage%>%
+      dplyr::pull(!!depth)
+
+    tree <- lineage %>%
+      tidyr::unite(col=pathString, !!groupranks, sep="/") %>%
+      dplyr::mutate(pathString = paste0("Root/", pathString))%>%
+      data.tree::as.Node(.) %>%
+      data.tree::ToNewick(heightAttribute = NULL) %>%
+      textConnection() %>%
+      phytools::read.newick()
+
+    #Append summaries of lower ranks
+    if(append_sum){
+      tree$tip.label <- paste0(tree$tip.label, "-", tipsums)
+      attr(tree, "sum") <- tipsums
+    }else if(!append_sum){
+      attr(tree, "sum") <- tipsums
+    }
+
+    #Resolve polytomies in tree
+    if(resolve_poly == "upper"){
+      tree <- ape::multi2di(tree)
+    }
+
+  } else if(isFALSE(summarise)){
+    # get mapping table for grafting
+    mapping <- lineage %>%
+      dplyr::mutate(Acc = Acc %>% str_remove("\\|.*$")) %>%
+      dplyr::select(tail(groupranks,1), Acc)%>%
+      mutate_all(~str_replace_all(.x," ", "_"))
+
+    upper_tree <- lineage %>%
+      dplyr::select(!!groupranks) %>%
+      dplyr::distinct() %>%
+      tidyr::unite(col=pathString, !!groupranks, sep="/") %>%
+      dplyr::mutate(pathString = paste0("Root/", pathString)) %>%
+      data.tree::as.Node(.,
+                         table,
+                         pathName = "pathString",
+                         pathDelimiter = "/",
+                         colLevels = NULL,
+                         na.rm = TRUE,
+                         check = "check")  %>%
+      data.tree::ToNewick(heightAttribute = NULL) %>%
+      textConnection() %>%
+      phytools::read.newick()
+
+    #Resolve polytomies in upper tree
+    if(resolve_poly == "upper"){
+      upper_tree <- ape::multi2di(upper_tree)
+    }
+
+    # Graft tips onto upper tree
+    tree <- graft_tips(upper_tree, mapping)
+  }else(
+    stop("Summarise must be TRUE or FALSE")
+  )
+  #Resolve polytomies in tree
+  if(resolve_poly == "all"){
+    tree <- ape::multi2di(tree)
+  }
+  time <- Sys.time() - time
+  message(paste0("Generated a taxonomic tree for ", length(x), " Sequences in ", format(time, digits = 2)))
+  return(tree)
+}
+
+
+# graft_tips --------------------------------------------------------------
+
+#' Graft new tips onto an existing tree
+#'
+#' @param tree A phylo object
+#' @param mapping A mapping data frame containing two columns.
+#' The left column must be identical to the tip labels of the phylogeny, the right column contains new tips to be grafted.
+#' @param branch_length A numeric giving the branch lengths for the new polytomic tips that are added.
+#'
+#' @return
+#' @export
+#' @import ape
+#'
+#' @examples
+graft_tips <- function(tree, mapping, branch_length = 0){
+  if (!inherits(tree, "phylo")) stop("'tree' is not of class 'phylo'")
+
+  info <- apply(mapping, 2, setequal, y = tree$tip.label)
+  if (!any(info)) stop("'mapping' is not congruent with tiplabels of 'tree'")
+
+  #Split into current tips to be grafted
+  mapping <- split(mapping[, !info], mapping[, info])
+  add_tip <- function(z){
+    z <- ape::read.tree(text = paste0("(", paste(z, collapse = ","), ");"))
+    ape::compute.brlen(z, branch_length) ## set branch lengths to branch_length
+  }
+  combs <- lapply(mapping, add_tip)
+  for (i in seq_along(combs)){
+    tree <- ape::bind.tree(tree, combs[[i]], which(tree$tip.label == names(combs)[i]))
+  }
+  return(tree)
+}
+
+
 # Filter sequences by taxonomy --------------------------------------------
 
 #' Filter sequences by taxonomy
