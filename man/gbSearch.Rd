@@ -22,7 +22,8 @@ gbSearch(
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
 
-\item{marker}{The barcode marker used as a search term for the database. If this is set to "mitochondria" it will download full mitochondrial genomes.}
+\item{marker}{The barcode marker used as a search term for the database.
+If this is set to "mitochondria" or "mitochondrion" it will download full mitochondrial genomes. If set to "genome" it will download entire genomes only.}
 
 \item{quiet}{(Optional) Print text output}
 
@@ -37,6 +38,9 @@ or "standard" which outputs the default format for each database. For genbank th
 \item{minlength}{The minimum length of sequences to download}
 
 \item{maxlength}{The maximum length of sequences to download}
+
+\item{chunksize}{Split up the query into chunks of this size to avoid overloading API servers.
+if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"}
 
 \item{out.dir}{Output directory to write fasta files to}
 

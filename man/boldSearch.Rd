@@ -29,7 +29,7 @@ Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Ord
 "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
-or "standard" which outputs the default format for each database. For bold this is \verb{processid|species name|markercode|genbankid}}
+or "standard" which outputs the default format for each database. For bold this is \verb{sampleid|species name|markercode|genbankid}}
 
 \item{out.file}{The file to write to, if empty it defaults to the search term}
 

@@ -36,6 +36,9 @@ or "standard" which outputs the default format for each database. For genbank th
 
 \item{maxlength}{The maximum length of sequences to download}
 
+\item{chunksize}{Split up the query into chunks of this size to avoid overloading API servers.
+if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"}
+
 \item{compress}{Option to compress output fasta files using gzip}
 
 \item{force}{Option ot overwright files if they already exist}

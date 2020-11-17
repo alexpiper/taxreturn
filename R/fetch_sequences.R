@@ -8,7 +8,7 @@
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
-#' or "standard" which outputs the default format for each database. For bold this is `processid|species name|markercode|genbankid`
+#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
 #' @param out.file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
@@ -66,7 +66,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 
   # Bold search
   data <- bold::bold_seqspec(taxon = x, sepfasta = FALSE)
-  if (length(data) >0 && class(data) == "data.frame") {
+  if (length(data) >0 && is(data, "data.frame")) {
     data <- data %>%
       dplyr::na_if("") %>%
       dplyr::filter(markercode == marker) %>% # Remove all sequences for unwanted markers
@@ -77,8 +77,8 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
     if (nrow(data) >0) {
       if (output == "standard") {
         data <- data %>%
-          dplyr::select(processid, species_name, markercode, genbank_accession, nucleotides) %>%
-          tidyr::unite("name", c("processid", "species_name", "markercode", "genbank_accession"), sep = "|")
+          dplyr::select(sampleid, species_name, markercode, genbank_accession, nucleotides) %>%
+          tidyr::unite("name", c("sampleid", "species_name", "markercode", "genbank_accession"), sep = "|")
       } else if (output == "h") {
         # Hierarchial output
         data <- data %>%
@@ -153,14 +153,24 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
       if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from BOLD ", " in ", format(time, digits = 2))))
     }
   }
+
+  # Count number of downloaded sequences
   if(file.exists(out.file)){
     counter <- nrow(Biostrings::fasta.index(out.file))
   } else {
     counter <- 0
   }
+
+  # Count total sequences that should have been downloaded
+  if(is(data, "data.frame")){
+    total_counter <- nrow(data)
+  } else {
+    total_counter <- 0
+  }
+
   res <- data.frame(
     taxon = x,
-    seqs_total = counter,
+    seqs_total = total_counter,
     seqs_downloaded = counter,
     marker = marker,
     database = "bold",
@@ -168,7 +178,6 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
   )
   return(res)
 }
-
 
 
 # Bold update -------------------------------------------------------------
@@ -186,7 +195,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
-#' or "standard" which outputs the default format for each database. For bold this is `processid|species name|markercode|genbankid`
+#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
 #' @param suffix The suffix to add to newly downloaded files. Defaults to 'updates'
 #' @param out.file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
@@ -260,7 +269,7 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 
   # Find differences
 
-  if (length(data) >0 && !class(data) == "logical") {
+  if (length(data) >0 && !is(data, "logical")) {
     data <- data %>%
       dplyr::na_if("") %>%
       dplyr::filter(stringr::str_detect(marker, markercode)) %>% # Remove all sequences for unwanted markers
@@ -271,8 +280,8 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
     if (nrow(data) >0) {
       if (output == "standard") {
         data <- data %>%
-          dplyr::select(processid, species_name, markercode, genbank_accession, nucleotides) %>%
-          tidyr::unite("name", c("processid", "species_name", "markercode", "genbank_accession"), sep = "|")
+          dplyr::select(sampleid, species_name, markercode, genbank_accession, nucleotides) %>%
+          tidyr::unite("name", c("sampleid", "species_name", "markercode", "genbank_accession"), sep = "|")
       } else if (output == "h") {
         # Hierarchial output
         data <- data %>%
@@ -347,14 +356,23 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
       if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from BOLD ", " in ", format(time, digits = 2))))
     }
   }
+  # Count number of downloaded sequences
   if(file.exists(out.file)){
     counter <- nrow(Biostrings::fasta.index(out.file))
   } else {
     counter <- 0
   }
+
+  # Count total sequences that should have been downloaded
+  if(is(data, "data.frame")){
+    total_counter <- nrow(data)
+  } else {
+    total_counter <- 0
+  }
+
   res <- data.frame(
     taxon = x,
-    seqs_total = counter,
+    seqs_total = total_counter,
     seqs_downloaded = counter,
     marker = marker,
     database = "bold",
@@ -370,7 +388,8 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #' Genbank search function
 #'
 #' @param x A taxon name or vector of taxa to download sequences for
-#' @param marker The barcode marker used as a search term for the database. If this is set to "mitochondria" it will download full mitochondrial genomes.
+#' @param marker The barcode marker used as a search term for the database.
+#' If this is set to "mitochondria" or "mitochondrion" it will download full mitochondrial genomes. If set to "genome" it will download entire genomes only.
 #' @param quiet (Optional) Print text output
 #' @param output The output format for the taxonomy in fasta headers.
 #' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -381,6 +400,8 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #' or "standard" which outputs the default format for each database. For genbank this is `Accession Sequence definition`
 #' @param minlength The minimum length of sequences to download
 #' @param maxlength The maximum length of sequences to download
+#' @param chunksize Split up the query into chunks of this size to avoid overloading API servers.
+#' if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 #' @param compress  Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
 #' @param out.dir Output directory to write fasta files to
@@ -472,7 +493,7 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
         message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
         if(is.null(chunksize)) {chunksize=1000}
-      } else if (tolower(marker) %in% c("genome", "mitochondrion")){
+      } else if (tolower(marker) %in% c("genome")){
         message(paste0("Input marker is ", marker, ", Downloading full genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
         if(is.null(chunksize)) {chunksize=1}
@@ -552,14 +573,24 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
     },
     error = function(e) NULL
   )
+
+  #Count number of downloaded sequences
   if(file.exists(out.file)){
     counter <- nrow(Biostrings::fasta.index(out.file))
   } else {
     counter <- 0
   }
+
+  # Count total sequences that should have been downloaded
+  if(exists("search_results") && length(search_results$ids) > 1 ){
+    total_counter <- length(search_results$ids)
+  } else {
+    total_counter <- 0
+  }
+
   res <- data.frame(
     taxon = x,
-    seqs_total = length(search_results$ids),
+    seqs_total = total_counter,
     seqs_downloaded = counter,
     marker = marker,
     database = database,
@@ -610,6 +641,8 @@ cat_acctax <- function(x) {
 #' or "standard" which outputs the default format for each database. For genbank this is `Accession Sequence definition`
 #' @param minlength The minimum length of sequences to download
 #' @param maxlength The maximum length of sequences to download
+#' @param chunksize Split up the query into chunks of this size to avoid overloading API servers.
+#' if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 #' @param compress  Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
 #' @param out.dir Output directory to write fasta files to
@@ -763,14 +796,24 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
     },
     error = function(e) NULL
   )
+
+  #Count number of downloaded sequences
   if(file.exists(out.file)){
     counter <- nrow(Biostrings::fasta.index(out.file))
   } else {
     counter <- 0
   }
+
+  # Count total sequences that should have been downloaded
+  if(exists("search_results") && length(search_results$ids) > 1 ){
+    total_counter <- length(search_results$ids)
+  } else {
+    total_counter <- 0
+  }
+
   res <- data.frame(
     taxon = x,
-    seqs_total = length(search_results$ids),
+    seqs_total = total_counter,
     seqs_downloaded = counter,
     marker = marker,
     database = database,
@@ -982,15 +1025,23 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
   #Close all workers
   future::plan(future::sequential)
 
-  #Count how many downloaded
+  #Count number of downloaded sequences
   if(file.exists(out.file)){
     counter <- nrow(Biostrings::fasta.index(out.file))
   } else {
     counter <- 0
   }
+
+  # Count total sequences that should have been downloaded
+  if(exists("search_results") && length(search_results$ids) > 1 ){
+    total_counter <- length(search_results$ids)
+  } else {
+    total_counter <- 0
+  }
+
   res <- data.frame(
     taxon = x,
-    seqs_total = length(search_results$ids),
+    seqs_total = total_counter,
     seqs_downloaded = counter,
     marker = marker,
     database = database,
@@ -1021,13 +1072,16 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
-#' or "standard" which outputs the default format for each database. For bold this is `processid|species name|markercode|genbankid` while for genbank this is `Accession Sequence definition`
+#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid` while for genbank this is `Accession Sequence definition`
 #' @param minlength The maximum length of the query sequence to return. Default 1.
 #' @param maxlength The maximum length of the query sequence to return.
 #' This can be useful for ensuring no off-target sequences are returned. Default 2000.
 #' @param out.dir Output directory to write fasta files to
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option to overwrite files if they already exist
+#' @param chunksize Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
+#' if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
+#' For BOLD queries the default is 100,000 returned records
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
 #' if x is a vector, or of downstream is being used.
@@ -1082,7 +1136,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
   }
   out.dir <- normalizePath(out.dir)
 
-  #Evaluate downstream
+  # Evaluate downstream
   if (is.character(downstream)) {
     if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
 
@@ -1103,7 +1157,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
     taxon <- x
   }
 
-  # setup multithreading - only makes sense if downstream = TRUE
+  # Setup multithreading - only makes sense if downstream = TRUE
   ncores <- future::availableCores() -1
   if(isTRUE(multithread)){
     cores <- ncores
@@ -1143,24 +1197,13 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
     }
 
   } else if (database == "bold") {
-    #Check query sizes
-    bold_taxon <- furrr::future_map(taxon, function(x){
-      rcds <- bold::bold_stats(x, dataType = "overview") %>%
-        unlist()
-      if(rcds["total_records"] > 100000){
-        if(!quiet){message("Found over 100,000 records for ", x, ", getting downstream taxonomic rank to reduce query size")}
-        downstream2 <- rcds[c("order.count", "family.count", "genus.count", "species.count")]
-        downstream2 <- stringr::str_remove(names(sort(downstream2[downstream2 > 1])[1]), ".count")
-        x <- taxize::downstream(x, db = "bold", downto = downstream2) %>%
-          as("list") %>%
-          dplyr::bind_rows() %>%
-          dplyr::filter(rank == stringr::str_to_lower(!!downstream2)) %>%
-          dplyr::mutate(downloaded = FALSE) %>%
-          dplyr::pull(name)
-      }
-      return(x)
-    }, .progress = progress) %>%
+    # Split any querys above chunksize
+    if(is.null(chunksize)){
+      chunksize <- 100000
+    }
+    bold_taxon <- furrr::future_map(taxon, split_bold_query, chunksize=chunksize, quiet=quiet, .progress = progress) %>%
       unlist()
+
     if(!quiet) {message("Downloading ", length(bold_taxon)," taxa from BOLD")}
     res <- furrr::future_map(
       bold_taxon, boldSearch, marker = marker, db=db,
@@ -1168,9 +1211,74 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
       compress = compress, quiet = quiet,  .progress = progress, force=force, ...=...)
   }
 
-  ## Explicitly close multisession workers
+  # Explicitly close multisession workers
   future::plan(future::sequential)
 
   # Return results summary
-  return(res)
+  return(res %>%
+           dplyr::bind_rows())
+}
+
+# Split BOLD query --------------------------------------------------------
+
+#' Split bold query
+#' This function recursively splits a bold taxonomic query until the amount of records returned is under chunksize
+#'
+#' @param x The input taxonomic query
+#' @param chunksize The maximum amount of records to return per query
+#' @param quiet (Optional) Print text output
+#'
+#' @return
+#' @export
+#'
+#' @examples
+split_bold_query <- function(x, chunksize=100000, quiet=FALSE){
+
+  rcds <- bold::bold_stats(x, dataType = "overview") %>%
+    unlist()
+  out <- character()
+  if(rcds["total_records"] > chunksize){
+    while(length(x) > 0){
+      rcds <- purrr::map(x, ~{
+        .x %>%
+          bold::bold_stats(dataType = "overview") %>%
+          unlist()
+      }) %>%
+        dplyr::bind_rows() %>%
+        dplyr::select("order.count", "family.count", "genus.count", "species.count") %>%
+        dplyr::select_if(colSums(.) > nrow(.))
+
+      if(!quiet) {message("Found over ", chunksize, " (chunksize value) BOLD records for ", x, ", searching for lower taxonomic ranks to reduce query size")}
+      downstream2 <- stringr::str_remove(colnames(rcds[1]), ".count")
+      lower_ranks <- taxize::downstream(x, db = "bold", downto = downstream2) %>%
+        as("list") %>%
+        dplyr::bind_rows() %>%
+        dplyr::filter(rank == stringr::str_to_lower(!!downstream2)) %>%
+        dplyr::pull(name)
+
+      # Check if any are still over
+      rcds2 <- purrr::map(lower_ranks, ~{
+        .x %>%
+          bold::bold_stats(dataType = "overview") %>%
+          unlist()
+      }) %>%
+        purrr::set_names(lower_ranks) %>%
+        dplyr::bind_rows(.id="name")
+
+      # Get successfully resolved
+      out <- c(out, rcds2 %>%
+                 dplyr::filter(total_records < chunksize)%>%
+                 dplyr::pull(name))
+
+      # Repeat on unresolved
+      x <- rcds2 %>%
+        dplyr::filter(total_records > chunksize) %>%
+        dplyr::pull(name)
+    }
+
+  } else(
+    out <- x
+  )
+
+  return(out)
 }

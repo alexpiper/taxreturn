@@ -43,12 +43,16 @@ Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Ord
 "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
-or "standard" which outputs the default format for each database. For bold this is \verb{processid|species name|markercode|genbankid} while for genbank this is \verb{Accession Sequence definition}}
+or "standard" which outputs the default format for each database. For bold this is \verb{sampleid|species name|markercode|genbankid} while for genbank this is \verb{Accession Sequence definition}}
 
 \item{minlength}{The maximum length of the query sequence to return. Default 1.}
 
 \item{maxlength}{The maximum length of the query sequence to return.
 This can be useful for ensuring no off-target sequences are returned. Default 2000.}
+
+\item{chunksize}{Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
+if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
+For BOLD queries the default is 100,000 returned records}
 
 \item{out.dir}{Output directory to write fasta files to}
 
