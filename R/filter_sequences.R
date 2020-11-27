@@ -156,8 +156,8 @@ map_to_model <- function(x, model, minscore = 100, shave = TRUE, check_indels = 
   if (!is(model, "PHMM")) {
     stop("Model needs to be a PHMM object")
   }
-  if(!extra %in% c(NULL, "fill", "drop")){
-    stop("extra must be 'fill', 'drop', or NULL")
+  if(!is.null(extra)){
+    if(!extra %in% c("fill", "drop")) stop("extra must be 'fill', 'drop', or NULL")
   }
   # Convert to DNAbin
   if (!is(x, "DNAbin")) {
