@@ -30,7 +30,26 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
     Biostrings::DNAStringSet()
 }
 
-
+# Function to generate random sequences
+#' Generate random sequences
+#'
+#' @param n The number of sequences to generate
+#' @param length The length of the generated sequences
+#' @param alphabet The DNA alphabet to draw from, default is A,G,C,T
+#'
+#' @return
+#' @export
+#'
+#' @examples
+random_seq <- function(n, length, alphabet = c("A","G","T","C")){
+  out <- seq(1, n, 1) %>%
+    purrr::map2(length, function(x,y ){
+      paste(sample(alphabet, y, replace = T), collapse="")
+    }) %>%
+    insect::char2dna()
+  names(out) <- make.unique(rep("Seq", n), sep="_")
+  return(out)
+}
 
 # Accession to hexadecimal coding ----------------------------------------------
 

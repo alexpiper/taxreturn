@@ -2,12 +2,16 @@
 % Please edit documentation in R/filter_sequences.R
 \name{map_to_model}
 \alias{map_to_model}
-\title{This function maps sequences to a Profile Hidden Markov Model (PHMM) in order to retain only the target loci}
+\title{This function alignes sequences to a Profile Hidden Markov Model (PHMM) using the Viterbi algorithm in order to retain only the target loci.
+This function can also be used to extract smaller subregions out of longer sequences, for instance extracting the COI barcode region from mitochondrial genomes.
+In order to reduce the number of sequences for alignment using the computationally expensive Viterbi algorithm, a rapid kmer distance screen is first conducted to remove any sequence too far diverged from the reference PHMM.
+Similarly, all sequences that are more than twice the length of the reference PHMM model are broken into chunks of the same length as the model, and a rapid kmer screen conducted. The sequence is then subset to the most similar chunk and its two adjacent chunks prior to Viterbi alignment.}
 \usage{
 map_to_model(
   x,
   model,
   minscore = 100,
+  kmer_threshold = 0.3,
   shave = TRUE,
   check_indels = FALSE,
   extra = NA,
@@ -27,6 +31,8 @@ An already derived model of COI can be loaded using \code{data("model", package=
 \item{minscore}{The minimum specificity (log-odds score for the optimal alignment) between the query sequence and the PHMM model for the sequence to be retained in the output object.
 see \code{?aphid::Viterbi} for more information about the alignment process.}
 
+\item{kmer_threshold}{the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment.}
+
 \item{shave}{Whether bases that are outside (to the left or right) of the PHMM object should be removed from sequences in the output. Default is TRUE.}
 
 \item{check_indels}{Whether sequences with insertions or deletions which arent in multiples of 3 should be removed from output. Useful for coding loci such as COI but should not be used for non-coding loci. Default is FALSE.}
@@ -45,5 +51,8 @@ see \code{?aphid::Viterbi} for more information about the alignment process.}
 
 }
 \description{
-This function maps sequences to a Profile Hidden Markov Model (PHMM) in order to retain only the target loci
+This function alignes sequences to a Profile Hidden Markov Model (PHMM) using the Viterbi algorithm in order to retain only the target loci.
+This function can also be used to extract smaller subregions out of longer sequences, for instance extracting the COI barcode region from mitochondrial genomes.
+In order to reduce the number of sequences for alignment using the computationally expensive Viterbi algorithm, a rapid kmer distance screen is first conducted to remove any sequence too far diverged from the reference PHMM.
+Similarly, all sequences that are more than twice the length of the reference PHMM model are broken into chunks of the same length as the model, and a rapid kmer screen conducted. The sequence is then subset to the most similar chunk and its two adjacent chunks prior to Viterbi alignment.
 }
