@@ -215,7 +215,7 @@ map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 
     if (!quiet) message("Retained ", length(res), " sequences after applying ambiguity filter \n")
   }
 
-  # Remove sequences above max_N
+  # Remove sequences above max_gap
   if(max_gap < Inf){
     discards <- sapply(res, function(s) sum(s == as.raw(c(4))))  > max_gap
     res <- res[!discards]
@@ -274,12 +274,12 @@ filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf
     if(check_frame & !any(!(gap_lengths %% 3))){
       return(NULL)
     }
-    # If the numbers between the 1 elements are less than max_gap combine with previous. Starting from second element!
+    # If the numbers between the 1 elements are less than max_indel combine with previous. Starting from second element!
     for(m in 2:length(rle_matches)){
       # Check if the current element is not a 1, but there is a 1 ahead and behind
       if(all((!names(rle_matches[m]) == "1"), (names(rle_matches[m-1]) == "1"), (names(rle_matches[m+1]) == "1"))){
-        #check if the current element is below max_gap
-        if(rle_matches[m] <  max_gap){
+        #check if the current element is below max_indel
+        if(rle_matches[m] <  max_indel){
           # if so, add the numbers
           names(rle_matches)[m] <- "1"
           rle_matches[m] <- (rle_matches[m] + rle_matches[m-1])
