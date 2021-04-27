@@ -190,7 +190,7 @@ map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 
   x <- x[!names(x) %in% names(x)[!names(x) %in% c(names(short_seqs), names(long_seqs))]]
 
   #Apply filt_phmm to all sequences
-  res <- furrr::future_map(x, filt_phmm2, model=model, min_score=min_score, min_length=min_length, max_indel = max_indel,
+  res <- furrr::future_map(x, filt_phmm, model=model, min_score=min_score, min_length=min_length, max_indel = max_indel,
                            shave=shave, trim_ends = trim_ends, check_frame=check_frame,
                            .progress = progress, .options = furrr::furrr_options(seed = TRUE))
 
