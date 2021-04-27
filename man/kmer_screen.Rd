@@ -4,7 +4,7 @@
 \alias{kmer_screen}
 \title{Kmer screening function}
 \usage{
-kmer_screen(seqs, model, threshold = 0.3, quiet = FALSE)
+kmer_screen(seqs, model, threshold = 0.3, k = 5, quiet = FALSE)
 }
 \arguments{
 \item{seqs}{A DNAbin object}
@@ -13,6 +13,8 @@ kmer_screen(seqs, model, threshold = 0.3, quiet = FALSE)
 An already derived model of COI can be loaded using \code{data("model", package="taxreturn")}}
 
 \item{threshold}{The maximum kmer distance allowed from the reference model before a sequence is discarded.}
+
+\item{k}{The k-mer size to be used for calculating the distance matrix, parsed to kmer::mbed. Note that high values of k may be slow to compute and use a lot of memory due to the large numbers of calculations required, particularly when the residue alphabet is also large.}
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
