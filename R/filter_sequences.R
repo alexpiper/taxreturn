@@ -108,6 +108,7 @@ clean_seqs <- function(x, model, min_score = 100, shave = TRUE, maxNs = 0, cores
 #' @param check_frame Whether sequences with insertions or deletions which arent in multiples of 3 should be removed from output. Useful for coding loci such as COI but should not be used for non-coding loci. Default is FALSE.
 #' @param kmer_threshold the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment.
 #' @param shave Whether bases that are outside (to the left or right) of the PHMM object should be removed from sequences in the output. Default is TRUE.
+#' @param trim_ends Sometimes a trailing base can end up at the end of the alignment, separated by gaps. the trim_ends parameter checks up to n bases from each end of the alignment and if gaps are detected, any trailing bases will be removed.
 #' @param extra How to handle insertions which were not part of the PHMM model. 'drop' will truncate all sequences to the shortest alignment length, while 'fill' will use gaps to pad all sequences out to the longest alignment length.
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected (Maximum available cores - 1), or provide a numeric vector to manually set the number of cores to use. Default is FALSE (single thread)
 #' @param quiet Whether progress should be printed to the console. Note that this will add additional runtime.
@@ -124,9 +125,9 @@ clean_seqs <- function(x, model, min_score = 100, shave = TRUE, maxNs = 0, cores
 #' @export
 #'
 #' @examples
-map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 9, max_gap = Inf, max_N = Inf, check_frame = FALSE,
-                         kmer_threshold=0.3, k=5, shave = TRUE, extra=NA,
-                         multithread = FALSE, quiet = FALSE, progress = FALSE) {
+map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 9, max_gap = Inf, max_N = Inf,
+                          check_frame = FALSE, kmer_threshold=0.3, k=5, shave = TRUE, trim_ends=FALSE, extra=NA,
+                          multithread = FALSE, quiet = FALSE, progress = FALSE) {
   time <- Sys.time() # get time
 
   # Check inputs
@@ -189,8 +190,8 @@ map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 
   x <- x[!names(x) %in% names(x)[!names(x) %in% c(names(short_seqs), names(long_seqs))]]
 
   #Apply filt_phmm to all sequences
-  res <- furrr::future_map(x, filt_phmm, model=model, min_score=min_score, min_length=min_length, max_indel = max_indel,
-                           shave=shave, check_frame=check_frame,
+  res <- furrr::future_map(x, filt_phmm2, model=model, min_score=min_score, min_length=min_length, max_indel = max_indel,
+                           shave=shave, trim_ends = trim_ends, check_frame=check_frame,
                            .progress = progress, .options = furrr::furrr_options(seed = TRUE))
 
   #Close all worker threads
@@ -201,7 +202,6 @@ map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 
 
   if (sum(!discards) > 0) {
     if (!quiet) message("Retained ", sum(!discards), " sequences after alignment to PHMM \n")
-    scores <- unlist(lapply(res, function(s) attr(s, "score")), use.names = FALSE)
     res <- res[!discards]
   } else {
     warning("None of the sequences met PHMM specificity criteria. Returning NULL \n")
@@ -246,9 +246,9 @@ map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 
 }
 
 # Filt phmm ---------------------------------------------------------------
-filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf, shave = TRUE, check_frame=TRUE, ...) {
+filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf, shave = TRUE, check_frame=TRUE, trim_ends=FALSE, ...) {
   s <- s[!s %in% as.raw(c(2, 4))] #Remove gaps
-  vit <- aphid::Viterbi(model, s, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
+  vit <- aphid::Viterbi(model, s, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
 
   # Stop early if below score or no matching states
   if (vit$score < min_score | !any(vit$path == 1)) {
@@ -297,12 +297,8 @@ filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf
     return(NULL)
   }
 
-  #Get starting position of F and R direction - Count only runs of 10 to avoid bad alignments
-  #matchF <- min(which(zoo::rollapply(as.numeric(vit$path), 10, identical, rep(1, 10))))
-  #matchR <- min(which(zoo::rollapply(as.numeric(rev(vit$path)), 10, identical, rep(1, 10))))
-
   # if shave is true, shave to alignment 2 - Maybe here is where i need to put the rolling match call?
-  if (isTRUE(shave) & any(vit$path==2)) {
+  if (shave & any(vit$path==2)) {
     last <- match(c(0, 1), rev(vit$path)) - 1
     last <- min(last[!is.na(last)])  # Getting the min, ignores deletions in the middle
     begin <- match(c(0, 1), vit$path)
@@ -315,7 +311,16 @@ filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf
   out <- as.raw(vit$path)
   out[out %in% c("01", "02")] <- s
   out[out==00] <- as.raw(04)
-  attr(out, "score") <- vit$score
+
+  # Trim any single bases on each end
+  if (is.numeric(trim_ends)){
+    if(out[trim_ends] == as.raw(04)){
+      out[1:trim_ends] <- as.raw(04)
+    }
+    if(out[length(out)-(trim_ends-1)]== as.raw(04)){
+      out[length(out)-(trim_ends-1):length(trim_ends)] <- as.raw(04)
+    }
+  }
   return(out)
 }
 

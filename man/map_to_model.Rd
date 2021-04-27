@@ -16,6 +16,7 @@ map_to_model(
   kmer_threshold = 0.3,
   k = 5,
   shave = TRUE,
+  trim_ends = FALSE,
   extra = NA,
   multithread = FALSE,
   quiet = FALSE,
@@ -44,6 +45,8 @@ see \code{?aphid::Viterbi} for more information about the alignment process.}
 \item{kmer_threshold}{the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment.}
 
 \item{shave}{Whether bases that are outside (to the left or right) of the PHMM object should be removed from sequences in the output. Default is TRUE.}
+
+\item{trim_ends}{Sometimes a trailing base can end up at the end of the alignment, separated by gaps. the trim_ends parameter checks up to n bases from each end of the alignment and if gaps are detected, any trailing bases will be removed.}
 
 \item{extra}{How to handle insertions which were not part of the PHMM model. 'drop' will truncate all sequences to the shortest alignment length, while 'fill' will use gaps to pad all sequences out to the longest alignment length.}
 
