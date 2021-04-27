@@ -271,13 +271,13 @@ filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf
     gap_lengths <- rle_matches[all_between[!all_between %in% which(names(rle_matches) == "1")]]
 
     # Check if gap lengths is divisible by 3
-    if(check_frame & !any(!(gap_lengths %% 3))){
+    if(check_frame & !all((gap_lengths %% 3)==0, na.rm = TRUE)){
       return(NULL)
     }
     # If the numbers between the 1 elements are less than max_indel combine with previous. Starting from second element!
     for(m in 2:length(rle_matches)){
       # Check if the current element is not a 1, but there is a 1 ahead and behind
-      if(all((!names(rle_matches[m]) == "1"), (names(rle_matches[m-1]) == "1"), (names(rle_matches[m+1]) == "1"))){
+      if(all((!names(rle_matches[m]) == "1"), (names(rle_matches[m-1]) == "1"), (names(rle_matches[m+1]) == "1"), na.rm =TRUE)){
         #check if the current element is below max_indel
         if(rle_matches[m] <  max_indel){
           # if so, add the numbers
