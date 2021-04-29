@@ -2,20 +2,16 @@
 % Please edit documentation in R/ncbi_taxonomy.R
 \name{get_ncbi_lineage}
 \alias{get_ncbi_lineage}
-\title{Download NCBI taxdump}
+\title{Get lineage}
 \usage{
-get_ncbi_lineage(dest.dir, synonyms = TRUE, force = FALSE)
+get_ncbi_lineage(x, db)
 }
 \arguments{
-\item{dest.dir}{A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created}
-
-\item{synonyms}{Whether synonyms should be included in the database}
-
-\item{force}{Whether already downloaded files should be overwritten}
+\item{db}{}
 }
 \value{
 
 }
 \description{
-Download NCBI taxdump
+Get lineage
 }

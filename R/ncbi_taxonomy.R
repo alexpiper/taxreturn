@@ -10,9 +10,8 @@
 #' @import readr
 #'
 #' @examples
-get_ncbi_lineage <- function(dest.dir, synonyms = TRUE, force=FALSE) {
+get_ncbi_taxonomy <- function(dest.dir, synonyms = TRUE, force=FALSE) {
   if(missing(dest.dir)){
-    #message("dest.dir is missing, downloading/looking for files in working directory")
     dest.dir <- getwd()
   }
   tmp <- paste0(dest.dir,"/ncbi_taxdump")
@@ -32,26 +31,6 @@ get_ncbi_lineage <- function(dest.dir, synonyms = TRUE, force=FALSE) {
   }
   message("Building NCBI taxonomy data frame\n")
 
-  ## Read data frame
-  #lin <- readr::read_tsv(paste0(tmp, "/rankedlineage.dmp"),
-  #                    delim="\t|",
-  #                    col_names = c("tax_id", "tax_name", "species", "genus", "family", "order", "class", "phylum", "kingdom", "superkingdom", "junk"),
-  #                    col_types = list(col_integer(),
-  #                                     col_character(),
-  #                                     col_character(),
-  #                                     col_character(),
-  #                                     col_character(),
-  #                                     col_character(),
-  #                                     col_character(),
-  #                                     col_character(),
-  #                                     col_character(),
-  #                                     col_character(),
-  #                                     col_character()
-#
-  #  )
-#
-  #) %>%
-  #  select(-junk)
   lin <- readr::read_tsv(paste0(tmp, "/rankedlineage.dmp"),
                          col_names = c("tax_id", "tax_name", "species", "genus", "family", "order", "class", "phylum", "kingdom", "superkingdom"),
                          col_types = ("i-c-c-c-c-c-c-c-c-c-")
@@ -78,10 +57,40 @@ get_ncbi_lineage <- function(dest.dir, synonyms = TRUE, force=FALSE) {
   return(lin)
 }
 
+# get_ncbi_lineage -------------------------------------------------------------
+#' Get lineage
+#'
+#' @param x
+#' @param db
+#'
+#' @return
+#' @export
+#' @import stringr
+#' @import tibble
+#' @import dplyr
+#' @import tidyr
+#'
+#' @examples
+get_ncbi_lineage <- function(x, db){
+  if(missing(db)){ db <- taxreturn::get_ncbi_taxonomy()}
+  cat("Getting taxonomic lineage from taxids\n")
+  na_taxids <- names(x)[stringr::str_extract(names(x), "(?<=\\|).+?(?=;)") == "NA"]
+  if(length(na_taxids)> 0){
+    message(length(na_taxids), " sequence/s have no matching tax_id in db")
+  }
+  lineage <- names(x) %>%
+    tibble::as_tibble() %>%
+    tidyr::separate(col=value, into=c("acc", "tax_id", "genus", "species"))%>%
+    dplyr::mutate(tax_id = suppressWarnings(as.numeric(tax_id))) %>%
+    dplyr::left_join (db %>% dplyr::select(-species, -genus), by = "tax_id")  %>%
+    tidyr::unite(col = Acc, c(acc, tax_id), sep = "|")
+  return(lineage)
+}
+
 # NCBI synonyms -----------------------------------------------------------
 #' Get NCBI synonyms
 #'
-#' @param dir A directory containing the NCBI taxonomy that was downloaded using get_ncbi_lineage
+#' @param dir A directory containing the NCBI taxonomy that was downloaded using get_ncbi_taxonomy
 #' @param recurse Whether to recurse when searching for dir if dir is NULL.
 #' If TRUE recurse fully, if a positive number the number of levels to recurse.
 #' @param quiet Whether progress should be printed to console
@@ -125,8 +134,9 @@ get_ncbi_synonyms <- function(dir=NULL, recurse=TRUE, quiet=FALSE) {
   return(out)
 }
 
-# resolve_synonyms_ncbi ---------------------------------------------------
 
+
+# resolve_synonyms_ncbi ---------------------------------------------------
 #' resolve_synonyms_ncbi
 #'
 #' @param x A DNAbin or DNAStringSet Object
@@ -204,25 +214,7 @@ resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE, ...) {
   return(x)
 }
 
-#
-#' (Deprecated) Get ranked Lineage
-#'
-#' @param db
-#' @param synonyms
-#' @param force
-#'
-#' @return
-#' @export
-#'
-#' @examples
-get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
-  .Deprecated(new="get_ncbi_lineage", old="get_ranked_lineage")
-  get_ncbi_lineage(db = "NCBI", synonyms = TRUE, force = FALSE)
-}
-
-
 # ncbi_taxid --------------------------------------------------------------
-
 #' Get ncbi taxid's for a taxon name
 #'
 #' @param x
@@ -236,7 +228,7 @@ get_ranked_lineage <- function(db = "NCBI", synonyms = TRUE, force=FALSE) {
 #' @examples
 ncbi_taxid <- function(x, db=NULL) {
 
-  if (is.null(db)) { db <- get_ncbi_lineage()}
+  if (is.null(db)) { db <- get_ncbi_taxonomy()}
   out <-  as.data.frame(x) %>%
     magrittr::set_colnames("tax_name") %>%
     dplyr::left_join (db, by = "tax_name") %>%
@@ -247,8 +239,6 @@ ncbi_taxid <- function(x, db=NULL) {
 
 
 # gid_to_acc --------------------------------------------------------------
-
-
 #' Convert NCBI gene ids to accession numbers
 #'
 #' @param ids A character or numeric vector of NCBI gids

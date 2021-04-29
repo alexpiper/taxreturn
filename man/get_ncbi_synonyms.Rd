@@ -7,7 +7,7 @@
 get_ncbi_synonyms(dir = NULL, recurse = TRUE, quiet = FALSE)
 }
 \arguments{
-\item{dir}{A directory containing the NCBI taxonomy that was downloaded using get_ncbi_lineage}
+\item{dir}{A directory containing the NCBI taxonomy that was downloaded using get_ncbi_taxonomy}
 
 \item{recurse}{Whether to recurse when searching for dir if dir is NULL.
 If TRUE recurse fully, if a positive number the number of levels to recurse.}

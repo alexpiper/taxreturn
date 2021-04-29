@@ -37,7 +37,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 
   # Get NCBI taxonomy database if NCBI format outputs are desired
   if (is.null(db) && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_lineage(synonyms = TRUE, force=FALSE)
+    db <- get_ncbi_taxonomy(synonyms = TRUE, force=FALSE)
   }
 
   #Define directories
@@ -253,7 +253,7 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 
   # Get NCBI taxonomy database if NCBI format outputs are desired
   if (is.null(db) && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_lineage(synonyms = TRUE, force=FALSE)
+    db <- get_ncbi_taxonomy(synonyms = TRUE, force=FALSE)
   }
 
   # Get accessions from existing fastas
@@ -1123,7 +1123,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
 
   # Get NCBI taxonomy database if NCBI format outputs are desired
   if (database == "bold" && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_lineage(synonyms = TRUE, force=FALSE)
+    db <- get_ncbi_taxonomy(synonyms = TRUE, force=FALSE)
   }
 
   #Define directories

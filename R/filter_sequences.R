@@ -698,7 +698,7 @@ codon_entropy <- function(x, genetic.code = "SGC4", forward=TRUE, reverse=FALSE,
 #' @description Cluster sequences at a certain taxonomic similarity, and find clusters that contain mixed taxonomic names,
 #' @description Note, it is recommended to set a unique seed using set.seed()
 #' @param x	 A DNAbin list object whose names include NCBItaxonomic identification numbers.
-#' @param db A taxonomic database from `get_ncbi_lineage` or `get_ott_lineage`
+#' @param db A taxonomic database from `get_ncbi_taxonomy` or `get_ott_lineage`
 #' @param rank The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
 #' If "all", the clusters will be checked at all taxonomic ranks available.
 #' @param threshold numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.
@@ -749,19 +749,15 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
       message("Please record this for your records so others can reproduce.")
       message("Try `set.seed(", rngseed, "); .Random.seed` for the full vector",
               sep = "")
-      message("...")
     }
-  }
-  else if (!quiet) {
-    message("You set `rngseed` to FALSE. Make sure you've set & recorded\n",
-            " the random seed of your session for reproducibility.\n",
-            "See `?set.seed`\n")
-    message("...")
-  }
+  } else if (!quiet) {message("You set `rngseed` to FALSE. Make sure you've set & recorded\n",
+                              " the random seed of your session for reproducibility.\n",
+                              "See `?set.seed`\n")}
+
   #Get lineage
   if(attr(db, "type")  == "ncbi"){
     source <- "ncbi"
-    lineage <- taxreturn::get_lineage(x = x, db = db)
+    lineage <- taxreturn::get_ncbi_lineage(x = x, db = db)
   } else if(attr(db, "type")  == "OTT"){
     source <- "OTT"
     lineage <- taxreturn::get_ott_lineage(x = x, db = db)
@@ -829,9 +825,11 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
     lins <- lineage %>%
       dplyr::select(!!rank[i]) %>%
       dplyr::pull(!!rank[i])
-    lins[is.na(lins)] <- ""
+    if(length(lins[is.na(lins)]) >0 & !quiet){warning("ignoring ", length(lins[is.na(lins)]), " sequence/s with no taxonomic data for ", rank[i])}
     names(lins) <- lineage$Acc
-    f <- as.factor(otus)
+    f <- as.factor(otus[!is.na(lins)])
+    lins <- lins[!is.na(lins)]
+
     splitlist <- split(lins, f)
     splitlist <- splitlist[tabulate(f) > 2]
 
@@ -843,6 +841,14 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
     } else if (length(mixedtab) > 0){
 
       mixedtab <- dplyr::bind_rows(mixedtab, .id="cluster")
+      if(rank[i] == "species"){
+        #Return binomials if species rank is selected
+        mixedtab <- mixedtab %>%
+          dplyr::left_join(lineage %>% dplyr::select(Acc, genus)) %>%
+          dplyr::mutate(listed = paste0(genus, " ", listed),
+                        consensus  = paste0(genus," ", consensus)) %>%
+          dplyr::select(-genus)
+      }
       if(return == "consensus"){
         mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
       }
@@ -858,6 +864,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
           dplyr::mutate(rank = rank[i],
                         threshold = threshold) %>%
           dplyr::mutate_if(is.factor, as.character)
+
       }
 
     }

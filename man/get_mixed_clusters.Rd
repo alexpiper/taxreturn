@@ -20,7 +20,7 @@ get_mixed_clusters(
 \arguments{
 \item{x}{A DNAbin list object whose names include NCBItaxonomic identification numbers.}
 
-\item{db}{A taxonomic database from \code{get_ncbi_lineage} or \code{get_ott_lineage}}
+\item{db}{A taxonomic database from \code{get_ncbi_taxonomy} or \code{get_ott_lineage}}
 
 \item{rank}{The taxonomic rank to check clusters at, accepts a character such as "order", or vector of characters such as c("species", "genus").
 If "all", the clusters will be checked at all taxonomic ranks available.}
