@@ -80,7 +80,7 @@ get_ncbi_lineage <- function(x, db){
   }
   lineage <- names(x) %>%
     tibble::as_tibble() %>%
-    tidyr::separate(col=value, into=c("acc", "tax_id", "genus", "species"))%>%
+    tidyr::separate(col=value, into=c("acc", "tax_id", "genus", "species"), sep="\\||;| ", extra="fill")%>%
     dplyr::mutate(tax_id = suppressWarnings(as.numeric(tax_id))) %>%
     dplyr::left_join (db %>% dplyr::select(-species, -genus), by = "tax_id")  %>%
     tidyr::unite(col = Acc, c(acc, tax_id), sep = "|")
