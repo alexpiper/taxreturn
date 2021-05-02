@@ -6,7 +6,7 @@
 \usage{
 prune_groups(
   x,
-  maxGroupSize = 5,
+  max_group_size = 5,
   dedup = TRUE,
   discardby = "length",
   quiet = FALSE
@@ -15,15 +15,15 @@ prune_groups(
 \arguments{
 \item{x}{A DNAbin or DNAStringset object}
 
-\item{maxGroupSize}{The maximum number of sequences with the same taxonomic annotation to keep}
+\item{max_group_size}{The maximum number of sequences with the same taxonomic annotation to keep}
 
 \item{dedup}{Whether sequences with identical taxonomic name and nucleotide bases sequences should be discarded first}
 
-\item{discardby}{How sequences from groups with size above maxGroupSize should be discarded.
-Options include "length" (Default) which will discard sequences from smallest to largest until the group is below maxGroupSize,
-"random" which will randomly pick sequences to discard until the group is below maxGroupSize,
+\item{discardby}{How sequences from groups with size above max_group_size should be discarded.
+Options include "length" (Default) which will discard sequences from smallest to largest until the group is below max_group_size,
+"random" which will randomly pick sequences to discard until the group is below max_group_size,
 and "novelty" which will conduct a local alignment, and discard the least unique sequences first until all sequences are unique,
-then discard sequences by length until the group is below maxGroupSize (Note: "novelty" is not yet implemented)}
+then discard sequences by length until the group is below max_group_size (Note: "novelty" is not yet implemented)}
 
 \item{quiet}{Whether progress should be printed to the console.}
 }

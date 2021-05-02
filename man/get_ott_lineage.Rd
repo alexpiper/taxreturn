@@ -10,7 +10,7 @@ get_ott_lineage(
   db,
   output = "tax_name",
   ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
-  cores = 1
+  multithread = FALSE
 )
 }
 \arguments{
@@ -21,11 +21,9 @@ get_ott_lineage(
 \item{ranks}{the taxonomic ranks to filter to. Default is "kingdom", "phylum", "class", "order", "family", "genus", "species"
 To get strain level ranks, add "terminal" to ranks}
 
-\item{cores}{integer giving the number of CPUs to parallelize the operation over (Defaults to 1).
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected (Maximum available cores - 1), or provide a numeric vector to manually set the number of cores to use. Default is FALSE (single thread)
 This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation,
-for example by running parallel::stopCluster(cores).
-The string 'autodetect' is also accepted, in which case the maximum number of cores to use is one less than the total number of cores available.
-Note that in this case there may be a tradeoff in terms of speed depending on the number and size of sequences to be processed, due to the extra time required to initialize the cluster.}
+for example by running parallel::stopCluster(cores).}
 }
 \value{
 

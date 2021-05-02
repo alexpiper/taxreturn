@@ -6,17 +6,17 @@
 \usage{
 filter_by_tax(
   x,
-  filtrank,
-  filtvalue,
+  filt_rank,
+  filt_value,
   ranks = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 )
 }
 \arguments{
 \item{x}{A DNAbin or DNAString with heirarchial taxonomy}
 
-\item{filtrank}{The taxonomic rank to subset at i.e. 'Class'}
+\item{filt_rank}{The taxonomic rank to subset at i.e. 'Class'}
 
-\item{filtvalue}{A taxonomic name or vector of taxonomic names to subset filtrank at at i.e. c('Insecta', 'Arachnida')}
+\item{filt_value}{A taxonomic name or vector of taxonomic names to subset filt_rank at at i.e. c('Insecta', 'Arachnida')}
 
 \item{ranks}{The taxonomic ranks currently assigned to the sequences}
 }

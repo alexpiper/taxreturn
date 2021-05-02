@@ -6,15 +6,17 @@
 \usage{
 codon_entropy(
   x,
-  genetic.code = "SGC4",
+  genetic_code = NULL,
   forward = TRUE,
   reverse = FALSE,
-  codon.filter = TRUE,
+  codon_filter = TRUE,
   method = "ML"
 )
 }
 \arguments{
-\item{codon.filter}{}
+\item{genetic_code}{A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE}
+
+\item{codon_filter}{}
 }
 \value{
 

@@ -28,7 +28,7 @@
 #'
 #' @param url (Optional) Default will search for the latest version
 #' URL to retrieve BLAST version from.
-#' @param dest.dir (Optional)  Default "bin"
+#' @param dest_dir (Optional)  Default "bin"
 #' Directory to install BLAST within.
 #' @force Whether existing installs should be forcefully overwritten
 #'
@@ -40,7 +40,7 @@
 #' @import httr
 #'
 #' @examples
-blast_install <- function(url, dest.dir = "bin", force = FALSE) {
+blast_install <- function(url, dest_dir = "bin", force = FALSE) {
 
   # get start time
   time <- Sys.time()
@@ -67,32 +67,32 @@ blast_install <- function(url, dest.dir = "bin", force = FALSE) {
 
   }
 
-  if (!dir.exists(dest.dir)) {
-    dir.create(dest.dir) # Create first directory
+  if (!dir.exists(dest_dir)) {
+    dir.create(dest_dir) # Create first directory
   }
 
   blast_version <- basename(url) %>% stringr::str_replace("(-x64)(.*?)(?=$)", "")
-  if (dir.exists(paste0(dest.dir, "/", blast_version)) && force == FALSE) {
+  if (dir.exists(paste0(dest_dir, "/", blast_version)) && force == FALSE) {
     message("Skipped as BLAST already exists in directory, to overwrite set force to TRUE")
     return(NULL)
-  } else  if (dir.exists(paste0(dest.dir, "/", blast_version)) && force == TRUE) {
-    unlink(paste0(dest.dir, "/", blast_version), recursive = TRUE) # Remove old version
+  } else  if (dir.exists(paste0(dest_dir, "/", blast_version)) && force == TRUE) {
+    unlink(paste0(dest_dir, "/", blast_version), recursive = TRUE) # Remove old version
   }
 
-  destfile <- file.path(dest.dir, basename(url))
+  destfile <- file.path(dest_dir, basename(url))
   if (exists(destfile)) {
     file.remove(destfile) # Remove old zip file
   }
 
   #Download and unzip
   httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
-  utils::untar(destfile, exdir = dest.dir)
+  utils::untar(destfile, exdir = dest_dir)
   file.remove(destfile)
 
   #Set new $Paths variable for mac & linux
   if(localos == "Darwin" | localos == "unix"){
     old_path <- Sys.getenv("PATH")
-    install_path <- list.dirs(dest.dir, full.names = TRUE)[str_detect(list.dirs(dest.dir, full.names = TRUE),"/bin$")]
+    install_path <- list.dirs(dest_dir, full.names = TRUE)[str_detect(list.dirs(dest_dir, full.names = TRUE),"/bin$")]
     Sys.setenv(PATH = paste(old_path, normalizePath(install_path), sep = ":"))
   }
 
@@ -191,24 +191,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   .findExecutable(type) # check blast is installed
 
   #Setup multithreading
-  ncores <- future::availableCores() -1
-  if((isTRUE(multithread) | is.numeric(multithread) & multithread > 1) & db=="remote"){
-    stop("Multithreading must be set to false for remote searches")
-  } else if(isTRUE(multithread)){
-    cores <- ncores
-    if(!quiet){message("Multithreading with ", cores, " cores")}
-  } else if (is.numeric(multithread) & multithread > 1){
-    cores <- multithread
-    if(cores > ncores){
-      cores <- ncores
-      message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
-    }
-    if(!quiet){message("Multithreading with ", cores, " cores")}
-  } else if(isFALSE(multithread) | multithread==1){
-    cores <- 1
-  } else (
-    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
-  )
+  setup_multithread(multithread = multithread, quiet=quiet)
 
   # Check outfmt
   if(output_format=="tabular"){
@@ -341,8 +324,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @param identity (Required) Minimum percent identity cutoff.
 #' @param coverage (Required) Minimum percent query coverage cutoff.
 #' @param evalue (Required) Minimum expect value (E) for saving hits
-#' @param maxtargetseqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
-#' @param maxhsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
+#' @param max_target_seqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
+#' @param max_hsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
 #' @param ranks (Required) The taxonomic ranks contained in the fasta headers
 #' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
 #' @param args (Optional) Extra arguments passed to BLAST
@@ -355,12 +338,12 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #'
 #' @examples
 blast_top_hit <- function(query, db, type="blastn",
-                          identity=95, coverage=95, evalue=1e06, maxtargetseqs=5, maxhsp=5,
+                          identity=95, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                           ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
                           tie="first", args=NULL, quiet=FALSE ){
 
   # set input filters in advance to speed up blast
-  args <- paste("-perc_identity", identity, "-max_target_seqs", maxtargetseqs, "-max_hsps", maxhsp, args)
+  args <- paste("-perc_identity", identity, "-max_target_seqs", max_target_seqs, "-max_hsps", max_hsp, args)
 
 
   #Conduct BLAST
@@ -403,8 +386,8 @@ blast_top_hit <- function(query, db, type="blastn",
 #' @param identity (Required) Minimum percent identity cutoff.
 #' @param coverage (Required) Minimum percent query coverage cutoff.
 #' @param evalue (Required) Minimum expect value (E) for saving hits
-#' @param maxtargetseqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
-#' @param maxhsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
+#' @param max_target_seqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
+#' @param max_hsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
 #' @param ranks (Required) The taxonomic ranks contained in the fasta headers
 #' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
 #' @param args (Optional) Extra arguments passed to BLAST
@@ -418,7 +401,7 @@ blast_top_hit <- function(query, db, type="blastn",
 #'
 #' @examples
 blast_assign_species <- function(query, db, type="blastn",
-                                 identity=975, coverage=95, evalue=1e06, maxtargetseqs=5, maxhsp=5,
+                                 identity=97, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                                  ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
                                  args=NULL, quiet=FALSE ){
 
@@ -429,7 +412,7 @@ blast_assign_species <- function(query, db, type="blastn",
 
   #Conduct BLAST
   result <- blast_top_hit(query = query, db = db, type=type,
-                          identity=identity, coverage=coverage, evalue=evalue, maxtargetseqs=maxtargetseqs, maxhsp=maxtargetseqs,
+                          identity=identity, coverage=coverage, evalue=evalue, max_target_seqs=max_target_seqs, max_hsp=max_hsp,
                           ranks=ranks, delim=delim, tie="all", args=args, quiet=quiet ) %>%
     dplyr::filter(!is.na(Species))
 

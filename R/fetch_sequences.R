@@ -9,10 +9,10 @@
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
-#' @param out.file The file to write to, if empty it defaults to the search term
+#' @param out_file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
-#' @param out.dir Output directory to write fasta files to
+#' @param out_dir Output directory to write fasta files to
 #'
 #' @import bold
 #' @import dplyr
@@ -25,8 +25,8 @@
 #'
 #' @examples
 boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
-                       out.file = NULL, compress = FALSE, force=FALSE,
-                       out.dir = NULL, db=NULL) {
+                       out_file = NULL, compress = FALSE, force=FALSE,
+                       out_dir = NULL, db=NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -37,31 +37,31 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 
   # Get NCBI taxonomy database if NCBI format outputs are desired
   if (is.null(db) && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_taxonomy(synonyms = TRUE, force=FALSE)
+    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
   }
 
   #Define directories
-  if (is.null(out.dir)) {
-    out.dir <- "bold"
-    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
+  if (is.null(out_dir)) {
+    out_dir <- "bold"
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
   }
-  if (!dir.exists(out.dir)) {
-    dir.create(out.dir)
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
   }
 
   # Create output files
   if (compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, ".fa.gz")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, ".fa.gz")
   } else if (!compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, ".fa")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, ".fa")
   }
 
   #Check if output exists
-  if (file.exists(out.file) && force==TRUE) {
-    file.remove(out.file)
-    cat("", file=out.file)
-  } else if (file.exists(out.file) && force==FALSE){
-    stop(paste0(out.file, " exists, set force = TRUE to overwrite"))
+  if (file.exists(out_file) && force==TRUE) {
+    file.remove(out_file)
+    cat("", file=out_file)
+  } else if (file.exists(out_file) && force==FALSE){
+    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
   }
 
   # Bold search
@@ -143,9 +143,9 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
       seqs <- Biostrings::DNAStringSet(data$nucleotides)
       names(seqs) <- data$name
       if (compress == TRUE) {
-        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000)
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000)
       } else if (compress == FALSE) {
-        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000)
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000)
       }
 
       # Done message
@@ -155,8 +155,8 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
   }
 
   # Count number of downloaded sequences
-  if(file.exists(out.file)){
-    counter <- nrow(Biostrings::fasta.index(out.file))
+  if(file.exists(out_file)){
+    counter <- nrow(Biostrings::fasta.index(out_file))
   } else {
     counter <- 0
   }
@@ -197,10 +197,10 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
 #' @param suffix The suffix to add to newly downloaded files. Defaults to 'updates'
-#' @param out.file The file to write to, if empty it defaults to the search term
+#' @param out_file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
-#' @param out.dir Output directory to write fasta files to
+#' @param out_dir Output directory to write fasta files to
 #' @param db
 #'
 #'
@@ -213,7 +213,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #'
 #' @examples
 boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h", suffix="updates", compress = FALSE, force=FALSE,
-                       out.dir = NULL, db=NULL) {
+                       out_dir = NULL, db=NULL) {
 
   # function setup
   time <- Sys.time() # get time
@@ -228,32 +228,32 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
   }
 
   #Define directories
-  if (is.null(out.dir)) {
-    out.dir <- "bold"
-    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
+  if (is.null(out_dir)) {
+    out_dir <- "bold"
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
   }
-  if (!dir.exists(out.dir)) {
-    dir.create(out.dir)
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
   }
 
   # Create output files
   if (compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, "_", suffix, ".fa.gz")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, "_", suffix, ".fa.gz")
   } else if (!compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, "_", suffix, ".fa")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, "_", suffix, ".fa")
   }
 
   #Check if output exists
-  if (file.exists(out.file) && force==TRUE) {
-    file.remove(out.file)
-    cat("", file=out.file)
-  } else if (file.exists(out.file) && force==FALSE){
-    stop(paste0(out.file, " exists, set force = TRUE to overwrite"))
+  if (file.exists(out_file) && force==TRUE) {
+    file.remove(out_file)
+    cat("", file=out_file)
+  } else if (file.exists(out_file) && force==FALSE){
+    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
   }
 
   # Get NCBI taxonomy database if NCBI format outputs are desired
   if (is.null(db) && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_taxonomy(synonyms = TRUE, force=FALSE)
+    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
   }
 
   # Get accessions from existing fastas
@@ -346,9 +346,9 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
       seqs <- Biostrings::DNAStringSet(data$nucleotides)
       names(seqs) <- data$name
       if (compress == TRUE) {
-        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000)
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000)
       } else if (compress == FALSE) {
-        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000)
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000)
       }
 
       # Done message
@@ -357,8 +357,8 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
     }
   }
   # Count number of downloaded sequences
-  if(file.exists(out.file)){
-    counter <- nrow(Biostrings::fasta.index(out.file))
+  if(file.exists(out_file)){
+    counter <- nrow(Biostrings::fasta.index(out_file))
   } else {
     counter <- 0
   }
@@ -384,7 +384,6 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 
 
 # Genbank fetching function -----------------------------------------------
-
 #' Genbank search function
 #'
 #' @param x A taxon name or vector of taxa to download sequences for
@@ -398,13 +397,13 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' or "standard" which outputs the default format for each database. For genbank this is `Accession Sequence definition`
-#' @param minlength The minimum length of sequences to download
-#' @param maxlength The maximum length of sequences to download
-#' @param chunksize Split up the query into chunks of this size to avoid overloading API servers.
+#' @param min_length The minimum length of sequences to download
+#' @param max_length The maximum length of sequences to download
+#' @param chunk_size Split up the query into chunks of this size to avoid overloading API servers.
 #' if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 #' @param compress  Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
-#' @param out.dir Output directory to write fasta files to
+#' @param out_dir Output directory to write fasta files to
 #'
 #'
 #' @import rentrez
@@ -434,7 +433,7 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #'
 #'  # Return res - Taxa - x of y sequences in n chunks in n secs to output
 gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h",
-                     minlength = 1, maxlength = 2000, subsample=NULL, chunksize=NULL, out.dir = NULL,
+                     min_length = 1, max_length = 2000, subsample=NULL, chunk_size=NULL, out_dir = NULL,
                      compress = FALSE, force=FALSE) {
 
   # function setup
@@ -451,12 +450,12 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
     marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
-  if (is.null(out.dir)) {
-    out.dir <- database
-    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
+  if (is.null(out_dir)) {
+    out_dir <- database
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
   }
-  if (!dir.exists(out.dir)) {
-    dir.create(out.dir)
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
   }
 
   # Create output file
@@ -466,17 +465,17 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
      stringr::str_replace_all(pattern=" ", replacement ="_")
 
   if (compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa.gz")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa.gz")
   } else if (!compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa")
   }
 
   #Check if output exists
-  if (file.exists(out.file) && force==TRUE) {
-    file.remove(out.file)
-    cat("", file=out.file)
-  } else if (file.exists(out.file) && force==FALSE){
-    stop(paste0(out.file, " exists, set force = TRUE to overwrite"))
+  if (file.exists(out_file) && force==TRUE) {
+    file.remove(out_file)
+    cat("", file=out_file)
+  } else if (file.exists(out_file) && force==FALSE){
+    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
   }
 
   if(database=="genbank"){
@@ -487,16 +486,16 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
   tryCatch(
     {
       if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
-        searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
-        if(is.null(chunksize)) {chunksize=10000}
+        searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", min_length, ":", max_length, "[Sequence Length]", sep = "")
+        if(is.null(chunk_size)) {chunk_size=10000}
       } else if (tolower(marker) %in% c("mitochondria", "mitochondrion")) {
         message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
-        if(is.null(chunksize)) {chunksize=1000}
+        if(is.null(chunk_size)) {chunk_size=1000}
       } else if (tolower(marker) %in% c("genome")){
         message(paste0("Input marker is ", marker, ", Downloading full genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
-        if(is.null(chunksize)) {chunksize=1}
+        if(is.null(chunk_size)) {chunk_size=1}
       }
       if(!quiet){message("Searching genbank with query:", searchQ)}
 
@@ -508,15 +507,15 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
         l <- 1
         start <- 0
 
-        chunks <- length(search_results$ids) / chunksize
+        chunks <- length(search_results$ids) / chunk_size
         if (!is.integer(chunks)) {
-          chunks <- as.integer(length(search_results$ids) / chunksize) + 1
+          chunks <- as.integer(length(search_results$ids) / chunk_size) + 1
         }
 
         for (l in 1:chunks) {
 
           # Fetch gb flat files
-          dl <- rentrez::entrez_fetch(db = database, web_history = search_results$web_history, rettype = "gb", retmax = chunksize, retstart = start)
+          dl <- rentrez::entrez_fetch(db = database, web_history = search_results$web_history, rettype = "gb", retmax = chunk_size, retstart = start)
           gb <- biofiles::gbRecord(rcd = textConnection(dl))
 
           # Hierarchial output
@@ -556,13 +555,13 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
                                  stringr::str_remove(" .*$")
                                %in% names(seqs)]
           if (compress == TRUE) {
-            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
+            Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
           } else if (compress == FALSE) {
-            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000, append = TRUE)
+            Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000, append = TRUE)
           }
 
           if (!quiet) (message("Chunk", l, " of ", chunks, " downloaded\r"))
-          start <- start + chunksize
+          start <- start + chunk_size
           Sys.sleep(2.5)
           if (l >= chunks) {
             time <- Sys.time() - time
@@ -575,8 +574,8 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
   )
 
   #Count number of downloaded sequences
-  if(file.exists(out.file)){
-    counter <- nrow(Biostrings::fasta.index(out.file))
+  if(file.exists(out_file)){
+    counter <- nrow(Biostrings::fasta.index(out_file))
   } else {
     counter <- 0
   }
@@ -639,13 +638,13 @@ cat_acctax <- function(x) {
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' or "standard" which outputs the default format for each database. For genbank this is `Accession Sequence definition`
-#' @param minlength The minimum length of sequences to download
-#' @param maxlength The maximum length of sequences to download
-#' @param chunksize Split up the query into chunks of this size to avoid overloading API servers.
+#' @param min_length The minimum length of sequences to download
+#' @param max_length The maximum length of sequences to download
+#' @param chunk_size Split up the query into chunks of this size to avoid overloading API servers.
 #' if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 #' @param compress  Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
-#' @param out.dir Output directory to write fasta files to
+#' @param out_dir Output directory to write fasta files to
 #'
 #'
 #' @import rentrez
@@ -660,8 +659,8 @@ cat_acctax <- function(x) {
 #'
 #' @examples
 gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"),
-                               quiet = FALSE, output = "h", minlength = 1, maxlength = 2000,
-                               subsample=1000, chunksize=300, compress = FALSE, force=FALSE, out.dir = NULL) {
+                               quiet = FALSE, output = "h", min_length = 1, max_length = 2000,
+                               subsample=1000, chunk_size=300, compress = FALSE, force=FALSE, out_dir = NULL) {
   # function setup
   time <- Sys.time() # get time
 
@@ -676,12 +675,12 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
     marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
-  if (is.null(out.dir)) {
-    out.dir <- database
-    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
+  if (is.null(out_dir)) {
+    out_dir <- database
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
   }
-  if (!dir.exists(out.dir)) {
-    dir.create(out.dir)
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
   }
 
   # Create output file
@@ -691,17 +690,17 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
     stringr::str_replace_all(pattern=" ", replacement ="_")
 
   if (compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa.gz")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa.gz")
   } else if (!compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, ".fa")
   }
 
   #Check if output exists
-  if (file.exists(out.file) && force==TRUE) {
-    file.remove(out.file)
-    cat("", file=out.file)
-  } else if (file.exists(out.file) && force==FALSE){
-    stop(paste0(out.file, " exists, set force = TRUE to overwrite"))
+  if (file.exists(out_file) && force==TRUE) {
+    file.remove(out_file)
+    cat("", file=out_file)
+  } else if (file.exists(out_file) && force==FALSE){
+    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
   }
 
   if(database=="genbank"){
@@ -713,16 +712,16 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
     {
       # Genbank Search
       if (!tolower(marker) %in%c("mitochondria", "mitochondrion", "genome")) {
-        searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
-        chunksize=5000
+        searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", min_length, ":", max_length, "[Sequence Length]", sep = "")
+        chunk_size=5000
       } else if (tolower(marker) %in% c("mitochondria", "mitochondrion")) {
         message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
-        chunksize=500
+        chunk_size=500
       } else if (tolower(marker) %in% c("genome", "mitochondrion")){
         message(paste0("Input marker is ", marker, ", Downloading full genomes"))
         searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
-        chunksize=1
+        chunk_size=1
       }
       if(!quiet){message("Searching genbank with query:", searchQ)}
 
@@ -733,7 +732,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
         if (!quiet) {message(paste0(subsample, " of: ", search_results$count, " sequences to be downloaded for: ", searchQ))}
 
         ids <- sample(search_results$ids, subsample )
-        chunks <- split(ids, ceiling(seq_along(ids)/chunksize))
+        chunks <- split(ids, ceiling(seq_along(ids)/chunk_size))
 
         l <- 1
 
@@ -780,9 +779,9 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
                                  stringr::str_remove(" .*$")
                                %in% names(seqs)]
           if (compress == TRUE) {
-            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
+            Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
           } else if (compress == FALSE) {
-            Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000, append = TRUE)
+            Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000, append = TRUE)
           }
 
           if (!quiet) (message("Chunk", l, " of ", length(chunks), " downloaded\r"))
@@ -798,8 +797,8 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
   )
 
   #Count number of downloaded sequences
-  if(file.exists(out.file)){
-    counter <- nrow(Biostrings::fasta.index(out.file))
+  if(file.exists(out_file)){
+    counter <- nrow(Biostrings::fasta.index(out_file))
   } else {
     counter <- 0
   }
@@ -840,13 +839,13 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' @param suffix The suffix to add to newly downloaded files. Defaults to 'updates'
-#' @param minlength The minimum length of sequences to download
-#' @param maxlength The maximum length of sequences to download
-#' @param chunksize The size of the chunked searches to conduct.
+#' @param min_length The minimum length of sequences to download
+#' @param max_length The maximum length of sequences to download
+#' @param chunk_size The size of the chunked searches to conduct.
 #' Warning, chunk sizes over 300 can be too big for the NCBI servers.
 #' @param compress  Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
-#' @param out.dir Output directory to write fasta files to
+#' @param out_dir Output directory to write fasta files to
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' @param progress Whether a progress bar should be shown. This reduces speed and is false by default.
 #'
@@ -861,7 +860,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
 #'
 #' @examples
 gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h", suffix="updates",
-                     minlength = 1, maxlength = 2000, chunksize=300, out.dir = NULL,
+                     min_length = 1, max_length = 2000, chunk_size=300, out_dir = NULL,
                      compress = FALSE, force=FALSE, multithread = FALSE, progress=FALSE){
 
   # function setup
@@ -883,12 +882,12 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
     marker <- paste(marker, collapse=" OR ")
   }
   #Define directories
-  if (is.null(out.dir)) {
-    out.dir <- database
-    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
+  if (is.null(out_dir)) {
+    out_dir <- database
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
   }
-  if (!dir.exists(out.dir)) {
-    dir.create(out.dir)
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
   }
 
   # Create output file
@@ -898,17 +897,17 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
     stringr::str_replace_all(pattern=" ", replacement ="_")
 
   if (compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, "_", suffix, ".fa.gz")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, "_", suffix, ".fa.gz")
   } else if (!compress) {
-    out.file <- paste0(normalizePath(out.dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, "_", suffix, ".fa")
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", name, "_", suffix, ".fa")
   }
 
   #Check if output exists
-  if (file.exists(out.file) && force==TRUE) {
-    file.remove(out.file)
-    cat("", file=out.file)
-  } else if (file.exists(out.file) && force==FALSE){
-    stop(paste0(out.file, " exists, set force = TRUE to overwrite"))
+  if (file.exists(out_file) && force==TRUE) {
+    file.remove(out_file)
+    cat("", file=out_file)
+  } else if (file.exists(out_file) && force==FALSE){
+    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
   }
 
   if(database=="genbank"){
@@ -921,16 +920,16 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 
   # Genbank Search
   if (!tolower(marker) %in%c("mitochondria", "mitochondrion", "genome")) {
-    searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", minlength, ":", maxlength, "[Sequence Length]", sep = "")
-    if(is.null(chunksize)) {chunksize=10000}
+    searchQ <- paste("(", x, "[ORGN])", " AND (", paste(c(marker), collapse = " OR "), ") AND ", min_length, ":", max_length, "[Sequence Length]", sep = "")
+    if(is.null(chunk_size)) {chunk_size=10000}
   } else if (tolower(marker) %in% c("mitochondria", "mitochondrion")) {
     message(paste0("Input marker is ", marker, ", Downloading full mitochondrial genomes"))
     searchQ <- paste("(", x, "[ORGN])", " AND mitochondrion[filter] AND genome", sep = "")
-    if(is.null(chunksize)) {chunksize=1000}
+    if(is.null(chunk_size)) {chunk_size=1000}
   } else if (tolower(marker) %in% c("genome", "mitochondrion")){
     message(paste0("Input marker is ", marker, ", Downloading full genomes"))
     searchQ <- paste("(", x, "[ORGN])", " AND complete genome[title]", sep = "")
-    if(is.null(chunksize)) {chunksize=1}
+    if(is.null(chunk_size)) {chunk_size=1}
   }
   if(!quiet){message("Searching genbank with query:", searchQ)}
 
@@ -939,7 +938,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 
   #Convert search result GIDs to accession
   if(length(ids) > 0 ){
-    accs <- gid_to_acc(ids, database = database, chunksize = chunksize,  multithread=multithread, progress = progress) %>%
+    accs <- gid_to_acc(ids, database = database, chunk_size = chunk_size,  multithread=multithread, progress = progress) %>%
     stringr::str_remove(".[0-9]$")
   } else{
     stop("search returned no hits")
@@ -953,32 +952,15 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 
     if (!quiet) {message(paste0(length(newsearch), " sequences to be downloaded for: ", searchQ))}
 
-    chunks <- split(newsearch, ceiling(seq_along(newsearch)/chunksize))
+    chunks <- split(newsearch, ceiling(seq_along(newsearch)/chunk_size))
 
     # setup multithreading
-    ncores <- future::availableCores() -1
-    if(isTRUE(multithread)){
-      cores <- ncores
-      if(!quiet){message("Multithreading with ", cores, " cores")}
-      future::plan(future::multiprocess, workers=cores)
-    } else if (is.numeric(multithread) & multithread > 1){
-      cores <- multithread
-      if(cores > ncores){
-        cores <- ncores
-        message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
-      }
-      if(!quiet){message("Multithreading with ", cores, " cores")}
-      future::plan(future::multiprocess, workers=cores)
-    } else if(isFALSE(multithread) | multithread==1){
-      future::plan(future::sequential)
-    } else (
-      stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
-    )
+    setup_multithread(multithread = multithread, quiet=quiet)
 
     #Main function
     furrr::future_map(chunks, function(x){
       upload <- rentrez::entrez_post(db=database, id=x)
-      dl <- rentrez::entrez_fetch(db = database, web_history = upload, rettype = "gb", retmax = chunksize)
+      dl <- rentrez::entrez_fetch(db = database, web_history = upload, rettype = "gb", retmax = chunk_size)
       gb <- biofiles::gbRecord(rcd = textConnection(dl))
 
       # Hierarchial output
@@ -1014,9 +996,9 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
                              stringr::str_remove(" .*$")
                            %in% names(seqs)]
       if (compress == TRUE) {
-        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000, append = TRUE)
       } else if (compress == FALSE) {
-        Biostrings::writeXStringSet(seqs, out.file, format = "fasta", width = 20000, append = TRUE)
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000, append = TRUE)
       }
       invisible(NULL)
     }, .progress = progress)
@@ -1026,8 +1008,8 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
   future::plan(future::sequential)
 
   #Count number of downloaded sequences
-  if(file.exists(out.file)){
-    counter <- nrow(Biostrings::fasta.index(out.file))
+  if(file.exists(out_file)){
+    counter <- nrow(Biostrings::fasta.index(out_file))
   } else {
     counter <- 0
   }
@@ -1053,9 +1035,9 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 
 
 
-# Fetchseqs wrapper function ----------------------------------------------
+# Fetchseqs function ----------------------------------------------
 
-#' Fetchseqs wrapper function
+#' Fetchseqs function
 #'
 #' @param x A taxon name or vector of taxon names to download sequences for.
 #' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
@@ -1073,13 +1055,13 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
 #' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid` while for genbank this is `Accession Sequence definition`
-#' @param minlength The maximum length of the query sequence to return. Default 1.
-#' @param maxlength The maximum length of the query sequence to return.
+#' @param min_length The maximum length of the query sequence to return. Default 1.
+#' @param max_length The maximum length of the query sequence to return.
 #' This can be useful for ensuring no off-target sequences are returned. Default 2000.
-#' @param out.dir Output directory to write fasta files to
+#' @param out_dir Output directory to write fasta files to
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option to overwrite files if they already exist
-#' @param chunksize Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
+#' @param chunk_size Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
 #' if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 #' For BOLD queries the default is 100,000 returned records
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
@@ -1106,8 +1088,8 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 #'
 #' @examples
 fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
-                      output = "h", minlength = 1, maxlength = 2000,
-                      subsample=FALSE, chunksize=NULL, out.dir = NULL, compress = TRUE,
+                      output = "h", min_length = 1, max_length = 2000,
+                      subsample=FALSE, chunk_size=NULL, out_dir = NULL, compress = TRUE,
                       force=FALSE, multithread = FALSE, quiet = TRUE, progress=FALSE, ...) {
 
   if(!database %in% c("nuccore", "genbank", "bold")) {
@@ -1123,18 +1105,18 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
 
   # Get NCBI taxonomy database if NCBI format outputs are desired
   if (database == "bold" && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_taxonomy(synonyms = TRUE, force=FALSE)
+    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
   }
 
   #Define directories
-  if (is.null(out.dir)) {
-    out.dir <- database
-    if (!quiet) (message(paste0("No input out.dir given, saving output file to: ", out.dir)))
+  if (is.null(out_dir)) {
+    out_dir <- database
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
   }
-  if (!dir.exists(out.dir)) {
-    dir.create(out.dir)
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
   }
-  out.dir <- normalizePath(out.dir)
+  out_dir <- normalizePath(out_dir)
 
   # Evaluate downstream
   if (is.character(downstream)) {
@@ -1158,24 +1140,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
   }
 
   # Setup multithreading - only makes sense if downstream = TRUE
-  ncores <- future::availableCores() -1
-  if(isTRUE(multithread)){
-    cores <- ncores
-    if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess, workers=cores)
-  } else if (is.numeric(multithread) & multithread > 1){
-    cores <- multithread
-    if(cores > ncores){
-      cores <- ncores
-      message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
-    }
-    if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess, workers=cores)
-  } else if(isFALSE(multithread) | multithread==1){
-    future::plan(future::sequential)
-  } else (
-    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
-  )
+  setup_multithread(multithread = multithread, quiet=quiet)
 
   # Genbank
   if (database %in% c("genbank", "nuccore")) {
@@ -1183,31 +1148,31 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
       message("Downloading from genbank - No subsampling")
     res <-  furrr::future_map_dfr(
         taxon, gbSearch, database = database, marker = marker,
-        output = output, minlength = minlength, maxlength = maxlength,
-        compress = compress, chunksize=chunksize, out.dir= out.dir,
+        output = output, min_length = min_length, max_length = max_length,
+        compress = compress, chunk_size=chunk_size, out_dir= out_dir,
         force=force, quiet = quiet, .progress = progress, ...=...)
 
     } else if (is.numeric(subsample)){
       message("Downloading from genbank - With subsampling")
     res <-  furrr::future_map_dfr(
         taxon, gbSearch_subsample, database = database, marker = marker,
-        out.dir = out.dir, output = output, subsample = subsample,
-        minlength = minlength, maxlength = maxlength, chunksize=chunksize,
+        out_dir = out_dir, output = output, subsample = subsample,
+        min_length = min_length, max_length = max_length, chunk_size=chunk_size,
         force=force, compress = compress, quiet = quiet,  .progress = progress, ...=...)
     }
 
   } else if (database == "bold") {
-    # Split any querys above chunksize
-    if(is.null(chunksize)){
-      chunksize <- 100000
+    # Split any querys above chunk_size
+    if(is.null(chunk_size)){
+      chunk_size <- 100000
     }
-    bold_taxon <- furrr::future_map(taxon, split_bold_query, chunksize=chunksize, quiet=quiet, .progress = progress) %>%
+    bold_taxon <- furrr::future_map(taxon, split_bold_query, chunk_size=chunk_size, quiet=quiet, .progress = progress) %>%
       unlist()
 
     if(!quiet) {message("Downloading ", length(bold_taxon)," taxa from BOLD")}
     res <- furrr::future_map(
       bold_taxon, boldSearch, marker = marker, db=db,
-      out.dir = out.dir, out.file = NULL, output = output,
+      out_dir = out_dir, out_file = NULL, output = output,
       compress = compress, quiet = quiet,  .progress = progress, force=force, ...=...)
   }
 
@@ -1222,22 +1187,22 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
 # Split BOLD query --------------------------------------------------------
 
 #' Split bold query
-#' This function recursively splits a bold taxonomic query until the amount of records returned is under chunksize
+#' This function recursively splits a bold taxonomic query until the amount of records returned is under chunk_size
 #'
 #' @param x The input taxonomic query
-#' @param chunksize The maximum amount of records to return per query
+#' @param chunk_size The maximum amount of records to return per query
 #' @param quiet (Optional) Print text output
 #'
 #' @return
 #' @export
 #'
 #' @examples
-split_bold_query <- function(x, chunksize=100000, quiet=FALSE){
+split_bold_query <- function(x, chunk_size=100000, quiet=FALSE){
 
   rcds <- bold::bold_stats(x, dataType = "overview") %>%
     unlist()
   out <- character()
-  if(rcds["total_records"] > chunksize){
+  if(rcds["total_records"] > chunk_size){
     while(length(x) > 0){
       rcds <- purrr::map(x, ~{
         .x %>%
@@ -1248,7 +1213,7 @@ split_bold_query <- function(x, chunksize=100000, quiet=FALSE){
         dplyr::select("order.count", "family.count", "genus.count", "species.count") %>%
         dplyr::select_if(colSums(.) > nrow(.))
 
-      if(!quiet) {message("Found over ", chunksize, " (chunksize value) BOLD records for ", x, ", searching for lower taxonomic ranks to reduce query size")}
+      if(!quiet) {message("Found over ", chunk_size, " (chunk_size value) BOLD records for ", x, ", searching for lower taxonomic ranks to reduce query size")}
       downstream2 <- stringr::str_remove(colnames(rcds[1]), ".count")
       lower_ranks <- taxize::downstream(x, db = "bold", downto = downstream2) %>%
         as("list") %>%
@@ -1267,12 +1232,12 @@ split_bold_query <- function(x, chunksize=100000, quiet=FALSE){
 
       # Get successfully resolved
       out <- c(out, rcds2 %>%
-                 dplyr::filter(total_records < chunksize)%>%
+                 dplyr::filter(total_records < chunk_size)%>%
                  dplyr::pull(name))
 
       # Repeat on unresolved
       x <- rcds2 %>%
-        dplyr::filter(total_records > chunksize) %>%
+        dplyr::filter(total_records > chunk_size) %>%
         dplyr::pull(name)
     }
 

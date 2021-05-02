@@ -1,7 +1,7 @@
 #' Download NCBI taxdump
 #'
-#' @param dest.dir A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created
-#' @param synonyms Whether synonyms should be included in the database
+#' @param dest_dir A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created
+#' @param include_synonyms Whether synonyms should be included in the database
 #' @param force Whether already downloaded files should be overwritten
 #'
 #' @return
@@ -10,11 +10,11 @@
 #' @import readr
 #'
 #' @examples
-get_ncbi_taxonomy <- function(dest.dir, synonyms = TRUE, force=FALSE) {
-  if(missing(dest.dir)){
-    dest.dir <- getwd()
+get_ncbi_taxonomy <- function(dest_dir, include_synonyms = TRUE, force=FALSE) {
+  if(missing(dest_dir)){
+    dest_dir <- getwd()
   }
-  tmp <- paste0(dest.dir,"/ncbi_taxdump")
+  tmp <- paste0(dest_dir,"/ncbi_taxdump")
   if (!dir.exists(tmp)) {
     dir.create(tmp) # Create first directory
   }
@@ -37,7 +37,7 @@ get_ncbi_taxonomy <- function(dest.dir, synonyms = TRUE, force=FALSE) {
   )
 
   # Remove synonyms
-  if (synonyms == FALSE) {
+  if (!include_synonyms) {
     x <- scan(
       file = paste0(tmp, "/names.dmp"), what = "", sep = "\n",
       quiet = TRUE
@@ -134,13 +134,11 @@ get_ncbi_synonyms <- function(dir=NULL, recurse=TRUE, quiet=FALSE) {
   return(out)
 }
 
-
-
 # resolve_synonyms_ncbi ---------------------------------------------------
 #' resolve_synonyms_ncbi
 #'
 #' @param x A DNAbin or DNAStringSet Object
-#' @param quiet
+#' @param quiet Whether progress should be printed to console
 #'
 #' @return
 #' @export
@@ -243,7 +241,7 @@ ncbi_taxid <- function(x, db=NULL) {
 #'
 #' @param ids A character or numeric vector of NCBI gids
 #' @param database The origin database of the gids, default 'nuccore'
-#' @param chunksize The size of the chunked searches to conduct.
+#' @param chunk_size The size of the chunked searches to conduct.
 #' Warning, chunk sizes over 300 can be too big for the NCBI servers.
 #' @param multithread Whether multithreading should be used
 #' @param quiet (Optional) Print text outputdatabase
@@ -255,42 +253,24 @@ ncbi_taxid <- function(x, db=NULL) {
 #' @import rentrez
 #' @import purrr
 #'
-#'
 #' @examples
-gid_to_acc <- function(ids, database="nuccore", chunksize=300, multithread=TRUE, progress=FALSE, quiet=FALSE){
+gid_to_acc <- function(ids, database="nuccore", chunk_size=300, multithread=TRUE, progress=FALSE, quiet=FALSE){
   if(!class(ids) %in% c("character", "numeric")){
     stop("input ids must be a character or numeric vector of NCBI gids")
   }
   time <- Sys.time() # get time
 
   # split search into chunks
-  chunks <- split(ids, ceiling(seq_along(ids)/chunksize))
+  chunks <- split(ids, ceiling(seq_along(ids)/chunk_size))
   if(!quiet){message(paste0("Converting ", length(ids), " NCBI gids to accession numbers in ", length(chunks), " chunks"))}
 
   # setup multithreading
-  ncores <- future::availableCores() -1
-  if(isTRUE(multithread)){
-    cores <- ncores
-    if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess, workers=cores)
-  } else if (is.numeric(multithread) & multithread > 1){
-    cores <- multithread
-    if(cores > ncores){
-      cores <- ncores
-      message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
-    }
-    if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess, workers=cores)
-  } else if(isFALSE(multithread) | multithread==1){
-    future::plan(future::sequential)
-  } else (
-    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
-  )
+  cores <- setup_multithread(multithread)
 
   #Main function
   out <- furrr::future_map(chunks, function(x){
     upload <- rentrez::entrez_post(db=database, id=x)
-    dl <- rentrez::entrez_fetch(db = database, web_history = upload, rettype = "acc", retmax = chunksize)
+    dl <- rentrez::entrez_fetch(db = database, web_history = upload, rettype = "acc", retmax = chunk_size)
     acc <- readLines(textConnection(dl))
     acc <- acc[!acc==""]
     return(acc)

@@ -8,11 +8,11 @@ blast_assign_species(
   query,
   db,
   type = "blastn",
-  identity = 975,
+  identity = 97,
   coverage = 95,
   evalue = 1e+06,
-  maxtargetseqs = 5,
-  maxhsp = 5,
+  max_target_seqs = 5,
+  max_hsp = 5,
   ranks = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
   delim = ";",
   args = NULL,
@@ -33,9 +33,9 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 \item{evalue}{(Required) Minimum expect value (E) for saving hits}
 
-\item{maxtargetseqs}{(Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.}
+\item{max_target_seqs}{(Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.}
 
-\item{maxhsp}{(Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.}
+\item{max_hsp}{(Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.}
 
 \item{ranks}{(Required) The taxonomic ranks contained in the fasta headers}
 

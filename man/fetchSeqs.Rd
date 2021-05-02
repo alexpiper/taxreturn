@@ -2,7 +2,7 @@
 % Please edit documentation in R/fetch_sequences.R
 \name{fetchSeqs}
 \alias{fetchSeqs}
-\title{Fetchseqs wrapper function}
+\title{Fetchseqs function}
 \usage{
 fetchSeqs(
   x,
@@ -10,11 +10,11 @@ fetchSeqs(
   marker = NULL,
   downstream = FALSE,
   output = "h",
-  minlength = 1,
-  maxlength = 2000,
+  min_length = 1,
+  max_length = 2000,
   subsample = FALSE,
-  chunksize = NULL,
-  out.dir = NULL,
+  chunk_size = NULL,
+  out_dir = NULL,
   compress = TRUE,
   force = FALSE,
   multithread = FALSE,
@@ -45,16 +45,16 @@ Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Ord
 "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
 or "standard" which outputs the default format for each database. For bold this is \verb{sampleid|species name|markercode|genbankid} while for genbank this is \verb{Accession Sequence definition}}
 
-\item{minlength}{The maximum length of the query sequence to return. Default 1.}
+\item{min_length}{The maximum length of the query sequence to return. Default 1.}
 
-\item{maxlength}{The maximum length of the query sequence to return.
+\item{max_length}{The maximum length of the query sequence to return.
 This can be useful for ensuring no off-target sequences are returned. Default 2000.}
 
-\item{chunksize}{Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
+\item{chunk_size}{Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
 if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 For BOLD queries the default is 100,000 returned records}
 
-\item{out.dir}{Output directory to write fasta files to}
+\item{out_dir}{Output directory to write fasta files to}
 
 \item{compress}{Option to compress output fasta files using gzip}
 
@@ -72,5 +72,5 @@ if x is a vector, or of downstream is being used.}
 
 }
 \description{
-Fetchseqs wrapper function
+Fetchseqs function
 }

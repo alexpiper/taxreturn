@@ -3,7 +3,7 @@
 #' Download open tree of life taxonomy
 #'
 #' @param url a URL to download from, if left blank the latest version will be downloaded
-#' @param dest.dir A directory to save the zipped taxonomy database to, if left blank the working directory is selected
+#' @param dest_dir A directory to save the zipped taxonomy database to, if left blank the working directory is selected
 #' @param force Whether existing files should be overwritten
 #'
 #' @return
@@ -15,7 +15,7 @@
 #' @import utils
 #'
 #' @examples
-download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
+download_ott_taxonomy <- function(url, dest_dir, force=FALSE) {
 
   if (missing(url)) {
     # find the latest version of taxonomy
@@ -30,38 +30,38 @@ download_ott_taxonomy <- function(url, dest.dir, force=FALSE) {
   version <- basename(url) %>%
     stringr::str_remove(".tgz")
 
-  if(missing(dest.dir)){
-    message("dest.dir is missing, downloading into /", version)
-    dest.dir <- version
+  if(missing(dest_dir)){
+    message("dest_dir is missing, downloading into /", version)
+    dest_dir <- version
   }
 
-  if (!dir.exists(dest.dir)) {
-    dir.create(dest.dir) # Create first directory
+  if (!dir.exists(dest_dir)) {
+    dir.create(dest_dir) # Create first directory
   }
 
-  # Check if files exist already in dest.dir
+  # Check if files exist already in dest_dir
   expected_files <- c(
-    paste0(dest.dir,"/", version,".tgz" ),
-    paste0(dest.dir,"/taxonomy.tsv" ),
-    paste0(dest.dir,"/synonyms.tsv" )
+    paste0(dest_dir,"/", version,".tgz" ),
+    paste0(dest_dir,"/taxonomy.tsv" ),
+    paste0(dest_dir,"/synonyms.tsv" )
   )
 
   if (any(file.exists(expected_files)) & force == FALSE) {
-    message(paste0("Skipped as files already exist in dest.dir, to overwrite set force to TRUE"))
+    message(paste0("Skipped as files already exist in dest_dir, to overwrite set force to TRUE"))
     return(NULL)
   } else  if (any(file.exists(expected_files)) && force == TRUE) {
     unlink(expected_files, recursive = TRUE) # Remove existing version
   }
 
-  destfile <- file.path(dest.dir, basename(url))
-  httr::GET(url, httr::write_disk(destfile, overwrite=TRUE))
+  dest_file <- file.path(dest_dir, basename(url))
+  httr::GET(url, httr::write_disk(dest_file, overwrite=TRUE))
 
   #unzip file
-  utils::untar(destfile, exdir = ".")
+  utils::untar(dest_file, exdir = ".")
   #Remove download
-  file.remove(destfile)
-  message(paste0("Downloaded taxonomy to: ",stringr::str_remove(destfile,".tgz" ), " \n"))
-  return(stringr::str_remove(destfile,".tgz" ))
+  file.remove(dest_file)
+  message(paste0("Downloaded taxonomy to: ",stringr::str_remove(dest_file,".tgz" ), " \n"))
+  return(stringr::str_remove(dest_file,".tgz" ))
 }
 
 
@@ -327,11 +327,9 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 #' @param db an OTT taxonomic database
 #' @param ranks the taxonomic ranks to filter to. Default is "kingdom", "phylum", "class", "order", "family", "genus", "species"
 #' To get strain level ranks, add "terminal" to ranks
-#' @param cores integer giving the number of CPUs to parallelize the operation over (Defaults to 1).
+#' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected (Maximum available cores - 1), or provide a numeric vector to manually set the number of cores to use. Default is FALSE (single thread)
 #' This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation,
 #' for example by running parallel::stopCluster(cores).
-#' The string 'autodetect' is also accepted, in which case the maximum number of cores to use is one less than the total number of cores available.
-#' Note that in this case there may be a tradeoff in terms of speed depending on the number and size of sequences to be processed, due to the extra time required to initialize the cluster.
 #'
 #' @return
 #' @export
@@ -342,7 +340,7 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 #' @import tibble
 #'
 #' @examples
-get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), cores = 1){
+get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), multithread = FALSE){
   #Check input format
   if (is(x, "DNAbin")) {
     message("Input is DNAbin")
@@ -370,6 +368,9 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
     message("Did not detect | and ; delimiters, assuming a vector of tax_id's")
     lineage <- data.frame(acc = as.character(NA), tax_name=as.character(NA), tax_id = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
+
+  # setup multithreading
+  cores <- setup_para(multithread, quiet)
 
   # Check for duplicated accessions
   if(any(duplicated(lineage$acc))){stop("Duplicated sequence accessions found")}

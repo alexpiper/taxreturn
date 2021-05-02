@@ -9,7 +9,7 @@ resolve_synonyms_ncbi(x, dir = NULL, quiet = FALSE, ...)
 \arguments{
 \item{x}{A DNAbin or DNAStringSet Object}
 
-\item{quiet}{}
+\item{quiet}{Whether progress should be printed to console}
 }
 \value{
 

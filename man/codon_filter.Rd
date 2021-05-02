@@ -6,23 +6,22 @@
 \usage{
 codon_filter(
   x,
-  genetic.code = "SGC4",
+  genetic_code = NULL,
   forward = TRUE,
   reverse = FALSE,
-  remove.ambiguities = TRUE
+  remove_ambiguities = TRUE
 )
 }
 \arguments{
 \item{x}{Sequences in DNAStringset or DNAbin format}
 
-\item{genetic.code}{A genetic code for the Amino acid translation. See all known codes at GENETIC_CODE_TABLE
-Default is the invertebrate mitochondrial code 'SGC4'}
+\item{genetic_code}{A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE}
 
 \item{forward}{Whether the forward complement should be used}
 
 \item{reverse}{Whether the reverse complement should be used}
 
-\item{remove.ambiguities}{Whether ambiguous bases (non ATGC) bases should be removed}
+\item{remove_ambiguities}{Whether sequences containing ambiguous bases (non ATGC) should be removed}
 }
 \value{
 

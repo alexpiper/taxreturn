@@ -10,9 +10,9 @@ pad_alignment(
   pad = "-",
   tryrc = FALSE,
   check_indels = TRUE,
-  minscore = 10,
-  omit.endgaps = FALSE,
-  cores = 1,
+  min_score = 10,
+  omit_endgaps = FALSE,
+  multithread = FALSE,
   quiet = FALSE,
   ...
 )
@@ -28,11 +28,11 @@ pad_alignment(
 
 \item{check_indels}{Check that indels are multiples of 3, recommended for coding sequences such as COI}
 
-\item{minscore}{Minimum score for the viterbi alignment}
+\item{min_score}{Minimum score for the viterbi alignment}
 
-\item{omit.endgaps}{Should gap characters at each end of the sequences be ignored when deriving the transition probabilities of the model? Defaults to FALSE. Set to TRUE if x is not a strict global alignment (i.e. if the alignment contains partial sequences with missing sections represented with gap characters).}
+\item{omit_endgaps}{Should gap characters at each end of the sequences be ignored when deriving the transition probabilities of the model? Defaults to FALSE. Set to TRUE if x is not a strict global alignment (i.e. if the alignment contains partial sequences with missing sections represented with gap characters).}
 
-\item{cores}{Integer giving the number of CPUs to parallelize the operation over. Defaults to 1, and reverts to 1 if x is not a list. This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation, for example by running parallel::stopCluster(cores). The string 'autodetect' is also accepted, in which case the maximum number of cores to use is one less than the total number of cores available. Note that in this case there may be a tradeoff in terms of speed depending on the number and size of sequences to be aligned, due to the extra time required to initialize the cluster.}
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
 
 \item{quiet}{Whether progress should be printed to the console.}
 

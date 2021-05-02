@@ -9,7 +9,7 @@ get_binding_position(
   model,
   tryrc = TRUE,
   quiet = FALSE,
-  minscore = 10,
+  min_score = 10,
   ...
 )
 }
@@ -22,7 +22,7 @@ get_binding_position(
 
 \item{quiet}{Whether progress should be printed to the console.}
 
-\item{minscore}{Minimum score for the viterbi alignment.}
+\item{min_score}{Minimum score for the viterbi alignment.}
 
 \item{...}{aditional arguments to be passed to "Viterbi"}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{hex2acc}
 \alias{hex2acc}
-\title{Title}
+\title{Hexadecimal coding to accession numberD}
 \usage{
 hex2acc(x, force = FALSE)
 }

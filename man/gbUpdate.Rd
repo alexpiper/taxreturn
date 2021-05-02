@@ -12,10 +12,10 @@ gbUpdate(
   quiet = FALSE,
   output = "h",
   suffix = "updates",
-  minlength = 1,
-  maxlength = 2000,
-  chunksize = 300,
-  out.dir = NULL,
+  min_length = 1,
+  max_length = 2000,
+  chunk_size = 300,
+  out_dir = NULL,
   compress = FALSE,
   force = FALSE,
   multithread = FALSE,
@@ -40,14 +40,14 @@ or "gb-binom" which outputs Genus species binomials, as well as genbank taxonomi
 
 \item{suffix}{The suffix to add to newly downloaded files. Defaults to 'updates'}
 
-\item{minlength}{The minimum length of sequences to download}
+\item{min_length}{The minimum length of sequences to download}
 
-\item{maxlength}{The maximum length of sequences to download}
+\item{max_length}{The maximum length of sequences to download}
 
-\item{chunksize}{The size of the chunked searches to conduct.
+\item{chunk_size}{The size of the chunked searches to conduct.
 Warning, chunk sizes over 300 can be too big for the NCBI servers.}
 
-\item{out.dir}{Output directory to write fasta files to}
+\item{out_dir}{Output directory to write fasta files to}
 
 \item{compress}{Option to compress output fasta files using gzip}
 

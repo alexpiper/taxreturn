@@ -6,8 +6,8 @@
 \usage{
 alignment_entropy(
   x,
-  maskgaps = 0.2,
-  countgaps = FALSE,
+  mask_gaps = 0.2,
+  count_gaps = FALSE,
   method = "ML",
   unit = "log",
   return_extra = FALSE
@@ -16,9 +16,9 @@ alignment_entropy(
 \arguments{
 \item{x}{A DNAbin or AAbin object}
 
-\item{maskgaps}{The threshold of gaps allowed before a position in the alignment is masked}
+\item{mask_gaps}{The threshold of gaps allowed before a position in the alignment is masked}
 
-\item{countgaps}{Whether gaps should be counted within entropy calculations. Default is FALSE.}
+\item{count_gaps}{Whether gaps should be counted within entropy calculations. Default is FALSE.}
 
 \item{method}{the method employed by \code{entropy::entropy} to estimate alignment entropy. Accepts:
 "ML" : maximum likelihood

@@ -27,7 +27,7 @@ If "all", the clusters will be checked at all taxonomic ranks available.}
 
 \item{threshold}{numeric between 0 and 1 giving the OTU identity cutoff for clustering. Defaults to 0.97.}
 
-\item{rngseed}{(Optional). A single integer value passed to set.seed, which is used to fix a seed for reproducibly random number generation for the kmeans clustering.
+\item{rngseed}{(Optional) A single integer value passed to set.seed, which is used to fix a seed for reproducibly random number generation for the kmeans clustering.
 If set to FALSE, then no fiddling with the RNG seed is performed, and it is up to the user to appropriately call set.seed beforehand to achieve reproducible results.}
 
 \item{confidence}{The minimum confidence value for a mixed cluster to be flagged. For example, if confidence = 0.8 (the default value)

@@ -6,7 +6,7 @@
 \usage{
 get_reading_frame(
   x,
-  genetic.code = "SGC4",
+  genetic_code = NULL,
   forward = TRUE,
   reverse = FALSE,
   resolve_draws = "majority"
@@ -15,8 +15,7 @@ get_reading_frame(
 \arguments{
 \item{x}{Sequences in DNAStringset or DNAbin format}
 
-\item{genetic.code}{A genetic code for the Amino acid translation. See all known codes at GENETIC_CODE_TABLE
-Default is the invertebrate mitochondrial code 'SGC4'}
+\item{genetic_code}{A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE}
 
 \item{forward}{whether the forward complement should be returned}
 

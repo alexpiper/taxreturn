@@ -83,11 +83,11 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank by searching for a taxon name
-fetchSeqs("Scaptodrosophila", database="genbank", out.dir="genbank", downstream=FALSE, marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", output = "gb-binom", compress=TRUE, force=TRUE, multithread =FALSE)
+fetchSeqs("Scaptodrosophila", database="genbank", out_dir="genbank", downstream=FALSE, marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", output = "gb-binom", compress=TRUE, force=TRUE, multithread =FALSE)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output = "gb-binom", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", compress=TRUE, force=TRUE, multithread = FALSE)
+fetchSeqs(spp_list, database="genbank", out_dir="genbank", quiet=FALSE, output = "gb-binom", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", compress=TRUE, force=TRUE, multithread = FALSE)
 ```
 
 
@@ -95,11 +95,11 @@ fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, output =
 
 ```{r Download BOLD Sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from BOLD by searching for a taxon name
-fetchSeqs("Scaptodrosophila", database="bold", out.dir="bold", downstream=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE, multithread = FALSE)
+fetchSeqs("Scaptodrosophila", database="bold", out_dir="bold", downstream=FALSE, marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE, multithread = FALSE)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(spp_list, database="bold", out.dir="bold", marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE, multithread = FALSE)
+fetchSeqs(spp_list, database="bold", out_dir="bold", marker="COI-5P", output = "gb-binom", compress=TRUE, force=TRUE, multithread = FALSE)
 ```
 
 ## Download mitochondrial genomes from GenBank
@@ -110,11 +110,11 @@ The fetchSeqs function accepts a special input argument of marker="mitochondria"
 
 ```{r Download mitochondria, eval=FALSE, include=TRUE}
 # Fetch mitochondrial genomes from genbank by searching for a taxon name
-fetchSeqs("Drosophila", database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", force=TRUE, compress=TRUE, multithread = FALSE)
+fetchSeqs("Scaptodrosophila", database="genbank", out_dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", force=TRUE, compress=TRUE, multithread = FALSE)
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(spp_list, database="genbank", out.dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", force=TRUE, compress=TRUE, multithread = FALSE)
+fetchSeqs(spp_list, database="genbank", out_dir="genbank", quiet=FALSE, marker="mitochondria", output = "gb-binom", force=TRUE, compress=TRUE, multithread = FALSE)
 ```
 
 # Curating public reference sequences
@@ -186,7 +186,7 @@ filtered <- map_to_model(uniqSeqs, model, min_score = 100, min_length = 50, max_
 The other main form of misannotation that can effect metabarcoding datasets is incorrect taxonomy for the reference sequences. To resolve this issue, we will cluster sequences at a specific similarity threshold (in this case 97% simularity), and compares the heirarchial taxonomy within clusters. When the taxonomy of a sequences diverges from the other sequences in its cluster, it is removed as a putative misannotation. The confidence required the remove a sequence can be adjusted. In this case we use a confidence threshold of 0.8, which indicates the putative misannotated sequence must diverge from 4/5 other sequences in its cluster to be removed from the dataset.
 
 ```{r get mixed clusters}
-# Load the NCBI taxonomic lineage
+# Load the NCBI taxonomy 
 db <- get_ncbi_taxonomy()
 
 #Get db
@@ -210,7 +210,8 @@ As the COI barcode is a protein coding region, underlying evolutionary constrain
 The below function will remove any sequences containing these patterns. If you are not working with a protein coding gene, skip this section.
 
 ```{r Stop codons}
-codon_filt <- codon_filter(purged)
+#SGC4 is invertebrate mitochondrial genetic code
+codon_filt <- codon_filter(purged, genetic_code = "SGC4", remove_ambiguities = TRUE)
 ```
 
 ## Resolve synonyms
@@ -232,7 +233,7 @@ We can also choose to de-duplicate the sequences here, which will remove all com
 
 ```{r prune groups}
 #Prune group sizes down to 5, removing all identical sequences first
-pruned <- prune_groups(resolved, maxGroupSize = 5, discardby="length", dedup=TRUE, quiet = FALSE)
+pruned <- prune_groups(resolved, max_group_size = 5, discardby = "length", dedup=TRUE, quiet = FALSE)
 ```
 
 ## Optional: Trim to primer regions
@@ -243,7 +244,7 @@ However, if you wish to keep the full length sequences, skip this section.
 
 ```{r trim to primer regions}
 #Trim to primer region using virtualPCR from insect package
-amplicon <- insect::virtualPCR(pruned, up = "ACWGGWTGRACWGTNTAYCC", down= "ARYATDGTRATDGCHCCDGC", cores=1, rcdown = TRUE, trimprimers = TRUE)
+amplicon <- insect::virtualPCR(pruned, up = "ACWGGWTGRACWGTNTAYCC", down = "ARYATDGTRATDGCHCCDGC", cores = 1, rcdown = TRUE, trimprimers = TRUE)
 
 #Check the lengths of the trimmed sequences
 table(lengths(amplicon))
@@ -303,7 +304,7 @@ The classifiers currently supported are:
 db <- get_ncbi_taxonomy()
 
 #Reformat to Kingdom to genus heirarchy suitable for assigntaxonomy classifier in DADA2
-dada2_gen <- reformat_dada2_gen(amplicon, db=db, quiet=FALSE)
+dada2_gen <- reformat_dada2_gen(amplicon, db = db, quiet = FALSE)
 insect::writeFASTA(dada2_gen, file = "COI_reference_dada2gen.fa.gz", compress = TRUE)
 
 #Reformat to genus species binomials as suitable for assignSpecies in DADA2
@@ -320,8 +321,8 @@ Taxreturn implements a wrapper function for training the IDTAXA classifier, as b
 db <- get_ncbi_taxonomy()
 
 # Train IDTAXA
-trainingSet <- train_idtaxa(amplicon, maxGroupSize=10, maxIterations = 3,  allowGroupRemoval = TRUE,  get_lineage=TRUE, db = db, quiet = FALSE)
+training_set <- train_idtaxa(amplicon, max_group_size = 10, max_iterations = 3,  allow_group_removal = TRUE,  get_lineage = TRUE, db = db, quiet = FALSE)
 
 #Write out training set
-saveRDS(trainingSet, file="trained_idtaxa.rds")
+saveRDS(training_set, file="trained_idtaxa.rds")
 ```

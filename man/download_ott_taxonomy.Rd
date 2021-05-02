@@ -4,12 +4,12 @@
 \alias{download_ott_taxonomy}
 \title{Download open tree of life taxonomy}
 \usage{
-download_ott_taxonomy(url, dest.dir, force = FALSE)
+download_ott_taxonomy(url, dest_dir, force = FALSE)
 }
 \arguments{
 \item{url}{a URL to download from, if left blank the latest version will be downloaded}
 
-\item{dest.dir}{A directory to save the zipped taxonomy database to, if left blank the working directory is selected}
+\item{dest_dir}{A directory to save the zipped taxonomy database to, if left blank the working directory is selected}
 
 \item{force}{Whether existing files should be overwritten}
 }

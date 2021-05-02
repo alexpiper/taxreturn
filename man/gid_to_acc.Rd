@@ -7,7 +7,7 @@
 gid_to_acc(
   ids,
   database = "nuccore",
-  chunksize = 300,
+  chunk_size = 300,
   multithread = TRUE,
   progress = FALSE,
   quiet = FALSE
@@ -18,7 +18,7 @@ gid_to_acc(
 
 \item{database}{The origin database of the gids, default 'nuccore'}
 
-\item{chunksize}{The size of the chunked searches to conduct.
+\item{chunk_size}{The size of the chunked searches to conduct.
 Warning, chunk sizes over 300 can be too big for the NCBI servers.}
 
 \item{multithread}{Whether multithreading should be used}

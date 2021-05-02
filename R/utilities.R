@@ -52,8 +52,6 @@ random_seq <- function(n, length, alphabet = c("A","G","T","C")){
 }
 
 # Accession to hexadecimal coding ----------------------------------------------
-
-
 #' Convert accession number to hexadecimal coding
 #' @description Hexadecimal coding is useful for ensuring that accession numbers dont contain characters that are considered illegal for newick strings
 #'
@@ -107,8 +105,7 @@ acc2hex <- function(x, force=FALSE){
 
 
 # Hexadecimal coding to accession -----------------------------------------
-
-#' Title
+#' Hexadecimal coding to accession numberD
 #' @description Hexadecimal coding is useful for ensuring that accession numbers dont contain characters that are considered illegal for newick strings
 #' @param x A DNAbin or DNAStringSet with names formatted Accession|taxid;taxonomy.
 #' Or a character vector with names formatted Accession|taxid;taxonomy
@@ -158,7 +155,6 @@ hex2acc <- function(x, force=FALSE){
 
 
 # hexadecimal translation -------------------------------------------------
-
 #' convert alphanumerics to hexadecimal
 #' internal taxreturn function
 #' @param y a character string

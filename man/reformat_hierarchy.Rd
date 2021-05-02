@@ -9,7 +9,7 @@ reformat_hierarchy(
   db = NULL,
   quiet = FALSE,
   ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"),
-  cores = 1
+  multithread = FALSE
 )
 }
 \arguments{
@@ -19,7 +19,9 @@ reformat_hierarchy(
 
 \item{ranks}{The taxonomic ranks to return in the output names}
 
-\item{cores}{The number of  cores to use for get_ott_lineage}
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected (Maximum available cores - 1), or provide a numeric vector to manually set the number of cores to use. Default is FALSE (single thread)
+This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation,
+for example by running parallel::stopCluster(cores).}
 }
 \value{
 

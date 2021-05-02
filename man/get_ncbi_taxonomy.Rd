@@ -4,12 +4,12 @@
 \alias{get_ncbi_taxonomy}
 \title{Download NCBI taxdump}
 \usage{
-get_ncbi_taxonomy(dest.dir, synonyms = TRUE, force = FALSE)
+get_ncbi_taxonomy(dest_dir, include_synonyms = TRUE, force = FALSE)
 }
 \arguments{
-\item{dest.dir}{A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created}
+\item{dest_dir}{A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created}
 
-\item{synonyms}{Whether synonyms should be included in the database}
+\item{include_synonyms}{Whether synonyms should be included in the database}
 
 \item{force}{Whether already downloaded files should be overwritten}
 }
