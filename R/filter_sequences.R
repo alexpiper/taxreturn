@@ -430,51 +430,76 @@ prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "lengt
 #'
 #' @param x Sequences in DNAStringset or DNAbin format
 #' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
-#' @param forward whether the forward complement should be returned
-#' @param reverse Whether the reverse complemement should be returned
+#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
 #' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
+#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
 #'
 #' @return
 #' @export
 #'
 #' @import ape
 #' @import Biostrings
+#' @import stringr
 #'
 #' @examples
-get_reading_frame <- function(x, genetic_code = NULL, forward=TRUE, reverse=FALSE, resolve_draws="majority") {
+get_reading_frame <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority") {
   if(is.null(genetic_code)){
-    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE")
+    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
   }
   # Convert to DNAStringSet
   if (is(x, "DNAbin")) {
     x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
   }
-  #Check for N's
-  if(hasOnlyBaseLetters(x) == FALSE) {stop("Error: Sequences contain ambiguities")}
 
-  if(forward==TRUE) {
-    F_frames <- lapply(1:3, function(pos) subseq(x, start=pos))
-  }
-  if(reverse==TRUE) {
-    R_frames <- lapply(1:3, function(pos) subseq(reverseComplement(x), start=pos))
+  # Get reading frames for forward and reverse oriientations
+  if(!tryrc){
+    frames <- lapply(1:3, function(pos) subseq(x, start=pos))
+  }else if (tryrc){
+    frames <- c(lapply(1:3, function(pos) subseq(x, start=pos)),
+                lapply(1:3, function(pos) subseq(Biostrings::reverseComplement(x), start=pos))
+    )
   }
   #Translate all reading frames
-  suppressWarnings(translated <- lapply(F_frames, translate, genetic.code = getGeneticCode(genetic_code)))
+  suppressWarnings(
+    translated <- lapply(frames, Biostrings::translate, genetic.code = Biostrings::getGeneticCode(genetic_code), if.fuzzy.codon=c("solve", "X"))
+    )
 
   #select the reading frames that contain 0 stop codons, or return NA
   reading_frame <- vector("integer", length=length(x))
   for (i in 1:length(x)){
-    fvec = c(str_count(as.character(translated[[1]][i]), "\\*"),
-             str_count(as.character(translated[[2]][i]), "\\*"),
-             str_count(as.character(translated[[3]][i]), "\\*"))
+    # Check forward frames first
+    fvec <- c(stringr::str_count(as.character(translated[[1]][i]), "\\*"),
+             stringr::str_count(as.character(translated[[2]][i]), "\\*"),
+             stringr::str_count(as.character(translated[[3]][i]), "\\*"))
     if(sum(fvec==0)==1){
+      # If only 1 appropriate frame for fwd direction
       reading_frame[i] <- which(fvec==0)
     } else if(sum(fvec==0)>1) {
+      # If multiple appropriate frames for fwd direction
       reading_frame[i] <- 0
-    }else if(sum(fvec==0)==0) {
-      reading_frame[i] <- NA
+    } else if(sum(fvec==0)==0) {
+      # If no appropriate frames for fwd direction
+      # Try reverse direction or return NA
+      if(tryrc){
+        rvec <- c(stringr::str_count(as.character(translated[[4]][i]), "\\*"),
+                 stringr::str_count(as.character(translated[[5]][i]), "\\*"),
+                 stringr::str_count(as.character(translated[[6]][i]), "\\*"))
+        if(sum(rvec==0)==1){
+          #Check if only 1 appropriate frame for rev direction (return negative)
+          reading_frame[i] <- -which(rvec==0)
+        } else if(sum(rvec==0)>1) {
+          #Check if multiple appropriate frames for rev direction
+          reading_frame[i] <- 0
+        }else if(sum(rvec==0)==0) {
+          #Check if multiple appropriate frames for rev direction
+          reading_frame[i] <- NA
+        }
+      } else {
+        reading_frame[i] <- NA
+      }
     }
   }
+  # if resolve draws is majority, select the most common frame from across the whole dataset
   if (resolve_draws == "majority") {
     reading_frame[reading_frame==0] <- reading_frame[which.max(tabulate(reading_frame))]
   } else if (resolve_draws == "remove") {
@@ -489,9 +514,9 @@ get_reading_frame <- function(x, genetic_code = NULL, forward=TRUE, reverse=FALS
 #'
 #' @param x Sequences in DNAStringset or DNAbin format
 #' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
-#' @param forward Whether the forward complement should be used
-#' @param reverse Whether the reverse complement should be used
-#' @param remove_ambiguities Whether sequences containing ambiguous bases (non ATGC) should be removed
+#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
+#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
+#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
 #'
 #' @return
 #' @export
@@ -500,9 +525,9 @@ get_reading_frame <- function(x, genetic_code = NULL, forward=TRUE, reverse=FALS
 #' @import DECIPHER
 #'
 #' @examples
-codon_filter <- function(x, genetic_code = NULL, forward=TRUE, reverse=FALSE, remove_ambiguities =TRUE){
+codon_filter <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority"){
   if(is.null(genetic_code)){
-    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE")
+    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
   }
   # Convert to DNAStringSet
   if (is(x, "DNAbin")) {
@@ -514,19 +539,16 @@ codon_filter <- function(x, genetic_code = NULL, forward=TRUE, reverse=FALSE, re
     stop("x must be a DNAbin or DNAStringSet")
   }
 
-  #Check for Ambiguities
-  nogaps <- DECIPHER::RemoveGaps(x)
-  if(!Biostrings::hasOnlyBaseLetters(nogaps) & !remove_ambiguities) {
-    stop("Error: Sequences containing ambiguities, set remove_ambiguities to TRUE")
-  } else if(!Biostrings::hasOnlyBaseLetters(nogaps) & remove_ambiguities) {
-    discards <- sapply(nogaps, Biostrings::hasOnlyBaseLetters)
-    discards <- discards[!discards]
-    x  <- x[which(!names(nogaps) %in% names(discards))] # This could definitely be improved
-    message(paste0(length(discards), " Sequences containing ambiguities were removed"))
-  }
-
   #Get reading frames
-  frames <- get_reading_frame(DECIPHER::RemoveGaps(x), genetic_code = genetic_code, forward = forward, reverse = reverse)
+  frames <- get_reading_frame(DECIPHER::RemoveGaps(x), genetic_code = genetic_code, tryrc = tryrc, resolve_draws = resolve_draws)
+
+  # Check if any sequences need RC (negative reading frame)
+  to_rc <- sign(frames)==-1
+  to_rc[is.na(to_rc)] <- FALSE
+  if (any(to_rc)){
+    message(sum(to_rc), " Sequences reverse complemented as no forward match was found")
+    x[to_rc] <- Biostrings::reverseComplement(x[to_rc])
+  }
 
   if(format=="DNAbin"){
     out <- ape::as.DNAbin(x[!is.na(frames)])
