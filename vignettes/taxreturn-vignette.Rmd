@@ -211,7 +211,7 @@ The below function will remove any sequences containing these patterns. If you a
 
 ```{r Stop codons}
 #SGC4 is invertebrate mitochondrial genetic code
-codon_filt <- codon_filter(purged, genetic_code = "SGC4", remove_ambiguities = TRUE)
+codon_filt <- codon_filter(purged, genetic_code = "SGC4", tryrc = TRUE, resolve_draws = "majority")
 ```
 
 ## Resolve synonyms
