@@ -23,7 +23,7 @@ Imports:
     rentrez,
     aphid,
     insect,
-    biofiles,
+    biofiles (>= 1.0.0.9000),
     Biostrings,
     ape,
     stringr,
