@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Author: Alexander M Piper" />
+
+<meta name="date" content="2021-05-05" />
+
+<title>taxreturn</title>
+
+<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">taxreturn</h1>
+<h3 class="subtitle">An R package for download and curation of public DNA barcode reference data</h3>
+<h4 class="author">Author: Alexander M Piper</h4>
+<h4 class="date">2021-05-05</h4>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>As with conventional DNA barcoding, accurate taxonomic assignment in metabarcoding studies relies on a well-curated reference database of DNA marker sequences to compare query sequences against. The primary public nucleotide databases of relevance to eukaryotic metabarcoding are the NCBI GenBank database and the Barcode of Life Data System (BOLD), both of which taxreturn supports. While GenBank hosts greater overall sequence data, BOLD represents a more curated DNA barcoding database that aims to maintain consistent links between sequences, validated morphological specimens, and associated specimen collection metadata.</p>
+<p>Despite the best efforts of submitters, both these databases have well documented issues with barcode sequences being either insufficiently annotated, annotated with the incorrect species, or multiple morpho-species assigned to the same DNA barcode, which may reflect misidentifications or the existence of species complexes.While some metabarcoding studies have responded to the aforementioned issues by exclusively using in-house reference databases for taxonomic assignment [90, 93–95], because many insect surveillance programmes aim to detect species that are not locally present, the reliance on public data to supplement in-house sequences may be unavoidable. Curating public reference data is therefore crucial for ensuring the robustness of a metabarcoding analysis, and this is the role that the taxreturn package aims to fulfil.</p>
+<p>The main steps of the taxreturn workflow are as follows:</p>
+<ul>
+<li>Download relevant barcode sequences and Mitochondrial genomes from BOLD and Genbank</li>
+<li>Use a profile hidden markov model trained on a reference alignment for the locus to remove non-homologous loci and cut the desired region from mitogenomes/longer sequences</li>
+<li>Use sequence similarity clustering to remove misannotated sequences (ie 99% similar sequences should share species level taxononmy)</li>
+<li>Resolve taxonomic synonyms using a reference taxonomy database (NCBI or open tree of life)</li>
+<li>Prune sequences from over-represented groups</li>
+<li>Reformat into a taxonomic hierarchy format (ie Kingdom;phylum….;Species) appropriate for metabarcoding classifiers.</li>
+</ul>
+</div>
+<div id="a-worked-example" class="section level1">
+<h1>A Worked example</h1>
+<p>The following vignette will run through an example analysis of retrieving insect COI barcode sequences and mitochondrial genomes, curating these, and outputting a reference database.</p>
+<div id="install-load-package" class="section level2">
+<h2>Install &amp; load package</h2>
+<p>First, make sure that the devtools, Biostrings and ape packages are installed and up to date. Then install and load the latest development version of the taxreturn package from GitHub as follows:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;alexpiper/taxreturn&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(taxreturn)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load other necessary packages</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Biostrings)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ape)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(insect)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div>
+</div>
+</div>
+<div id="fetching-sequences-from-genbank-and-bold" class="section level1">
+<h1>Fetching sequences from GenBank and BOLD</h1>
+<p>The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetchSeqs function, which wraps an interface to entrez and BOLD API’s respectively. This function can either take a single higher level rank, i.e. the family ‘Trioza’, or it can take a vector of taxon names, such as the species contained on a priority pest list or those of conservation concern.</p>
+<p>The downstream option lets the function know if you want to conduct searches and output fasta files using the input rank, or at a taxonomic rank downstream of it, i.e. Species. The downto option then determines what that downstream rank is. This functionality is important for getting around server limits when conducting large searches for example ‘Insecta’, however comes with some computational overhead when downloading few taxa.</p>
+<p>The marker option determines what will be in the search, note that the naming of loci differs between Genbank and bold so i suggest conducting a test search on their respective websites to confirm the desired marker.</p>
+<p>The compress option toggles whether to output as a gzipped fasta file to save space. All further functions in this package should be capable of handling gzipped files.</p>
+<p>Finally, the cores option determines how many cores to use when downloading sequences, using more cores can speed up searches. <em>note - i dont believe cores is currently working properly so use 1 core for now</em></p>
+<p>Depending on the amount of sequences you are downloading, and the speed of your internet connection this step can take from minutes to hours, i suggest running this overnight for large searches with over a million sequences.</p>
+<div id="download-sequences-from-ncbi-genbank" class="section level2">
+<h2>Download sequences from NCBI GenBank</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Fetch sequences from GenBank by searching for a taxon name</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(<span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">downstream=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;COI[GENE] OR COX1[GENE] OR COXI[GENE]&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span><span class="cn">FALSE</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(spp_list, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">quiet=</span><span class="cn">FALSE</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI[GENE] OR COX1[GENE] OR COXI[GENE]&quot;</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+</div>
+<div id="download-sequences-from-bold" class="section level2">
+<h2>Download sequences from BOLD</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Fetch sequences from BOLD by searching for a taxon name</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(<span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;bold&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;bold&quot;</span>, <span class="at">downstream=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;COI-5P&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(spp_list, <span class="at">database=</span><span class="st">&quot;bold&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;bold&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI-5P&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+</div>
+<div id="download-mitochondrial-genomes-from-genbank" class="section level2">
+<h2>Download mitochondrial genomes from GenBank</h2>
+<p>We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region from the genome.</p>
+<p>The fetchSeqs function accepts a special input argument of marker=“mitochondria” to do this.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fetch mitochondrial genomes from genbank by searching for a taxon name</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(<span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">quiet=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;mitochondria&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(spp_list, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">quiet=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;mitochondria&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+</div>
+</div>
+<div id="curating-public-reference-sequences" class="section level1">
+<h1>Curating public reference sequences</h1>
+<p>Due to the aforementioned issues with misannotated sequences in public reference databases we will use a number of filtering steps.</p>
+<div id="removing-non-homologous-sequences" class="section level2">
+<h2>Removing non-homologous sequences</h2>
+<p>The first step is to remove non-homologous loci by mapping to a reference of COI. In order to reduce bias involved in mapping sequences to a single reference sequence, we will align them to a profile hidden markov model of the gene that uses a probablistic framework to take into account a wider range of diversity. To make this model we will use the aphid R package, and a curated alignment of insect COI sequences obtained from the Midori dataset and trimmed to the folmer region.</p>
+<p>A pretrained model of the conventional COI barcode or ‘folmer’ region can be loaded from the package data as below. This model was trained on the midori longest dataset of all COI sequences.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#This loads the model into the workspace</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;model&quot;</span>, <span class="at">package=</span><span class="st">&quot;taxreturn&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#See what it looks like</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(model)</span></code></pre></div>
+<p>However if you are workign with a different barcode locus, or if you wish to improve accuracy by training on a specific taxonomic group you can train a new PHMM model using the aphid R package as below:</p>
+<p>Note: if you are using a public dataset as a reference alignment to build the model, it may be worth further curating it manually first, as a poor reference alignment will produce a poor model and greatly affect downstream analysis</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read in sequence dataset to be used in model training</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>seqs <span class="ot">&lt;-</span>  <span class="fu">readDNAStringSet</span>(<span class="st">&quot;MIDORI_LONGEST_20180221_COI.fasta&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Trim the sequences to the amplified region using a virtual PCR</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>amplicon <span class="ot">&lt;-</span> insect<span class="sc">::</span><span class="fu">virtualPCR</span>(seqs,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                               <span class="at">up =</span> <span class="st">&quot;TITCIACIAAYCAYAARGAYATTGG&quot;</span>,  <span class="co">#Forward primer</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">down=</span> <span class="st">&quot;TAIACYTCIGGRTGICCRAARAAYCA&quot;</span>, <span class="co">#Reverse primer</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                             <span class="at">cores=</span><span class="dv">1</span>, <span class="at">rcdown =</span> <span class="cn">TRUE</span>, <span class="at">trimprimers =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#Only retain amplicons of the appropriate length (in this case 658bp)</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>amplicon_filtered <span class="ot">&lt;-</span> amplicon[<span class="fu">lengths</span>(amplicon) <span class="sc">==</span> <span class="dv">658</span>]</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> aphid<span class="sc">::</span><span class="fu">derivePHMM</span>(amplicon_filtered)</span></code></pre></div>
+<p>Now that we have our train PHMM model, we will use the map_to_model function with the model to remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.</p>
+<p>Firstly we will merge the sequences from each database together. As BOLD and GenBank share a number of sequences, we subset the merged file to only the unique sequences to speed things up.</p>
+<p>As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases outside the range defined by the model. As here we are looking at a coding gene, we will set check_frame to TRUE to ensure that any insertions or deletions are in multiples of 3.</p>
+<p>When extracting the target region from longer sequences such as mitochondrial genomes, the dynamic programming algorithm used to align to the PHMM can take a very long time. Therefore, sequences that are more than twice the length of the input model are split into chunks, and a rapid k-mer pre-screening is used to find the closest matching chunk, which is used to seed the PHMM alignment. This k-mer screening is also used as a rapid screen of shorter sequences to ensure they arent too diverged to be worthwhile aligning to the PHMM. The stringency of this screen can be modified using the kmer_threshold parameter, with the default excluding any sequence more than 30% diverged at k=5. To further speed things up, you can set multithread to the number of cores you wish to use.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#read in all fastas and merge</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>seqs <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">readDNAStringSet</span>(<span class="fu">list.files</span>(<span class="st">&quot;genbank&quot;</span>, <span class="at">pattern =</span> <span class="st">&quot;.fa&quot;</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">full.names =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">readDNAStringSet</span>(<span class="fu">list.files</span>(<span class="st">&quot;bold&quot;</span>, <span class="at">pattern =</span> <span class="st">&quot;.fa&quot;</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">full.names =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove those sequnce accessions that are identical across both databases</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Using a regex that splits to just the accessions</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>uniqSeqs <span class="ot">&lt;-</span> seqs[<span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">str_extract</span>(<span class="fu">names</span>(seqs), <span class="st">&quot;^.*</span><span class="sc">\\</span><span class="st">|&quot;</span> )),] </span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#remove non-homologous sequences</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>filtered <span class="ot">&lt;-</span> <span class="fu">map_to_model</span>(uniqSeqs, model, <span class="at">min_score =</span> <span class="dv">100</span>, <span class="at">min_length =</span> <span class="dv">50</span>, <span class="at">max_N=</span><span class="cn">Inf</span>, <span class="at">max_gap=</span><span class="cn">Inf</span>, </span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                         <span class="at">shave=</span><span class="cn">TRUE</span>, <span class="at">check_frame=</span><span class="cn">TRUE</span>, <span class="at">kmer_threshold =</span> <span class="fl">0.3</span>, <span class="at">k=</span><span class="dv">5</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                         <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+</div>
+<div id="resolve-contaminated-sequences-and-misannotated-taxonomy" class="section level2">
+<h2>Resolve Contaminated sequences and misannotated taxonomy</h2>
+<p>The other main form of misannotation that can effect metabarcoding datasets is incorrect taxonomy for the reference sequences. To resolve this issue, we will cluster sequences at a specific similarity threshold (in this case 97% simularity), and compares the heirarchial taxonomy within clusters. When the taxonomy of a sequences diverges from the other sequences in its cluster, it is removed as a putative misannotation. The confidence required the remove a sequence can be adjusted. In this case we use a confidence threshold of 0.8, which indicates the putative misannotated sequence must diverge from 4/5 other sequences in its cluster to be removed from the dataset.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the NCBI taxonomy </span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>db <span class="ot">&lt;-</span> <span class="fu">get_ncbi_taxonomy</span>()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Get db</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>mixed_clusters <span class="ot">&lt;-</span> <span class="fu">get_mixed_clusters</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> filtered, <span class="at">db=</span>db,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">rank =</span> <span class="st">&quot;genus&quot;</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">threshold =</span> <span class="fl">0.97</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">return =</span> <span class="st">&quot;consensus&quot;</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">confidence=</span><span class="fl">0.6</span>, <span class="at">quiet =</span> <span class="cn">FALSE</span>) </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Get accession numbers to remove</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>rem <span class="ot">&lt;-</span> mixed_clusters<span class="sc">$</span>Acc</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>purged  <span class="ot">&lt;-</span> <span class="fu">subset.DNAbin</span>(filtered, <span class="at">subset =</span> <span class="sc">!</span><span class="fu">str_replace</span>(<span class="fu">names</span>(filtered), <span class="st">&quot;(?:.(?!;))+$&quot;</span>, <span class="st">&quot;&quot;</span>) <span class="sc">%in%</span> rem)</span></code></pre></div>
+</div>
+<div id="optional-filter-for-stop-codons" class="section level2">
+<h2>Optional: Filter for stop codons</h2>
+<p>As the COI barcode is a protein coding region, underlying evolutionary constraints mean that any sequences containing stop codons or indels of lengths which are not a multiple of 3 commonly indicate pseudogenes.</p>
+<p>The below function will remove any sequences containing these patterns. If you are not working with a protein coding gene, skip this section.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#SGC4 is invertebrate mitochondrial genetic code</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>codon_filt <span class="ot">&lt;-</span> <span class="fu">codon_filter</span>(purged, <span class="at">genetic_code =</span> <span class="st">&quot;SGC4&quot;</span>, <span class="at">tryrc =</span> <span class="cn">TRUE</span>, <span class="at">resolve_draws =</span> <span class="st">&quot;majority&quot;</span>)</span></code></pre></div>
+</div>
+<div id="resolve-synonyms" class="section level2">
+<h2>Resolve synonyms</h2>
+<p>Classification of sequences into reference taxonomy can be complicated by the existence of taxonomic synonyms. To resolve this we use the NCBI names file to check each name to see if it represents a currently valid taxa. If it represents a synonym, the name is replaced with the accepted taxon name.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>resolved <span class="ot">&lt;-</span> <span class="fu">resolve_synonyms_ncbi</span>(purged)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#Check for differences in names</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(resolved)[<span class="fu">which</span>(<span class="sc">!</span><span class="fu">names</span>(resolved) <span class="sc">%in%</span> <span class="fu">names</span>(purged))]</span></code></pre></div>
+</div>
+<div id="prune-large-groups" class="section level2">
+<h2>Prune large groups</h2>
+<p>In many cases groups of taxa are over-represented in databases, which can slow down and bias the taxonomic assignment process. Here we prune over-represented groups down to 5 sequences. This function has the option of discarding these sequences by length (ie removing smaller sequences first), or randomly.</p>
+<p>We can also choose to de-duplicate the sequences here, which will remove all completely identical sequences before pruning down the group sizes.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Prune group sizes down to 5, removing all identical sequences first</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>pruned <span class="ot">&lt;-</span> <span class="fu">prune_groups</span>(resolved, <span class="at">max_group_size =</span> <span class="dv">5</span>, <span class="at">discardby =</span> <span class="st">&quot;length&quot;</span>, <span class="at">dedup=</span><span class="cn">TRUE</span>, <span class="at">quiet =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+</div>
+<div id="optional-trim-to-primer-regions" class="section level2">
+<h2>Optional: Trim to primer regions</h2>
+<p>Depending on the taxonomic classifier used, it can be beneficial to trim the reference sequences down to the actual region amplified by the primers. Below we will trim the sequences to the primer regions we use for metabarcoding using the virtualPCR function from the insect R pacakge.</p>
+<p>However, if you wish to keep the full length sequences, skip this section.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Trim to primer region using virtualPCR from insect package</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>amplicon <span class="ot">&lt;-</span> insect<span class="sc">::</span><span class="fu">virtualPCR</span>(pruned, <span class="at">up =</span> <span class="st">&quot;ACWGGWTGRACWGTNTAYCC&quot;</span>, <span class="at">down =</span> <span class="st">&quot;ARYATDGTRATDGCHCCDGC&quot;</span>, <span class="at">cores =</span> <span class="dv">1</span>, <span class="at">rcdown =</span> <span class="cn">TRUE</span>, <span class="at">trimprimers =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Check the lengths of the trimmed sequences</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="fu">lengths</span>(amplicon))</span></code></pre></div>
+</div>
+<div id="reformat-to-taxonomic-hierarchy" class="section level2">
+<h2>Reformat to taxonomic hierarchy</h2>
+<p>Finally, we will reformat to fasta annotations to contain the full taxonomic hierarchy and write out the fasta</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Load NCBI taxonomy</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>db <span class="ot">&lt;-</span> <span class="fu">get_ncbi_taxonomy</span>()</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Reformat to complete taxonomic heirarchy </span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>hierarchy <span class="ot">&lt;-</span> <span class="fu">reformat_hierarchy</span>(amplicon, <span class="at">db=</span>db, <span class="at">quiet=</span><span class="cn">FALSE</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">#See if this worked</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">names</span>(hierarchy))</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Save a zipped fasta file of curated reference database</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>insect<span class="sc">::</span><span class="fu">writeFASTA</span>(hierarchy, <span class="at">file =</span> <span class="st">&quot;COI_reference_hierarchial.fa.gz&quot;</span>, <span class="at">compress =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div id="summarise-number-of-taxa-in-database" class="section level2">
+<h2>Summarise number of taxa in database</h2>
+<p>Finally, we can output a few summary metrics for our final curated database, such as the number of unique sequences for each taxonomic rank:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(hierarchy) <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_split_fixed</span>(<span class="st">&quot;;&quot;</span>, <span class="at">n=</span><span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">separate</span>(V1, <span class="at">into=</span><span class="fu">c</span>(<span class="st">&quot;Sequences&quot;</span>, <span class="st">&quot;taxids&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  magrittr<span class="sc">::</span><span class="fu">set_colnames</span>(<span class="fu">c</span>(<span class="st">&quot;Sequences&quot;</span>, <span class="st">&quot;tax_ids&quot;</span>, <span class="st">&quot;kingdom&quot;</span>, <span class="st">&quot;phylum&quot;</span>, <span class="st">&quot;class&quot;</span>, <span class="st">&quot;order&quot;</span>, <span class="st">&quot;family&quot;</span>, <span class="st">&quot;genus&quot;</span>, <span class="st">&quot;species&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_all</span>(n_distinct)</span></code></pre></div>
+<p>We can also generate a tree like representation of the taxonomy which we can output as a newick file for analysis in other software</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>tree <span class="ot">&lt;-</span> <span class="fu">tax2tree</span>(hierarchy, <span class="at">output=</span><span class="st">&quot;phylo&quot;</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write.tree</span>(tree, <span class="st">&quot;tree.nwk&quot;</span>)</span></code></pre></div>
+</div>
+<div id="bonus-output-trained-classifiers" class="section level2">
+<h2>Bonus: output trained classifiers</h2>
+<p>The taxreturn package supports reformatting of the reference database to work with</p>
+<p>The classifiers currently supported are:</p>
+<ul>
+<li>RDP classifier as implemented in DADA2 assignTaxonomy function</li>
+<li>Exact matchign as implemented in DADA2 assignSpecies function</li>
+<li>IDTAXA Classifier as implemented in the DECIPHER R package</li>
+</ul>
+<div id="rdp" class="section level3">
+<h3>RDP</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Load NCBI taxonomy</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>db <span class="ot">&lt;-</span> <span class="fu">get_ncbi_taxonomy</span>()</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Reformat to Kingdom to genus heirarchy suitable for assigntaxonomy classifier in DADA2</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>dada2_gen <span class="ot">&lt;-</span> <span class="fu">reformat_dada2_gen</span>(amplicon, <span class="at">db =</span> db, <span class="at">quiet =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>insect<span class="sc">::</span><span class="fu">writeFASTA</span>(dada2_gen, <span class="at">file =</span> <span class="st">&quot;COI_reference_dada2gen.fa.gz&quot;</span>, <span class="at">compress =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">#Reformat to genus species binomials as suitable for assignSpecies in DADA2</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>dada2_spp <span class="ot">&lt;-</span> <span class="fu">reformat_dada2_spp</span>(amplicon)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>insect<span class="sc">::</span><span class="fu">writeFASTA</span>(dada2_spp, <span class="at">file =</span> <span class="st">&quot;COI_reference_dada2spp.fa.gz&quot;</span>, <span class="at">compress =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div id="idtaxa" class="section level3">
+<h3>IDTAXA</h3>
+<p>Taxreturn implements a wrapper function for training the IDTAXA classifier, as below:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Load NCBI taxonomy</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>db <span class="ot">&lt;-</span> <span class="fu">get_ncbi_taxonomy</span>()</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Train IDTAXA</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>training_set <span class="ot">&lt;-</span> <span class="fu">train_idtaxa</span>(amplicon, <span class="at">max_group_size =</span> <span class="dv">10</span>, <span class="at">max_iterations =</span> <span class="dv">3</span>,  <span class="at">allow_group_removal =</span> <span class="cn">TRUE</span>,  <span class="at">get_lineage =</span> <span class="cn">TRUE</span>, <span class="at">db =</span> db, <span class="at">quiet =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">#Write out training set</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(training_set, <span class="at">file=</span><span class="st">&quot;trained_idtaxa.rds&quot;</span>)</span></code></pre></div>
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
