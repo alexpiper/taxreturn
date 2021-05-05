@@ -20,7 +20,7 @@ change**
 ## Installation
 
 This package is still in development and not yet available on CRAN. You
-can install development version from [GitHub](https://github.com/) with:
+can install development version from [GitHub](https://github.com/alexpiper/taxreturn/) with:
 
 ``` r
 install.packages("devtools")
