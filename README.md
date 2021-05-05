@@ -5,10 +5,7 @@
 
 <!-- badges: start -->
 
-[![Travis build
-status](https://travis-ci.org/alexpiper/taxreturn.svg?branch=master)](https://travis-ci.org/alexpiper/taxreturn)
-[![Project\_Status](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
-[![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
+[![R-CMD-check](https://github.com/alexpiper/taxreturn/workflows/R-CMD-check/badge.svg)](https://github.com/alexpiper/taxreturn/actions)
 <!-- badges: end -->
 
 taxreturn is an R package for fetching DNA barcode sequences and
@@ -36,7 +33,7 @@ library(taxreturn)
 The main vignette demonstrates example usage of all main functions. This
 can be accessed using the following code, or a rendered version can be
 accessed
-[here](https://alexpiper.github.io/taxreturn/doc/taxreturn-vignette.html)
+[here](https://alexpiper.github.io/taxreturn/vignettes/taxreturn-vignette.html)
 
 ``` r
 # Use this to view the vignette as an isolated HTML file

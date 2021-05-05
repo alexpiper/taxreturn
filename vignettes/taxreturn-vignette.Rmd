@@ -195,11 +195,11 @@ seqs <- c(
 
 # Remove those sequnce accessions that are identical across both databases
 # Using a regex that splits to just the accessions
-uniqSeqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" )),] 
+uniq_seqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" )),] 
 
 #remove non-homologous sequences
 filtered <- map_to_model(
-  uniqSeqs, model, min_score = 100, min_length = 50, max_N=Inf, max_gap=Inf, 
+  uniq_seqs, model, min_score = 100, min_length = 200, max_N=Inf, max_gap=Inf, 
   shave=TRUE, check_frame=TRUE, kmer_threshold = 0.3, k=5,
   multithread = FALSE, quiet=FALSE
   )
@@ -226,9 +226,11 @@ mixed_clusters <- get_mixed_clusters(
 # Get accession numbers to remove
 rem <- mixed_clusters$Acc
 
-purged  <- subset.DNAbin(
-  filtered, subset = !str_replace(names(filtered), "(?:.(?!;))+$", "") %in% rem
-  )
+# Get current accession numbers
+acc <- str_replace(names(filtered), "(?:.(?!;))+$", "")
+
+# Remove any bad accessions
+purged  <- filtered[!acc %in% rem]
 ```
 
 ## Optional: Filter for stop codons
