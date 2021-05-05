@@ -28,6 +28,7 @@ Imports:
     stringr,
     bold,
     parallel,
+    biofiles,
     data.table,
     data.tree,
     dplyr,
@@ -53,7 +54,8 @@ Imports:
     RCurl,
     phytools,
     openssl,
-    methods
+    methods,
+    BiocManager
 Remotes: 
     gschofl/biofiles
 BiocViews:
