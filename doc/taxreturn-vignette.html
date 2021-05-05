@@ -177,7 +177,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="fetching-sequences-from-genbank-and-bold" class="section level1">
 <h1>Fetching sequences from GenBank and BOLD</h1>
-<p>The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetchSeqs function, which wraps an interface to entrez and BOLD API’s respectively. This function can either take a single higher level rank, i.e. the family ‘Trioza’, or it can take a vector of taxon names, such as the species contained on a priority pest list or those of conservation concern.</p>
+<p>The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetch_seqs function, which wraps an interface to entrez and BOLD API’s respectively. This function can either take a single higher level rank, i.e. the family ‘Trioza’, or it can take a vector of taxon names, such as the species contained on a priority pest list or those of conservation concern.</p>
 <p>The downstream option lets the function know if you want to conduct searches and output fasta files using the input rank, or at a taxonomic rank downstream of it, i.e. Species. The downto option then determines what that downstream rank is. This functionality is important for getting around server limits when conducting large searches for example ‘Insecta’, however comes with some computational overhead when downloading few taxa.</p>
 <p>The marker option determines what will be in the search, note that the naming of loci differs between Genbank and bold so i suggest conducting a test search on their respective websites to confirm the desired marker.</p>
 <p>The compress option toggles whether to output as a gzipped fasta file to save space. All further functions in this package should be capable of handling gzipped files.</p>
@@ -186,7 +186,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="download-sequences-from-ncbi-genbank" class="section level2">
 <h2>Download sequences from NCBI GenBank</h2>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Fetch sequences from GenBank by searching for a taxon name</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, </span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">downstream=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;COI[GENE] OR COX1[GENE] OR COXI[GENE]&quot;</span>, </span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span><span class="cn">FALSE</span></span>
@@ -194,7 +194,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">quiet=</span><span class="cn">FALSE</span>,</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI[GENE] OR COX1[GENE] OR COXI[GENE]&quot;</span>,</span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
@@ -203,7 +203,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="download-sequences-from-bold" class="section level2">
 <h2>Download sequences from BOLD</h2>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Fetch sequences from BOLD by searching for a taxon name</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;bold&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;bold&quot;</span>, </span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">downstream=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;COI-5P&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, </span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
@@ -211,17 +211,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;bold&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;bold&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI-5P&quot;</span>,</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 </div>
 <div id="download-mitochondrial-genomes-from-genbank" class="section level2">
 <h2>Download mitochondrial genomes from GenBank</h2>
-<p>We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region from the genome.</p>
-<p>The fetchSeqs function accepts a special input argument of marker=“mitochondria” to do this.</p>
+<p>We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the map_to_model function to pull out our target region from the genome.</p>
+<p>The fetch_seqs function accepts a special input argument of marker=“mitochondria” to do this.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fetch mitochondrial genomes from genbank by searching for a taxon name</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>,</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">quiet=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;mitochondria&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">force=</span><span class="cn">TRUE</span>,</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
@@ -229,7 +229,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetchSeqs</span>(</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">quiet=</span><span class="cn">FALSE</span>,</span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">marker=</span><span class="st">&quot;mitochondria&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">force=</span><span class="cn">TRUE</span>,</span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
@@ -275,11 +275,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove those sequnce accessions that are identical across both databases</span></span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Using a regex that splits to just the accessions</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>uniqSeqs <span class="ot">&lt;-</span> seqs[<span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">str_extract</span>(<span class="fu">names</span>(seqs), <span class="st">&quot;^.*</span><span class="sc">\\</span><span class="st">|&quot;</span> )),] </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>uniq_seqs <span class="ot">&lt;-</span> seqs[<span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">str_extract</span>(<span class="fu">names</span>(seqs), <span class="st">&quot;^.*</span><span class="sc">\\</span><span class="st">|&quot;</span> )),] </span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#remove non-homologous sequences</span></span>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>filtered <span class="ot">&lt;-</span> <span class="fu">map_to_model</span>(</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  uniqSeqs, model, <span class="at">min_score =</span> <span class="dv">100</span>, <span class="at">min_length =</span> <span class="dv">50</span>, <span class="at">max_N=</span><span class="cn">Inf</span>, <span class="at">max_gap=</span><span class="cn">Inf</span>, </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  uniq_seqs, model, <span class="at">min_score =</span> <span class="dv">100</span>, <span class="at">min_length =</span> <span class="dv">200</span>, <span class="at">max_N=</span><span class="cn">Inf</span>, <span class="at">max_gap=</span><span class="cn">Inf</span>, </span>
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">shave=</span><span class="cn">TRUE</span>, <span class="at">check_frame=</span><span class="cn">TRUE</span>, <span class="at">kmer_threshold =</span> <span class="fl">0.3</span>, <span class="at">k=</span><span class="dv">5</span>,</span>
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
@@ -302,9 +302,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Get accession numbers to remove</span></span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>rem <span class="ot">&lt;-</span> mixed_clusters<span class="sc">$</span>Acc</span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>purged  <span class="ot">&lt;-</span> <span class="fu">subset.DNAbin</span>(</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  filtered, <span class="at">subset =</span> <span class="sc">!</span><span class="fu">str_replace</span>(<span class="fu">names</span>(filtered), <span class="st">&quot;(?:.(?!;))+$&quot;</span>, <span class="st">&quot;&quot;</span>) <span class="sc">%in%</span> rem</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Get current accession numbers</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>acc <span class="ot">&lt;-</span> <span class="fu">str_replace</span>(<span class="fu">names</span>(filtered), <span class="st">&quot;(?:.(?!;))+$&quot;</span>, <span class="st">&quot;&quot;</span>)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove any bad accessions</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>purged  <span class="ot">&lt;-</span> filtered[<span class="sc">!</span>acc <span class="sc">%in%</span> rem]</span></code></pre></div>
 </div>
 <div id="optional-filter-for-stop-codons" class="section level2">
 <h2>Optional: Filter for stop codons</h2>

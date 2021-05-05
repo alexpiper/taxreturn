@@ -67,7 +67,7 @@ library(tidyverse)
 
 # Fetching sequences from GenBank and BOLD
 
-The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetchSeqs function, which wraps an interface to entrez and BOLD API's respectively. This function can either take a single higher level rank, i.e. the family 'Trioza', or it can take a vector of taxon names, such as the species contained on a priority pest list or those of conservation concern.
+The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetch_seqs function, which wraps an interface to entrez and BOLD API's respectively. This function can either take a single higher level rank, i.e. the family 'Trioza', or it can take a vector of taxon names, such as the species contained on a priority pest list or those of conservation concern.
 
 The downstream option lets the function know if you want to conduct searches and output fasta files using the input rank, or at a taxonomic rank downstream of it, i.e. Species. The downto option then determines what that downstream rank is. This functionality is important for getting around server limits when conducting large searches for example 'Insecta', however comes with some computational overhead when downloading few taxa.
 
@@ -83,7 +83,7 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank by searching for a taxon name
-fetchSeqs(
+fetch_seqs(
   "Scaptodrosophila", database="genbank", out_dir="genbank", 
   downstream=FALSE, marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", 
   output = "gb-binom", compress=TRUE, force=TRUE, multithread =FALSE
@@ -91,7 +91,7 @@ fetchSeqs(
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(
+fetch_seqs(
   spp_list, database="genbank", out_dir="genbank", quiet=FALSE,
   output = "gb-binom", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]",
   compress=TRUE, force=TRUE, multithread = FALSE
@@ -103,7 +103,7 @@ fetchSeqs(
 
 ```{r Download BOLD Sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from BOLD by searching for a taxon name
-fetchSeqs(
+fetch_seqs(
   "Scaptodrosophila", database="bold", out_dir="bold", 
   downstream=FALSE, marker="COI-5P", output = "gb-binom", 
   compress=TRUE, force=TRUE, multithread = FALSE
@@ -111,7 +111,7 @@ fetchSeqs(
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(
+fetch_seqs(
   spp_list, database="bold", out_dir="bold", marker="COI-5P",
   output = "gb-binom", compress=TRUE, force=TRUE, multithread = FALSE
   )
@@ -119,13 +119,13 @@ fetchSeqs(
 
 ## Download mitochondrial genomes from GenBank
 
-We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the clean_seqs function to pull out our target region from the genome.
+We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the map_to_model function to pull out our target region from the genome.
 
-The fetchSeqs function accepts a special input argument of marker="mitochondria" to do this.
+The fetch_seqs function accepts a special input argument of marker="mitochondria" to do this.
 
 ```{r Download mitochondria, eval=FALSE, include=TRUE}
 # Fetch mitochondrial genomes from genbank by searching for a taxon name
-fetchSeqs(
+fetch_seqs(
   "Scaptodrosophila", database="genbank", out_dir="genbank",
   quiet=FALSE, marker="mitochondria", output = "gb-binom", force=TRUE,
   compress=TRUE, multithread = FALSE
@@ -133,7 +133,7 @@ fetchSeqs(
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
-fetchSeqs(
+fetch_seqs(
   spp_list, database="genbank", out_dir="genbank", quiet=FALSE,
   marker="mitochondria", output = "gb-binom", force=TRUE,
   compress=TRUE, multithread = FALSE
@@ -186,7 +186,7 @@ As we only wish to look at the sequence data contained within the range of our a
 
 When extracting the target region from longer sequences such as mitochondrial genomes, the dynamic programming algorithm used to align to the PHMM can take a very long time. Therefore, sequences that are more than twice the length of the input model are split into chunks, and a rapid k-mer pre-screening is used to find the closest matching chunk, which is used to seed the PHMM alignment. This k-mer screening is also used as a rapid screen of shorter sequences to ensure they arent too diverged to  be worthwhile aligning to the PHMM. The stringency of this screen can be modified using the kmer_threshold parameter, with the default excluding any sequence more than 30% diverged at k=5. To further speed things up, you can set multithread to the number of cores you wish to use.
 
-```{r clean seqs}
+```{r map to model}
 #read in all fastas and merge
 seqs <- c(
   readDNAStringSet(list.files("genbank", pattern = ".fa", full.names = TRUE)),
@@ -195,11 +195,11 @@ seqs <- c(
 
 # Remove those sequnce accessions that are identical across both databases
 # Using a regex that splits to just the accessions
-uniqSeqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" )),] 
+uniq_seqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" )),] 
 
 #remove non-homologous sequences
 filtered <- map_to_model(
-  uniqSeqs, model, min_score = 100, min_length = 50, max_N=Inf, max_gap=Inf, 
+  uniq_seqs, model, min_score = 100, min_length = 200, max_N=Inf, max_gap=Inf, 
   shave=TRUE, check_frame=TRUE, kmer_threshold = 0.3, k=5,
   multithread = FALSE, quiet=FALSE
   )
@@ -226,9 +226,11 @@ mixed_clusters <- get_mixed_clusters(
 # Get accession numbers to remove
 rem <- mixed_clusters$Acc
 
-purged  <- subset.DNAbin(
-  filtered, subset = !str_replace(names(filtered), "(?:.(?!;))+$", "") %in% rem
-  )
+# Get current accession numbers
+acc <- str_replace(names(filtered), "(?:.(?!;))+$", "")
+
+# Remove any bad accessions
+purged  <- filtered[!acc %in% rem]
 ```
 
 ## Optional: Filter for stop codons
