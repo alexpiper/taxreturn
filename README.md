@@ -7,6 +7,8 @@
 
 [![Travis build
 status](https://travis-ci.org/alexpiper/taxreturn.svg?branch=master)](https://travis-ci.org/alexpiper/taxreturn)
+[![Project\_Status](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
+[![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 <!-- badges: end -->
 
 taxreturn is an R package for fetching DNA barcode sequences and
