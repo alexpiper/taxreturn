@@ -4,3 +4,5 @@
 ^README\.Rmd$
 ^\.travis\.yml$
 ^data-raw$
+^doc$
+^Meta$
