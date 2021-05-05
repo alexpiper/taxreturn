@@ -114,7 +114,7 @@ blast_install <- function(url, dest_dir = "bin", force = FALSE) {
 #' @import stringr
 #' @importFrom R.utils gunzip
 #'
-makeblastdb <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
+make_blast_db <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
   time <- Sys.time() # get time
   .findExecutable("makeblastdb") # Check blast is installed
   if (is.null(args)){args <- ""}

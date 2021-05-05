@@ -120,3 +120,187 @@ propagate_tax <- function(tax, from = "Family") {
   }
   tax
 }
+
+
+# Fetchseqs function ----------------------------------------------
+
+#' Fetchseqs function (DEPRECATED)
+#'
+#' @param x A taxon name or vector of taxon names to download sequences for.
+#' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
+#' Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'
+#' @param marker The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix \[GENE\] will increase the search selectivity.
+#' The default for Genbank is 'COI\[GENE\] OR COX1\[GENE\] OR COXI\[GENE\]', while the default for BOLD is 'COI-5P'.
+#' If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
+#' If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.
+#' @param downstream Instead of search for the query sequence, this provides the option of instead searching for a downstream taxonomic rank.
+#' This is useful for big queries where >100k sequences will be downloaded. For example, when x is 'Insecta', and downsteam is Order, this will download all Orders within insecta and thus not overload the query. Default is FALSE.
+#' @param output The output format for the taxonomy in fasta headers.
+#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+#' "binom" for just genus species binomials (SeqID;Genus Species),
+#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
+#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid` while for genbank this is `Accession Sequence definition`
+#' @param min_length The maximum length of the query sequence to return. Default 1.
+#' @param max_length The maximum length of the query sequence to return.
+#' This can be useful for ensuring no off-target sequences are returned. Default 2000.
+#' @param subsample (Numeric) return a random subsample of sequences from the search.
+#' @param out_dir Output directory to write fasta files to
+#' @param compress Option to compress output fasta files using gzip
+#' @param force Option to overwrite files if they already exist
+#' @param chunk_size Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
+#' if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
+#' For BOLD queries the default is 100,000 returned records
+#' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
+#' Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
+#' if x is a vector, or of downstream is being used.
+#' @param quiet Whether progress should be printed to the console.
+#' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
+#'
+#' @import dplyr
+#' @import stringr
+#' @import purrr
+#' @import future
+#' @import furrr
+#' @importFrom taxize downstream
+#' @importFrom methods as
+#'
+#' @return
+#' @export
+#'
+fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
+                      output = "h", min_length = 1, max_length = 2000,
+                      subsample=FALSE, chunk_size=NULL, out_dir = NULL, compress = TRUE,
+                      force=FALSE, multithread = FALSE, quiet = TRUE, progress=FALSE) {
+  .Deprecated("taxreturn::fetch_seqs", package="taxreturn",  old = as.character(sys.call(sys.parent()))[1L])
+
+
+  if(!database %in% c("nuccore", "genbank", "bold")) {
+    stop("database is invalid. See help page for more details")
+  }
+
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
+  }
+
+  #stop if subsample and BOLD is true
+  if (is.numeric(subsample ) & database=="bold"){ stop("Subsampling is currently not supported for BOLD")}
+
+  # Get NCBI taxonomy database if NCBI format outputs are desired
+  if (database == "bold" && output %in% c("gb", "gb-binom")) {
+    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
+  }
+
+  #Define directories
+  if (is.null(out_dir)) {
+    out_dir <- database
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
+  }
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
+  }
+  out_dir <- normalizePath(out_dir)
+
+  # Evaluate downstream
+  if (is.character(downstream)) {
+    if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
+
+    taxlist <- taxize::downstream(x, db = switch(database, bold = "bold", genbank = "ncbi", nuccore = "ncbi"),
+                                  downto = downstream) %>%
+      methods::as("list") %>%
+      dplyr::bind_rows() %>%
+      dplyr::filter(rank == stringr::str_to_lower(!!downstream)) %>%
+      dplyr::mutate(downloaded = FALSE)
+
+    if (nrow(taxlist) > 0) {
+      taxon <- switch(database, bold = taxlist$name, genbank = taxlist$childtaxa_name, nuccore = taxlist$childtaxa_name)
+    } else {
+      (taxon <- x)
+    }
+    if (!quiet) cat(paste0(length(taxon), " downstream taxa found\n"))
+  } else {
+    taxon <- x
+  }
+
+  # Setup multithreading - only makes sense if downstream = TRUE
+  setup_multithread(multithread = multithread, quiet=quiet)
+
+  # Genbank
+  if (database %in% c("genbank", "nuccore")) {
+    if (subsample==FALSE) {
+      message("Downloading from genbank - No subsampling")
+      res <-  furrr::future_map_dfr(
+        taxon, gbSearch, database = database, marker = marker,
+        output = output, min_length = min_length, max_length = max_length,
+        compress = compress, chunk_size=chunk_size, out_dir= out_dir,
+        force=force, quiet = quiet, .progress = progress)
+
+    } else if (is.numeric(subsample)){
+      message("Downloading from genbank - With subsampling")
+      res <-  furrr::future_map_dfr(
+        taxon, gbSearch_subsample, database = database, marker = marker,
+        out_dir = out_dir, output = output, subsample = subsample,
+        min_length = min_length, max_length = max_length, chunk_size=chunk_size,
+        force=force, compress = compress, quiet = quiet,  .progress = progress)
+    }
+
+  } else if (database == "bold") {
+    # Split any querys above chunk_size
+    if(is.null(chunk_size)){
+      chunk_size <- 100000
+    }
+    bold_taxon <- furrr::future_map(taxon, split_bold_query, chunk_size=chunk_size, quiet=quiet, .progress = progress) %>%
+      unlist()
+
+    if(!quiet) {message("Downloading ", length(bold_taxon)," taxa from BOLD")}
+    res <- furrr::future_map(
+      bold_taxon, boldSearch, marker = marker, db=db,
+      out_dir = out_dir, out_file = NULL, output = output,
+      compress = compress, quiet = quiet,  .progress = progress, force=force)
+  }
+
+  # Explicitly close multisession workers
+  future::plan(future::sequential)
+
+  # Return results summary
+  return(res %>%
+           dplyr::bind_rows())
+}
+
+
+# Make Blast DB -----------------------------------------------------------
+
+#' Make blast Database (DEPRECATED)
+#'
+#' @param file (Required) A fasta file to create a database from.
+#' @param dbtype (Optional) Molecule type of database, accepts "nucl" for nucleotide or "prot" for protein.
+#' @param args (Optional) Extra arguments passed to BLAST
+#' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
+#'
+#' @return
+#' @export
+#' @import stringr
+#' @importFrom R.utils gunzip
+#'
+makeblastdb <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
+  .Deprecated("taxreturn::make_blast_db", package="taxreturn",  old = as.character(sys.call(sys.parent()))[1L])
+
+  time <- Sys.time() # get time
+  .findExecutable("makeblastdb") # Check blast is installed
+  if (is.null(args)){args <- ""}
+  if (stringr::str_detect(file, ".gz")) {
+    message("Unzipping file")
+    compressed <- TRUE
+    R.utils::gunzip(file, remove=FALSE)
+    file <- stringr::str_replace(file, ".gz", "")
+  }else (compressed <- FALSE)
+  results <- system2(command = .findExecutable("makeblastdb"),
+                     args = c("-in", file, "-dbtype", dbtype, args),
+                     wait = TRUE,
+                     stdout = TRUE)
+  time <- Sys.time() - time
+  if (compressed) {file.remove(file)}
+  if (!quiet) (message(paste0("made BLAST DB in ", format(time, digits = 2))))
+
+}

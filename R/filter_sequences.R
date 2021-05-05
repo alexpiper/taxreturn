@@ -1,5 +1,5 @@
 
-# map to model ------------------------------------------------------------
+# PHMM------------------------------------------------------------
 #' Map to model
 #'
 #' @description This function alignes sequences to a Profile Hidden Markov Model (PHMM) using the Viterbi algorithm in order to retain only the target loci.
@@ -140,7 +140,6 @@ map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 
   return(res)
 }
 
-# Filt phmm ---------------------------------------------------------------
 filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf, shave = TRUE, check_frame=TRUE, trim_ends=FALSE, ...) {
   s <- s[!s %in% as.raw(c(2, 4))] #Remove gaps
   vit <- aphid::Viterbi(model, s, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
@@ -220,7 +219,190 @@ filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf
 }
 
 
-# kmer screen -------------------------------------------------------------
+
+# Codon filters ---------------------------------------------------------------
+#' Get Reading frame of sequences
+#'
+#' @param x Sequences in DNAStringset or DNAbin format
+#' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
+#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
+#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
+#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
+#'
+#' @return
+#' @export
+#'
+#' @import stringr
+#' @importFrom Biostrings reverseComplement
+#' @importFrom Biostrings translate
+#' @importFrom Biostrings getGeneticCode
+#' @importFrom methods is
+#'
+get_reading_frame <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority") {
+  if(is.null(genetic_code)){
+    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
+  }
+  # Convert to DNAStringSet
+  if (methods::is(x, "DNAbin")) {
+    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
+  }
+
+  # Get reading frames for forward and reverse oriientations
+  if(!tryrc){
+    frames <- lapply(1:3, function(pos) subseq(x, start=pos))
+  }else if (tryrc){
+    frames <- c(lapply(1:3, function(pos) subseq(x, start=pos)),
+                lapply(1:3, function(pos) subseq(Biostrings::reverseComplement(x), start=pos))
+    )
+  }
+  #Translate all reading frames
+  suppressWarnings(
+    translated <- lapply(frames, Biostrings::translate, genetic.code = Biostrings::getGeneticCode(genetic_code), if.fuzzy.codon=c("solve", "X"))
+  )
+
+  #select the reading frames that contain 0 stop codons, or return NA
+  reading_frame <- vector("integer", length=length(x))
+  for (i in 1:length(x)){
+    # Check forward frames first
+    fvec <- c(stringr::str_count(as.character(translated[[1]][i]), "\\*"),
+              stringr::str_count(as.character(translated[[2]][i]), "\\*"),
+              stringr::str_count(as.character(translated[[3]][i]), "\\*"))
+    if(sum(fvec==0)==1){
+      # If only 1 appropriate frame for fwd direction
+      reading_frame[i] <- which(fvec==0)
+    } else if(sum(fvec==0)>1) {
+      # If multiple appropriate frames for fwd direction
+      reading_frame[i] <- 0
+    } else if(sum(fvec==0)==0) {
+      # If no appropriate frames for fwd direction
+      # Try reverse direction or return NA
+      if(tryrc){
+        rvec <- c(stringr::str_count(as.character(translated[[4]][i]), "\\*"),
+                  stringr::str_count(as.character(translated[[5]][i]), "\\*"),
+                  stringr::str_count(as.character(translated[[6]][i]), "\\*"))
+        if(sum(rvec==0)==1){
+          #Check if only 1 appropriate frame for rev direction (return negative)
+          reading_frame[i] <- -which(rvec==0)
+        } else if(sum(rvec==0)>1) {
+          #Check if multiple appropriate frames for rev direction
+          reading_frame[i] <- 0
+        }else if(sum(rvec==0)==0) {
+          #Check if multiple appropriate frames for rev direction
+          reading_frame[i] <- NA
+        }
+      } else {
+        reading_frame[i] <- NA
+      }
+    }
+  }
+  # if resolve draws is majority, select the most common frame from across the whole dataset
+  if (resolve_draws == "majority") {
+    reading_frame[reading_frame==0] <- reading_frame[which.max(tabulate(reading_frame))]
+  } else if (resolve_draws == "remove") {
+    reading_frame[reading_frame==0] <- NA
+  }
+  return(reading_frame)
+}
+
+
+#' Filter sequences containing stop codons
+#'
+#' @param x Sequences in DNAStringset or DNAbin format
+#' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
+#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
+#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
+#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
+#'
+#' @return
+#' @export
+#' @importFrom ape as.DNAbin
+#' @importFrom Biostrings reverseComplement
+#' @importFrom DECIPHER RemoveGaps
+#' @importFrom methods is
+#'
+codon_filter <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority"){
+  if(is.null(genetic_code)){
+    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
+  }
+  # Convert to DNAStringSet
+  if (methods::is(x, "DNAbin")) {
+    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
+    format <- "DNAbin"
+  } else if(methods::is(x, "DNAStringSet")){
+    format <- "DNAStringSet"
+  } else {
+    stop("x must be a DNAbin or DNAStringSet")
+  }
+
+  #Get reading frames
+  frames <- get_reading_frame(DECIPHER::RemoveGaps(x), genetic_code = genetic_code, tryrc = tryrc, resolve_draws = resolve_draws)
+
+  # Check if any sequences need RC (negative reading frame)
+  to_rc <- sign(frames)==-1
+  to_rc[is.na(to_rc)] <- FALSE
+  if (any(to_rc)){
+    message(sum(to_rc), " Sequences reverse complemented as no forward match was found")
+    x[to_rc] <- Biostrings::reverseComplement(x[to_rc])
+  }
+
+  if(format=="DNAbin"){
+    out <- ape::as.DNAbin(x[!is.na(frames)])
+  } else if(format=="DNAStringSet"){
+    out <- x[!is.na(frames)]
+  }
+  message(paste0(length(x) - length(out), " Sequences containing stop codons removed"))
+  return(out)
+}
+
+#' Codon entropy
+#'
+#' @param x Sequences in DNAStringset or DNAbin format
+#' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
+#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
+#' @param codon_filter Whether `taxreturn::codon_filter` should be run first to remove sequences containing stop codons or frameshifts.
+#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
+#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
+#' @param method the method employed to estimate entropy. see `?entropy::entropy` for more details
+#'
+#' @return
+#' @export
+#' @import purrr
+#' @importFrom entropy entropy
+#' @importFrom methods is
+#'
+#'
+codon_entropy <- function(x, genetic_code = NULL, tryrc = TRUE, codon_filter = TRUE, resolve_draws = "majority", method = "ML") {
+  if(is.null(genetic_code)){
+    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE")
+  }
+  if (methods::is(x, "DNAbin")) {
+    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
+  }
+  #Filter out sequences with stop codons
+  if(codon_filter){
+    x <- codon_filter(x, genetic_code = genetic_code, tryrc=tryrc)
+  }
+
+  #subset to the reading frame
+  pos <- get_reading_frame(x, genetic_code = genetic_code, tryrc = tryrc, resolve_draws = resolve_draws)
+
+  F_frames <-  as.character(subseq(x, start= pos))
+
+  ent <- vector("list", length=length(F_frames))
+  for (l in 1:length(F_frames)){
+    ent[[l]] <- c(
+      entropy::entropy(table(purrr::map_chr(seq(1, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method),
+      entropy::entropy(table(purrr::map_chr(seq(2, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method),
+      entropy::entropy(table(purrr::map_chr(seq(3, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method)
+    )
+    names(ent[[l]]) <- c("pos1", "pos2", "pos3")
+  }
+  names(ent) <- names(x)
+  return(ent)
+}
+
+
+# kmer screening -------------------------------------------------------------
 #' Kmer screening function
 #'
 #' @param seqs A DNAbin object
@@ -268,7 +450,6 @@ kmer_screen <- function(seqs, model, threshold = 0.3, k = 5, quiet=FALSE){
   return()
 }
 
-# closest kmer dist -------------------------------------------------------------
 #' Closest kmer distance
 #' This function checks the kmer distance between all the sequences in a DNAbin and a reference PHMM model
 #'
@@ -308,7 +489,6 @@ closest_seq <- function(seqs, model, threshold, k=5, quiet=FALSE){
   return(out)
 }
 
-# chunk seuqences ---------------------------------------------------------
 chunk_seqs <- function(x, split_length){
   n <- round(length(x)/split_length)
   chunk <- function(x,n) split(x, cut(seq_along(x), n, labels = FALSE))
@@ -324,7 +504,6 @@ chunk_seqs <- function(x, split_length){
   return(splits)
 }
 
-# Subset long sequences ---------------------------------------------------
 subset_long_seq <- function(x, model, split_length, threshold=0.3, k=5, quiet=FALSE){
   # Split sequences into chunks
   splits <- chunk_seqs(x, split_length=split_length)
@@ -345,7 +524,6 @@ subset_long_seq <- function(x, model, split_length, threshold=0.3, k=5, quiet=FA
   out <- unlist(splits[chunks_to_keep])
   return(out)
 }
-
 
 # Prune group sizes -------------------------------------------------------
 #' Prune group sizes
@@ -430,192 +608,7 @@ prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "lengt
   return(x)
 }
 
-
-# Get Reading frame ---------------------------------------------------------------
-#' Get Reading frame of sequences
-#'
-#' @param x Sequences in DNAStringset or DNAbin format
-#' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
-#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
-#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
-#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
-#'
-#' @return
-#' @export
-#'
-#' @import stringr
-#' @importFrom Biostrings reverseComplement
-#' @importFrom Biostrings translate
-#' @importFrom Biostrings getGeneticCode
-#' @importFrom methods is
-#'
-get_reading_frame <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority") {
-  if(is.null(genetic_code)){
-    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
-  }
-  # Convert to DNAStringSet
-  if (methods::is(x, "DNAbin")) {
-    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
-  }
-
-  # Get reading frames for forward and reverse oriientations
-  if(!tryrc){
-    frames <- lapply(1:3, function(pos) subseq(x, start=pos))
-  }else if (tryrc){
-    frames <- c(lapply(1:3, function(pos) subseq(x, start=pos)),
-                lapply(1:3, function(pos) subseq(Biostrings::reverseComplement(x), start=pos))
-    )
-  }
-  #Translate all reading frames
-  suppressWarnings(
-    translated <- lapply(frames, Biostrings::translate, genetic.code = Biostrings::getGeneticCode(genetic_code), if.fuzzy.codon=c("solve", "X"))
-    )
-
-  #select the reading frames that contain 0 stop codons, or return NA
-  reading_frame <- vector("integer", length=length(x))
-  for (i in 1:length(x)){
-    # Check forward frames first
-    fvec <- c(stringr::str_count(as.character(translated[[1]][i]), "\\*"),
-             stringr::str_count(as.character(translated[[2]][i]), "\\*"),
-             stringr::str_count(as.character(translated[[3]][i]), "\\*"))
-    if(sum(fvec==0)==1){
-      # If only 1 appropriate frame for fwd direction
-      reading_frame[i] <- which(fvec==0)
-    } else if(sum(fvec==0)>1) {
-      # If multiple appropriate frames for fwd direction
-      reading_frame[i] <- 0
-    } else if(sum(fvec==0)==0) {
-      # If no appropriate frames for fwd direction
-      # Try reverse direction or return NA
-      if(tryrc){
-        rvec <- c(stringr::str_count(as.character(translated[[4]][i]), "\\*"),
-                 stringr::str_count(as.character(translated[[5]][i]), "\\*"),
-                 stringr::str_count(as.character(translated[[6]][i]), "\\*"))
-        if(sum(rvec==0)==1){
-          #Check if only 1 appropriate frame for rev direction (return negative)
-          reading_frame[i] <- -which(rvec==0)
-        } else if(sum(rvec==0)>1) {
-          #Check if multiple appropriate frames for rev direction
-          reading_frame[i] <- 0
-        }else if(sum(rvec==0)==0) {
-          #Check if multiple appropriate frames for rev direction
-          reading_frame[i] <- NA
-        }
-      } else {
-        reading_frame[i] <- NA
-      }
-    }
-  }
-  # if resolve draws is majority, select the most common frame from across the whole dataset
-  if (resolve_draws == "majority") {
-    reading_frame[reading_frame==0] <- reading_frame[which.max(tabulate(reading_frame))]
-  } else if (resolve_draws == "remove") {
-    reading_frame[reading_frame==0] <- NA
-  }
-  return(reading_frame)
-}
-
-
-# Codon_filter ------------------------------------------------------------
-#' Filter sequences containing stop codons
-#'
-#' @param x Sequences in DNAStringset or DNAbin format
-#' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
-#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
-#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
-#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
-#'
-#' @return
-#' @export
-#' @importFrom ape as.DNAbin
-#' @importFrom Biostrings reverseComplement
-#' @importFrom DECIPHER RemoveGaps
-#' @importFrom methods is
-#'
-codon_filter <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority"){
-  if(is.null(genetic_code)){
-    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
-  }
-  # Convert to DNAStringSet
-  if (methods::is(x, "DNAbin")) {
-    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
-    format <- "DNAbin"
-  } else if(methods::is(x, "DNAStringSet")){
-    format <- "DNAStringSet"
-  } else {
-    stop("x must be a DNAbin or DNAStringSet")
-  }
-
-  #Get reading frames
-  frames <- get_reading_frame(DECIPHER::RemoveGaps(x), genetic_code = genetic_code, tryrc = tryrc, resolve_draws = resolve_draws)
-
-  # Check if any sequences need RC (negative reading frame)
-  to_rc <- sign(frames)==-1
-  to_rc[is.na(to_rc)] <- FALSE
-  if (any(to_rc)){
-    message(sum(to_rc), " Sequences reverse complemented as no forward match was found")
-    x[to_rc] <- Biostrings::reverseComplement(x[to_rc])
-  }
-
-  if(format=="DNAbin"){
-    out <- ape::as.DNAbin(x[!is.na(frames)])
-  } else if(format=="DNAStringSet"){
-    out <- x[!is.na(frames)]
-  }
-  message(paste0(length(x) - length(out), " Sequences containing stop codons removed"))
-  return(out)
-}
-
-# Codon entropy  -----------------------------------------------------------
-#' Codon entropy
-#'
-#' @param x Sequences in DNAStringset or DNAbin format
-#' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
-#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
-#' @param codon_filter Whether `taxreturn::codon_filter` should be run first to remove sequences containing stop codons or frameshifts.
-#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
-#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
-#' @param method the method employed to estimate entropy. see `?entropy::entropy` for more details
-#'
-#' @return
-#' @export
-#' @import purrr
-#' @importFrom entropy entropy
-#' @importFrom methods is
-#'
-#'
-codon_entropy <- function(x, genetic_code = NULL, tryrc = TRUE, codon_filter = TRUE, resolve_draws = "majority", method = "ML") {
-  if(is.null(genetic_code)){
-    stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE")
-  }
-  if (methods::is(x, "DNAbin")) {
-    x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
-  }
-  #Filter out sequences with stop codons
-  if(codon_filter){
-  x <- codon_filter(x, genetic_code = genetic_code, tryrc=tryrc)
-  }
-
-  #subset to the reading frame
-  pos <- get_reading_frame(x, genetic_code = genetic_code, tryrc = tryrc, resolve_draws = resolve_draws)
-
-  F_frames <-  as.character(subseq(x, start= pos))
-
-  ent <- vector("list", length=length(F_frames))
-  for (l in 1:length(F_frames)){
-    ent[[l]] <- c(
-      entropy::entropy(table(purrr::map_chr(seq(1, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method),
-      entropy::entropy(table(purrr::map_chr(seq(2, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method),
-      entropy::entropy(table(purrr::map_chr(seq(3, nchar(F_frames[l]), 3), function(i) substr(F_frames[l], i, i))), method=method)
-      )
-    names(ent[[l]]) <- c("pos1", "pos2", "pos3")
-  }
-  names(ent) <- names(x)
- return(ent)
-}
-
-
-# Get mixed clusters -----------------------------------------------------
+# Mixed clusters -----------------------------------------------------
 #' Get mixed clusters
 #'
 #' @description Cluster sequences at a certain taxonomic similarity, and find clusters that contain mixed taxonomic names,

@@ -1,397 +1,4 @@
-#' boldSearch
-#' @param x A taxon name or vector of taxa to download sequences for
-#' @param marker the barcode marker used as a search term for the database
-#' @param quiet Whether progress should be printed to the console.
-#' @param output the output format for the taxonomy in fasta headers.
-#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
-#' "binom" for just genus species binomials (SeqID;Genus Species),
-#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
-#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
-#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
-#' @param out_file The file to write to, if empty it defaults to the search term
-#' @param compress Option to compress output fasta files using gzip
-#' @param force Option ot overwright files if they already exist
-#' @param out_dir Output directory to write fasta files to
-#' @param db (Optional) a database file generated using `taxreturn::get_ncbi_taxonomy()` or `taxreturn::get_ott_taxonomy()`
-#'
-#' @import dplyr
-#' @import stringr
-#' @importFrom bold bold_seqspec
-#' @importFrom tidyr unite
-#' @importFrom tidyr drop_na
-#' @importFrom Biostrings DNAStringSet
-#' @importFrom Biostrings fasta.index
-#' @importFrom Biostrings writeXStringSet
-#' @importFrom methods is
-#'
-#' @return
-#' @export
-#'
-#'
-boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
-                       out_file = NULL, compress = FALSE, force=FALSE,
-                       out_dir = NULL, db=NULL) {
-
-  # function setup
-  time <- Sys.time() # get time
-
-  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
-    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
-  }
-
-  # Get NCBI taxonomy database if NCBI format outputs are desired
-  if (is.null(db) && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
-  }
-
-  #Define directories
-  if (is.null(out_dir)) {
-    out_dir <- "bold"
-    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
-  }
-  if (!dir.exists(out_dir)) {
-    dir.create(out_dir)
-  }
-
-  # Create output files
-  if (compress) {
-    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, ".fa.gz")
-  } else if (!compress) {
-    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, ".fa")
-  }
-
-  #Check if output exists
-  if (file.exists(out_file) && force==TRUE) {
-    file.remove(out_file)
-    cat("", file=out_file)
-  } else if (file.exists(out_file) && force==FALSE){
-    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
-  }
-
-  # Bold search
-  data <- bold::bold_seqspec(taxon = x, sepfasta = FALSE)
-  if (length(data) >0 && methods::is(data, "data.frame")) {
-    data <- data %>%
-      dplyr::na_if("") %>%
-      dplyr::filter(markercode == marker) %>% # Remove all sequences for unwanted markers
-      dplyr::mutate(domain_name = "Eukaryota") %>%
-      dplyr::filter(!is.na(species_name), !is.na(markercode), !is.na(nucleotides)) %>%
-      dplyr::filter(!stringr::str_detect(nucleotides, pattern = "I")) #remove inosines
-
-    if (nrow(data) >0) {
-      if (output == "standard") {
-        data <- data %>%
-          dplyr::select(sampleid, species_name, markercode, genbank_accession, nucleotides) %>%
-          tidyr::unite("name", c("sampleid", "species_name", "markercode", "genbank_accession"), sep = "|")
-      } else if (output == "h") {
-        # Hierarchial output
-        data <- data %>%
-          dplyr::select(sampleid, domain_name, phylum_name, class_name,
-          order_name, family_name, genus_name, species_name,nucleotides
-        ) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c(
-            "sampleid", "domain_name",
-            "phylum_name", "class_name",
-            "order_name", "family_name",
-            "genus_name", "species_name"
-          ),
-          sep = ";"
-          ) %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
-
-
-      } else if (output == "binom") {
-        # Binomial output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c("sampleid", "species_name"), sep = ";") %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
-
-
-      } else if (output == "bold") {
-        # BOLD taxID output
-        data <- data %>%
-          dplyr::select(sampleid, species_taxID, nucleotides) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c("sampleid", "species_taxID"), sep = ";") %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
-
-      } else if (output == "gb") {
-        # Genbank taxID output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
-          dplyr::left_join(db, by="tax_name") %>%
-          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|")
-
-      } else if (output == "gb-binom") {
-        # genbank binomial output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
-          dplyr::left_join(db, by="tax_name") %>%
-          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
-          tidyr::unite("name", c("name", "tax_name"), sep = ";")
-      }
-
-      seqs <- Biostrings::DNAStringSet(data$nucleotides)
-      names(seqs) <- data$name
-      if (compress == TRUE) {
-        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000)
-      } else if (compress == FALSE) {
-        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000)
-      }
-
-      # Done message
-      time <- Sys.time() - time
-      if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from BOLD ", " in ", format(time, digits = 2))))
-    }
-  }
-
-  # Count number of downloaded sequences
-  if(file.exists(out_file)){
-    counter <- nrow(Biostrings::fasta.index(out_file))
-  } else {
-    counter <- 0
-  }
-
-  # Count total sequences that should have been downloaded
-  if(methods::is(data, "data.frame")){
-    total_counter <- nrow(data)
-  } else {
-    total_counter <- 0
-  }
-
-  res <- data.frame(
-    taxon = x,
-    seqs_total = total_counter,
-    seqs_downloaded = counter,
-    marker = marker,
-    database = "bold",
-    time = format(time, digits = 2)
-  )
-  return(res)
-}
-
-
-# Bold update -------------------------------------------------------------
-
-##  BOLD UPDATE
-#' boldUpdate
-#'
-#' @param x A taxon name or vector of taxa to download sequences for
-#' @param fasta A fasta file or list of fasta files to check for existing sequence accessions
-#' @param marker the barcode marker used as a search term for the database
-#' @param quiet Whether progress should be printed to the console.
-#' @param output the output format for the taxonomy in fasta headers.
-#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
-#' "binom" for just genus species binomials (SeqID;Genus Species),
-#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
-#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
-#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
-#' @param suffix The suffix to add to newly downloaded files. Defaults to 'updates'
-#' @param compress Option to compress output fasta files using gzip
-#' @param force Option ot overwright files if they already exist
-#' @param out_dir Output directory to write fasta files to
-#' @param db (Optional) a database file generated using `taxreturn::get_ncbi_taxonomy()` or `taxreturn::get_ott_taxonomy()`
-#'
-#'
-#' @return
-#' @import dplyr
-#' @import stringr
-#' @importFrom bold bold_specimens
-#' @importFrom bold bold_seqspec
-#' @importFrom tidyr unite
-#' @importFrom tidyr drop_na
-#' @importFrom Biostrings DNAStringSet
-#' @importFrom Biostrings fasta.index
-#' @importFrom Biostrings writeXStringSet
-#' @importFrom methods is
-#'
-boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h", suffix="updates", compress = FALSE, force=FALSE,
-                       out_dir = NULL, db=NULL) {
-
-  # function setup
-  time <- Sys.time() # get time
-
-  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
-    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
-  }
-
-  #Check if all inputs exists
-  if (!any(file.exists(fasta))) {
-    stop("Not all fasta files provided can be found, check the diferectory you have provided")
-  }
-
-  #Define directories
-  if (is.null(out_dir)) {
-    out_dir <- "bold"
-    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
-  }
-  if (!dir.exists(out_dir)) {
-    dir.create(out_dir)
-  }
-
-  # Create output files
-  if (compress) {
-    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, "_", suffix, ".fa.gz")
-  } else if (!compress) {
-    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, "_", suffix, ".fa")
-  }
-
-  #Check if output exists
-  if (file.exists(out_file) && force==TRUE) {
-    file.remove(out_file)
-    cat("", file=out_file)
-  } else if (file.exists(out_file) && force==FALSE){
-    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
-  }
-
-  # Get NCBI taxonomy database if NCBI format outputs are desired
-  if (is.null(db) && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
-  }
-
-  # Get accessions from existing fastas
-  current <- acc_from_fasta(fasta)
-
-  accs <-  bold::bold_specimens(taxon = x) %>%
-    dplyr::pull(sampleid)
-
-  newsearch <- setdiff(accs, current)
-
-  # Bold search
-  data <- bold::bold_seqspec(ids = newsearch, sepfasta = FALSE)
-
-  # Find differences
-
-  if (length(data) >0 && !methods::is(data, "logical")) {
-    data <- data %>%
-      dplyr::na_if("") %>%
-      dplyr::filter(stringr::str_detect(marker, markercode)) %>% # Remove all sequences for unwanted markers
-      dplyr::mutate(domain_name = "Eukaryota") %>%
-      dplyr::filter(!is.na(species_name)) %>%
-      dplyr::filter(!stringr::str_detect(nucleotides, pattern = "I")) #remove inosines
-
-    if (nrow(data) >0) {
-      if (output == "standard") {
-        data <- data %>%
-          dplyr::select(sampleid, species_name, markercode, genbank_accession, nucleotides) %>%
-          tidyr::unite("name", c("sampleid", "species_name", "markercode", "genbank_accession"), sep = "|")
-      } else if (output == "h") {
-        # Hierarchial output
-        data <- data %>%
-          dplyr::select(sampleid, domain_name, phylum_name, class_name,
-                        order_name, family_name, genus_name, species_name,nucleotides
-          ) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c(
-            "sampleid", "domain_name",
-            "phylum_name", "class_name",
-            "order_name", "family_name",
-            "genus_name", "species_name"
-          ),
-          sep = ";"
-          ) %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
-
-
-      } else if (output == "binom") {
-        # Binomial output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c("sampleid", "species_name"), sep = ";") %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
-
-
-      } else if (output == "bold") {
-        # BOLD taxID output
-        data <- data %>%
-          dplyr::select(sampleid, species_taxID, nucleotides) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c("sampleid", "species_taxID"), sep = ";") %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
-
-      } else if (output == "gb") {
-        # Genbank taxID output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
-          dplyr::left_join(db, by="tax_name") %>%
-          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|")
-
-      } else if (output == "gb-binom") {
-        # genbank binomial output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
-          dplyr::left_join(db, by="tax_name") %>%
-          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
-          tidyr::unite("name", c("name", "tax_name"), sep = ";")
-      }
-
-      seqs <- Biostrings::DNAStringSet(data$nucleotides)
-      names(seqs) <- data$name
-      if (compress == TRUE) {
-        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000)
-      } else if (compress == FALSE) {
-        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000)
-      }
-
-      # Done message
-      time <- Sys.time() - time
-      if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from BOLD ", " in ", format(time, digits = 2))))
-    }
-  }
-  # Count number of downloaded sequences
-  if(file.exists(out_file)){
-    counter <- nrow(Biostrings::fasta.index(out_file))
-  } else {
-    counter <- 0
-  }
-
-  # Count total sequences that should have been downloaded
-  if(methods::is(data, "data.frame")){
-    total_counter <- nrow(data)
-  } else {
-    total_counter <- 0
-  }
-
-  res <- data.frame(
-    taxon = x,
-    seqs_total = total_counter,
-    seqs_downloaded = counter,
-    marker = marker,
-    database = "bold",
-    time = format(time, digits = 2)
-  )
-  return(res)
-}
-
-
-
-# Genbank fetching function -----------------------------------------------
+# Genbank functions -----------------------------------------------
 # Some useful entrez queries
 #' all `[filter]` 	Retrieves everthing
 #' Specified `[property]` 	Formal binomial and trinomial
@@ -445,10 +52,9 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #' @importFrom Biostrings writeXStringSet
 #'
 #' @return
-#' @export
 #' @details
 #'
-gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h",
+search_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h",
                      min_length = 1, max_length = 2000, chunk_size=NULL, out_dir = NULL,
                      compress = FALSE, force=FALSE) {
 
@@ -614,28 +220,6 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
   return(res)
 }
 
-
-# Cat_acctax --------------------------------------------------------------
-#' Helper function for processing taxids
-#'
-#' @param x a gb object
-#' @importFrom biofiles getAccession
-#' @importFrom biofiles dbxref
-cat_acctax <- function(x) {
-  if(length(biofiles::getAccession(x)) > 1){
-    taxid <- purrr::map(x, biofiles::dbxref, "taxon")
-    tax_chr <- purrr::map_chr(taxid, ~{
-      as.character(.x[1, 1])})
-    attributes(tax_chr) <- NULL
-    taxout <- paste0(attributes(taxid)$names, "|", tax_chr)
-  } else if(length(biofiles::getAccession(x)) == 1){
-    taxout <- paste0(biofiles::getAccession(x), "|", as.character(biofiles::dbxref(x[1], "taxon")))
-  }
-  return(taxout)
-}
-
-# Genbank fetching function -----------------------------------------------
-
 #' Genbank subsampling
 #'
 #' @param x A taxon name or vector of taxa to download sequences for
@@ -679,7 +263,7 @@ cat_acctax <- function(x) {
 #' @return
 #'
 #'
-gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"),
+search_genbank_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"),
                                quiet = FALSE, output = "h", min_length = 1, max_length = 2000,
                                subsample=1000, chunk_size=300, compress = FALSE, force=FALSE, out_dir = NULL) {
   # function setup
@@ -843,10 +427,6 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
 }
 
 
-
-# Update genbank database -------------------------------------------------
-
-
 #' GbUpdate
 #'
 #' @param x A taxon name or vector of taxa to download sequences for
@@ -872,7 +452,6 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
 #' @param progress Whether a progress bar should be shown. This reduces speed and is false by default.
 #'
 #' @return
-#' @export
 #' @import stringr
 #' @import future
 #' @import furrr
@@ -889,7 +468,7 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
 #' @importFrom Biostrings fasta.index
 #' @importFrom Biostrings writeXStringSet
 #'
-gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h", suffix="updates",
+update_genbank <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h", suffix="updates",
                      min_length = 1, max_length = 2000, chunk_size=300, out_dir = NULL,
                      compress = FALSE, force=FALSE, multithread = FALSE, progress=FALSE){
 
@@ -1062,154 +641,413 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
   return(res)
 }
 
-
-
-
-# Fetchseqs function ----------------------------------------------
-
-#' Fetchseqs function
+#' Helper function for processing taxids
 #'
-#' @param x A taxon name or vector of taxon names to download sequences for.
-#' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
-#' Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'
-#' @param marker The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix \[GENE\] will increase the search selectivity.
-#' The default for Genbank is 'COI\[GENE\] OR COX1\[GENE\] OR COXI\[GENE\]', while the default for BOLD is 'COI-5P'.
-#' If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
-#' If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.
-#' @param downstream Instead of search for the query sequence, this provides the option of instead searching for a downstream taxonomic rank.
-#' This is useful for big queries where >100k sequences will be downloaded. For example, when x is 'Insecta', and downsteam is Order, this will download all Orders within insecta and thus not overload the query. Default is FALSE.
-#' @param output The output format for the taxonomy in fasta headers.
+#' @param x a gb object
+#' @importFrom biofiles getAccession
+#' @importFrom biofiles dbxref
+cat_acctax <- function(x) {
+  if(length(biofiles::getAccession(x)) > 1){
+    taxid <- purrr::map(x, biofiles::dbxref, "taxon")
+    tax_chr <- purrr::map_chr(taxid, ~{
+      as.character(.x[1, 1])})
+    attributes(tax_chr) <- NULL
+    taxout <- paste0(attributes(taxid)$names, "|", tax_chr)
+  } else if(length(biofiles::getAccession(x)) == 1){
+    taxout <- paste0(biofiles::getAccession(x), "|", as.character(biofiles::dbxref(x[1], "taxon")))
+  }
+  return(taxout)
+}
+
+
+# BOLD functions --------------------------------------------------------
+
+#' seach_bold
+#' @param x A taxon name or vector of taxa to download sequences for
+#' @param marker the barcode marker used as a search term for the database
+#' @param quiet Whether progress should be printed to the console.
+#' @param output the output format for the taxonomy in fasta headers.
 #' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
 #' "binom" for just genus species binomials (SeqID;Genus Species),
 #' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
 #' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
-#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
-#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid` while for genbank this is `Accession Sequence definition`
-#' @param min_length The maximum length of the query sequence to return. Default 1.
-#' @param max_length The maximum length of the query sequence to return.
-#' This can be useful for ensuring no off-target sequences are returned. Default 2000.
-#' @param subsample (Numeric) return a random subsample of sequences from the search.
-#' @param out_dir Output directory to write fasta files to
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
+#' @param out_file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
-#' @param force Option to overwrite files if they already exist
-#' @param chunk_size Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
-#' if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
-#' For BOLD queries the default is 100,000 returned records
-#' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
-#' Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
-#' if x is a vector, or of downstream is being used.
-#' @param quiet Whether progress should be printed to the console.
-#' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
+#' @param force Option ot overwright files if they already exist
+#' @param out_dir Output directory to write fasta files to
+#' @param db (Optional) a database file generated using `taxreturn::get_ncbi_taxonomy()` or `taxreturn::get_ott_taxonomy()`
 #'
 #' @import dplyr
 #' @import stringr
-#' @import purrr
-#' @import future
-#' @import furrr
-#' @importFrom taxize downstream
-#' @importFrom methods as
+#' @importFrom bold bold_seqspec
+#' @importFrom tidyr unite
+#' @importFrom tidyr drop_na
+#' @importFrom Biostrings DNAStringSet
+#' @importFrom Biostrings fasta.index
+#' @importFrom Biostrings writeXStringSet
+#' @importFrom methods is
 #'
 #' @return
-#' @export
 #'
-fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
-                      output = "h", min_length = 1, max_length = 2000,
-                      subsample=FALSE, chunk_size=NULL, out_dir = NULL, compress = TRUE,
-                      force=FALSE, multithread = FALSE, quiet = TRUE, progress=FALSE) {
+#'
+seach_bold <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
+                       out_file = NULL, compress = FALSE, force=FALSE,
+                       out_dir = NULL, db=NULL) {
 
-  if(!database %in% c("nuccore", "genbank", "bold")) {
-    stop("database is invalid. See help page for more details")
-  }
+  # function setup
+  time <- Sys.time() # get time
 
   if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
     stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
   }
 
-  #stop if subsample and BOLD is true
-  if (is.numeric(subsample ) & database=="bold"){ stop("Subsampling is currently not supported for BOLD")}
-
   # Get NCBI taxonomy database if NCBI format outputs are desired
-  if (database == "bold" && output %in% c("gb", "gb-binom")) {
+  if (is.null(db) && output %in% c("gb", "gb-binom")) {
     db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
   }
 
   #Define directories
   if (is.null(out_dir)) {
-    out_dir <- database
+    out_dir <- "bold"
     if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
   }
   if (!dir.exists(out_dir)) {
     dir.create(out_dir)
   }
-  out_dir <- normalizePath(out_dir)
 
-  # Evaluate downstream
-  if (is.character(downstream)) {
-    if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
+  # Create output files
+  if (compress) {
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, ".fa.gz")
+  } else if (!compress) {
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, ".fa")
+  }
 
-    taxlist <- taxize::downstream(x, db = switch(database, bold = "bold", genbank = "ncbi", nuccore = "ncbi"),
-                                  downto = downstream) %>%
-      methods::as("list") %>%
-      dplyr::bind_rows() %>%
-      dplyr::filter(rank == stringr::str_to_lower(!!downstream)) %>%
-      dplyr::mutate(downloaded = FALSE)
+  #Check if output exists
+  if (file.exists(out_file) && force==TRUE) {
+    file.remove(out_file)
+    cat("", file=out_file)
+  } else if (file.exists(out_file) && force==FALSE){
+    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
+  }
 
-    if (nrow(taxlist) > 0) {
-      taxon <- switch(database, bold = taxlist$name, genbank = taxlist$childtaxa_name, nuccore = taxlist$childtaxa_name)
-    } else {
-      (taxon <- x)
+  # Bold search
+  data <- bold::bold_seqspec(taxon = x, sepfasta = FALSE)
+  if (length(data) >0 && methods::is(data, "data.frame")) {
+    data <- data %>%
+      dplyr::na_if("") %>%
+      dplyr::filter(markercode == marker) %>% # Remove all sequences for unwanted markers
+      dplyr::mutate(domain_name = "Eukaryota") %>%
+      dplyr::filter(!is.na(species_name), !is.na(markercode), !is.na(nucleotides)) %>%
+      dplyr::filter(!stringr::str_detect(nucleotides, pattern = "I")) #remove inosines
+
+    if (nrow(data) >0) {
+      if (output == "standard") {
+        data <- data %>%
+          dplyr::select(sampleid, species_name, markercode, genbank_accession, nucleotides) %>%
+          tidyr::unite("name", c("sampleid", "species_name", "markercode", "genbank_accession"), sep = "|")
+      } else if (output == "h") {
+        # Hierarchial output
+        data <- data %>%
+          dplyr::select(sampleid, domain_name, phylum_name, class_name,
+                        order_name, family_name, genus_name, species_name,nucleotides
+          ) %>%
+          tidyr::drop_na() %>%
+          tidyr::unite("name", c(
+            "sampleid", "domain_name",
+            "phylum_name", "class_name",
+            "order_name", "family_name",
+            "genus_name", "species_name"
+          ),
+          sep = ";"
+          ) %>%
+          dplyr::mutate(name = name %>%
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
+
+
+      } else if (output == "binom") {
+        # Binomial output
+        data <- data %>%
+          dplyr::select(sampleid, species_name, nucleotides) %>%
+          tidyr::drop_na() %>%
+          tidyr::unite("name", c("sampleid", "species_name"), sep = ";") %>%
+          dplyr::mutate(name = name %>%
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
+
+
+      } else if (output == "bold") {
+        # BOLD taxID output
+        data <- data %>%
+          dplyr::select(sampleid, species_taxID, nucleotides) %>%
+          tidyr::drop_na() %>%
+          tidyr::unite("name", c("sampleid", "species_taxID"), sep = ";") %>%
+          dplyr::mutate(name = name %>%
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
+
+      } else if (output == "gb") {
+        # Genbank taxID output
+        data <- data %>%
+          dplyr::select(sampleid, species_name, nucleotides) %>%
+          tidyr::drop_na() %>%
+          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+          dplyr::left_join(db, by="tax_name") %>%
+          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|")
+
+      } else if (output == "gb-binom") {
+        # genbank binomial output
+        data <- data %>%
+          dplyr::select(sampleid, species_name, nucleotides) %>%
+          tidyr::drop_na() %>%
+          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+          dplyr::left_join(db, by="tax_name") %>%
+          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
+          tidyr::unite("name", c("name", "tax_name"), sep = ";")
+      }
+
+      seqs <- Biostrings::DNAStringSet(data$nucleotides)
+      names(seqs) <- data$name
+      if (compress == TRUE) {
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000)
+      } else if (compress == FALSE) {
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000)
+      }
+
+      # Done message
+      time <- Sys.time() - time
+      if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from BOLD ", " in ", format(time, digits = 2))))
     }
-    if (!quiet) cat(paste0(length(taxon), " downstream taxa found\n"))
+  }
+
+  # Count number of downloaded sequences
+  if(file.exists(out_file)){
+    counter <- nrow(Biostrings::fasta.index(out_file))
   } else {
-    taxon <- x
+    counter <- 0
   }
 
-  # Setup multithreading - only makes sense if downstream = TRUE
-  setup_multithread(multithread = multithread, quiet=quiet)
-
-  # Genbank
-  if (database %in% c("genbank", "nuccore")) {
-    if (subsample==FALSE) {
-      message("Downloading from genbank - No subsampling")
-    res <-  furrr::future_map_dfr(
-        taxon, gbSearch, database = database, marker = marker,
-        output = output, min_length = min_length, max_length = max_length,
-        compress = compress, chunk_size=chunk_size, out_dir= out_dir,
-        force=force, quiet = quiet, .progress = progress)
-
-    } else if (is.numeric(subsample)){
-      message("Downloading from genbank - With subsampling")
-    res <-  furrr::future_map_dfr(
-        taxon, gbSearch_subsample, database = database, marker = marker,
-        out_dir = out_dir, output = output, subsample = subsample,
-        min_length = min_length, max_length = max_length, chunk_size=chunk_size,
-        force=force, compress = compress, quiet = quiet,  .progress = progress)
-    }
-
-  } else if (database == "bold") {
-    # Split any querys above chunk_size
-    if(is.null(chunk_size)){
-      chunk_size <- 100000
-    }
-    bold_taxon <- furrr::future_map(taxon, split_bold_query, chunk_size=chunk_size, quiet=quiet, .progress = progress) %>%
-      unlist()
-
-    if(!quiet) {message("Downloading ", length(bold_taxon)," taxa from BOLD")}
-    res <- furrr::future_map(
-      bold_taxon, boldSearch, marker = marker, db=db,
-      out_dir = out_dir, out_file = NULL, output = output,
-      compress = compress, quiet = quiet,  .progress = progress, force=force)
+  # Count total sequences that should have been downloaded
+  if(methods::is(data, "data.frame")){
+    total_counter <- nrow(data)
+  } else {
+    total_counter <- 0
   }
 
-  # Explicitly close multisession workers
-  future::plan(future::sequential)
-
-  # Return results summary
-  return(res %>%
-           dplyr::bind_rows())
+  res <- data.frame(
+    taxon = x,
+    seqs_total = total_counter,
+    seqs_downloaded = counter,
+    marker = marker,
+    database = "bold",
+    time = format(time, digits = 2)
+  )
+  return(res)
 }
 
-# Split BOLD query --------------------------------------------------------
+
+#' update_bold
+#'
+#' @param x A taxon name or vector of taxa to download sequences for
+#' @param fasta A fasta file or list of fasta files to check for existing sequence accessions
+#' @param marker the barcode marker used as a search term for the database
+#' @param quiet Whether progress should be printed to the console.
+#' @param output the output format for the taxonomy in fasta headers.
+#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+#' "binom" for just genus species binomials (SeqID;Genus Species),
+#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
+#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
+#' @param suffix The suffix to add to newly downloaded files. Defaults to 'updates'
+#' @param compress Option to compress output fasta files using gzip
+#' @param force Option ot overwright files if they already exist
+#' @param out_dir Output directory to write fasta files to
+#' @param db (Optional) a database file generated using `taxreturn::get_ncbi_taxonomy()` or `taxreturn::get_ott_taxonomy()`
+#'
+#'
+#' @return
+#' @import dplyr
+#' @import stringr
+#' @importFrom bold bold_specimens
+#' @importFrom bold bold_seqspec
+#' @importFrom tidyr unite
+#' @importFrom tidyr drop_na
+#' @importFrom Biostrings DNAStringSet
+#' @importFrom Biostrings fasta.index
+#' @importFrom Biostrings writeXStringSet
+#' @importFrom methods is
+#'
+update_bold <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h", suffix="updates", compress = FALSE, force=FALSE,
+                        out_dir = NULL, db=NULL) {
+
+  # function setup
+  time <- Sys.time() # get time
+
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
+  }
+
+  #Check if all inputs exists
+  if (!any(file.exists(fasta))) {
+    stop("Not all fasta files provided can be found, check the diferectory you have provided")
+  }
+
+  #Define directories
+  if (is.null(out_dir)) {
+    out_dir <- "bold"
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
+  }
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
+  }
+
+  # Create output files
+  if (compress) {
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, "_", suffix, ".fa.gz")
+  } else if (!compress) {
+    out_file <- paste0(normalizePath(out_dir), "/", stringr::str_replace_all(x, pattern=" ", replacement="_"), "_", marker, "_", suffix, ".fa")
+  }
+
+  #Check if output exists
+  if (file.exists(out_file) && force==TRUE) {
+    file.remove(out_file)
+    cat("", file=out_file)
+  } else if (file.exists(out_file) && force==FALSE){
+    stop(paste0(out_file, " exists, set force = TRUE to overwrite"))
+  }
+
+  # Get NCBI taxonomy database if NCBI format outputs are desired
+  if (is.null(db) && output %in% c("gb", "gb-binom")) {
+    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
+  }
+
+  # Get accessions from existing fastas
+  current <- acc_from_fasta(fasta)
+
+  accs <-  bold::bold_specimens(taxon = x) %>%
+    dplyr::pull(sampleid)
+
+  newsearch <- setdiff(accs, current)
+
+  # Bold search
+  data <- bold::bold_seqspec(ids = newsearch, sepfasta = FALSE)
+
+  # Find differences
+
+  if (length(data) >0 && !methods::is(data, "logical")) {
+    data <- data %>%
+      dplyr::na_if("") %>%
+      dplyr::filter(stringr::str_detect(marker, markercode)) %>% # Remove all sequences for unwanted markers
+      dplyr::mutate(domain_name = "Eukaryota") %>%
+      dplyr::filter(!is.na(species_name)) %>%
+      dplyr::filter(!stringr::str_detect(nucleotides, pattern = "I")) #remove inosines
+
+    if (nrow(data) >0) {
+      if (output == "standard") {
+        data <- data %>%
+          dplyr::select(sampleid, species_name, markercode, genbank_accession, nucleotides) %>%
+          tidyr::unite("name", c("sampleid", "species_name", "markercode", "genbank_accession"), sep = "|")
+      } else if (output == "h") {
+        # Hierarchial output
+        data <- data %>%
+          dplyr::select(sampleid, domain_name, phylum_name, class_name,
+                        order_name, family_name, genus_name, species_name,nucleotides
+          ) %>%
+          tidyr::drop_na() %>%
+          tidyr::unite("name", c(
+            "sampleid", "domain_name",
+            "phylum_name", "class_name",
+            "order_name", "family_name",
+            "genus_name", "species_name"
+          ),
+          sep = ";"
+          ) %>%
+          dplyr::mutate(name = name %>%
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
+
+
+      } else if (output == "binom") {
+        # Binomial output
+        data <- data %>%
+          dplyr::select(sampleid, species_name, nucleotides) %>%
+          tidyr::drop_na() %>%
+          tidyr::unite("name", c("sampleid", "species_name"), sep = ";") %>%
+          dplyr::mutate(name = name %>%
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
+
+
+      } else if (output == "bold") {
+        # BOLD taxID output
+        data <- data %>%
+          dplyr::select(sampleid, species_taxID, nucleotides) %>%
+          tidyr::drop_na() %>%
+          tidyr::unite("name", c("sampleid", "species_taxID"), sep = ";") %>%
+          dplyr::mutate(name = name %>%
+                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                          trimws(which = "both"))
+
+      } else if (output == "gb") {
+        # Genbank taxID output
+        data <- data %>%
+          dplyr::select(sampleid, species_name, nucleotides) %>%
+          tidyr::drop_na() %>%
+          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+          dplyr::left_join(db, by="tax_name") %>%
+          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|")
+
+      } else if (output == "gb-binom") {
+        # genbank binomial output
+        data <- data %>%
+          dplyr::select(sampleid, species_name, nucleotides) %>%
+          tidyr::drop_na() %>%
+          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+          dplyr::left_join(db, by="tax_name") %>%
+          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
+          tidyr::unite("name", c("name", "tax_name"), sep = ";")
+      }
+
+      seqs <- Biostrings::DNAStringSet(data$nucleotides)
+      names(seqs) <- data$name
+      if (compress == TRUE) {
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", compress = "gzip", width = 20000)
+      } else if (compress == FALSE) {
+        Biostrings::writeXStringSet(seqs, out_file, format = "fasta", width = 20000)
+      }
+
+      # Done message
+      time <- Sys.time() - time
+      if (!quiet) (message(paste0("Downloaded ", length(seqs), " ", x, " Sequences from BOLD ", " in ", format(time, digits = 2))))
+    }
+  }
+  # Count number of downloaded sequences
+  if(file.exists(out_file)){
+    counter <- nrow(Biostrings::fasta.index(out_file))
+  } else {
+    counter <- 0
+  }
+
+  # Count total sequences that should have been downloaded
+  if(methods::is(data, "data.frame")){
+    total_counter <- nrow(data)
+  } else {
+    total_counter <- 0
+  }
+
+  res <- data.frame(
+    taxon = x,
+    seqs_total = total_counter,
+    seqs_downloaded = counter,
+    marker = marker,
+    database = "bold",
+    time = format(time, digits = 2)
+  )
+  return(res)
+}
 
 #' Split bold query
 #' This function recursively splits a bold taxonomic query until the amount of records returned is under chunk_size
@@ -1276,3 +1114,150 @@ split_bold_query <- function(x, chunk_size=100000, quiet=FALSE){
 
   return(out)
 }
+
+
+# wrapper -----------------------------------------------------------------
+
+
+#' fetch_seqs function
+#'
+#' @param x A taxon name or vector of taxon names to download sequences for.
+#' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
+#' Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'
+#' @param marker The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix \[GENE\] will increase the search selectivity.
+#' The default for Genbank is 'COI\[GENE\] OR COX1\[GENE\] OR COXI\[GENE\]', while the default for BOLD is 'COI-5P'.
+#' If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
+#' If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.
+#' @param downstream Instead of search for the query sequence, this provides the option of instead searching for a downstream taxonomic rank.
+#' This is useful for big queries where >100k sequences will be downloaded. For example, when x is 'Insecta', and downsteam is Order, this will download all Orders within insecta and thus not overload the query. Default is FALSE.
+#' @param output The output format for the taxonomy in fasta headers.
+#' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
+#' "binom" for just genus species binomials (SeqID;Genus Species),
+#' "bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
+#' "gb" for genbank taxonomic ID (SeqID;GBTaxID),
+#' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
+#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid` while for genbank this is `Accession Sequence definition`
+#' @param min_length The maximum length of the query sequence to return. Default 1.
+#' @param max_length The maximum length of the query sequence to return.
+#' This can be useful for ensuring no off-target sequences are returned. Default 2000.
+#' @param subsample (Numeric) return a random subsample of sequences from the search.
+#' @param out_dir Output directory to write fasta files to
+#' @param compress Option to compress output fasta files using gzip
+#' @param force Option to overwrite files if they already exist
+#' @param chunk_size Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
+#' if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
+#' For BOLD queries the default is 100,000 returned records
+#' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
+#' Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
+#' if x is a vector, or of downstream is being used.
+#' @param quiet Whether progress should be printed to the console.
+#' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
+#'
+#' @import dplyr
+#' @import stringr
+#' @import purrr
+#' @import future
+#' @import furrr
+#' @importFrom taxize downstream
+#' @importFrom methods as
+#'
+#' @return
+#' @export
+#'
+fetch_seqs <- function(x, database, marker = NULL, downstream = FALSE,
+                       output = "h", min_length = 1, max_length = 2000,
+                       subsample=FALSE, chunk_size=NULL, out_dir = NULL, compress = TRUE,
+                       force=FALSE, multithread = FALSE, quiet = TRUE, progress=FALSE) {
+
+  if(!database %in% c("nuccore", "genbank", "bold")) {
+    stop("database is invalid. See help page for more details")
+  }
+
+  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
+    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
+  }
+
+  #stop if subsample and BOLD is true
+  if (is.numeric(subsample ) & database=="bold"){ stop("Subsampling is currently not supported for BOLD")}
+
+  # Get NCBI taxonomy database if NCBI format outputs are desired
+  if (database == "bold" && output %in% c("gb", "gb-binom")) {
+    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
+  }
+
+  #Define directories
+  if (is.null(out_dir)) {
+    out_dir <- database
+    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
+  }
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir)
+  }
+  out_dir <- normalizePath(out_dir)
+
+  # Evaluate downstream
+  if (is.character(downstream)) {
+    if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
+
+    taxlist <- taxize::downstream(x, db = switch(database, bold = "bold", genbank = "ncbi", nuccore = "ncbi"),
+                                  downto = downstream) %>%
+      methods::as("list") %>%
+      dplyr::bind_rows() %>%
+      dplyr::filter(rank == stringr::str_to_lower(!!downstream)) %>%
+      dplyr::mutate(downloaded = FALSE)
+
+    if (nrow(taxlist) > 0) {
+      taxon <- switch(database, bold = taxlist$name, genbank = taxlist$childtaxa_name, nuccore = taxlist$childtaxa_name)
+    } else {
+      (taxon <- x)
+    }
+    if (!quiet) cat(paste0(length(taxon), " downstream taxa found\n"))
+  } else {
+    taxon <- x
+  }
+
+  # Setup multithreading - only makes sense if downstream = TRUE
+  setup_multithread(multithread = multithread, quiet=quiet)
+
+  # Genbank
+  if (database %in% c("genbank", "nuccore")) {
+    if (subsample==FALSE) {
+      message("Downloading from genbank - No subsampling")
+      res <-  furrr::future_map_dfr(
+        taxon, search_genbank, database = database, marker = marker,
+        output = output, min_length = min_length, max_length = max_length,
+        compress = compress, chunk_size=chunk_size, out_dir= out_dir,
+        force=force, quiet = quiet, .progress = progress)
+
+    } else if (is.numeric(subsample)){
+      message("Downloading from genbank - With subsampling")
+      res <-  furrr::future_map_dfr(
+        taxon, search_genbank_subsample, database = database, marker = marker,
+        out_dir = out_dir, output = output, subsample = subsample,
+        min_length = min_length, max_length = max_length, chunk_size=chunk_size,
+        force=force, compress = compress, quiet = quiet,  .progress = progress)
+    }
+
+  } else if (database == "bold") {
+    # Split any querys above chunk_size
+    if(is.null(chunk_size)){
+      chunk_size <- 100000
+    }
+    bold_taxon <- furrr::future_map(taxon, split_bold_query, chunk_size=chunk_size, quiet=quiet, .progress = progress) %>%
+      unlist()
+
+    if(!quiet) {message("Downloading ", length(bold_taxon)," taxa from BOLD")}
+    res <- furrr::future_map(
+      bold_taxon, seach_bold, marker = marker, db=db,
+      out_dir = out_dir, out_file = NULL, output = output,
+      compress = compress, quiet = quiet,  .progress = progress, force=force)
+  }
+
+  # Explicitly close multisession workers
+  future::plan(future::sequential)
+
+  # Return results summary
+  return(res %>%
+           dplyr::bind_rows())
+}
+
