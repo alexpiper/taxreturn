@@ -44,6 +44,8 @@ see \code{?aphid::Viterbi} for more information about the alignment process.}
 
 \item{kmer_threshold}{the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment.}
 
+\item{k}{integer giving the k-mer size used to generate the input matrix for k-means clustering.}
+
 \item{shave}{Whether bases that are outside (to the left or right) of the PHMM object should be removed from sequences in the output. Default is TRUE.}
 
 \item{trim_ends}{Sometimes a trailing base can end up at the end of the alignment, separated by gaps. the trim_ends parameter checks up to n bases from each end of the alignment and if gaps are detected, any trailing bases will be removed.}
@@ -53,6 +55,8 @@ see \code{?aphid::Viterbi} for more information about the alignment process.}
 \item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected (Maximum available cores - 1), or provide a numeric vector to manually set the number of cores to use. Default is FALSE (single thread)}
 
 \item{quiet}{Whether progress should be printed to the console. Note that this will add additional runtime.}
+
+\item{progress}{Whether a progress bar is displayed.}
 }
 \value{
 

@@ -12,12 +12,11 @@
 #'
 #' @return
 #' @export
-#' @import aphid
-#' @import insect
 #' @import stringr
-#' @import ape
+#' @importFrom ape complement
+#' @importFrom insect char2dna
+#' @importFrom aphid Viterbi
 #'
-#' @examples
 get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, min_score = 10, ...) {
 
   input <- primer
@@ -99,13 +98,14 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
 #'
 #' @return
 #' @export
-#' @import aphid
-#' @import insect
-#' @import ape
 #' @import future
+#' @importFrom ape as.DNAbin
+#' @importFrom ape base.freq
+#' @importFrom ape complement
+#' @importFrom aphid derivePHMM
+#' @importFrom aphid Viterbi
 #'
 #'
-#' @examples
 get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TRUE, min_score=10, omit_endgaps	= FALSE, multithread=FALSE, ...) {
 
   # Ensure x is a DNAbin
@@ -164,12 +164,10 @@ get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TR
 #'
 #' @return
 #' @export
-#' @import aphid
-#' @import insect
-#' @import ape
 #' @import stringr
+#' @importFrom insect char2dna
 #'
-#' @examples
+#'
 pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRUE, min_score = 10, omit_endgaps	= FALSE, multithread = FALSE,  quiet = FALSE, ...){
 
   path <- get_subalignment(x = x, model = model, tryrc = tryrc, check_indels = check_indels,
@@ -246,12 +244,11 @@ pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRU
 #'
 #' @return
 #' @export
-#' @import entropy
-#' @import ape
 #' @import purrr
+#' @importFrom entropy entropy
 #'
 #'
-#' @examples
+#'
 alignment_entropy <- function (x, mask_gaps=0.2, count_gaps = FALSE, method="ML", unit="log", return_extra=FALSE) {
   if ((mask_gaps < 0) | (mask_gaps > 1)) {
     stop("mask_gaps should be a percentage (within the [0,1] range).")
@@ -325,12 +322,12 @@ alignment_entropy <- function (x, mask_gaps=0.2, count_gaps = FALSE, method="ML"
 #'
 #' @return
 #' @export
-#' @import Biostrings
 #' @import stringr
 #' @import dplyr
+#' @importFrom Biostrings fasta.index
+#' @importFrom stats quantile
 #'
 #'
-#' @examples
 summarise_fasta <- function(x, label=NULL, origin=NULL) {
   if(is.null(origin)){
     out <- Biostrings::fasta.index(x) %>%
@@ -340,11 +337,11 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
       dplyr::summarise(nseqs = n(),
                        nspecies=n_distinct(taxid),
                        mean_length = mean(seqlength),
-                       q0 = quantile(seqlength, probs=0),
-                       q25 = quantile(seqlength, probs=0.25),
-                       q50 = quantile(seqlength, probs=0.5), # Q50 is median
-                       q75 = quantile(seqlength, probs=0.75),
-                       q100 = quantile(seqlength, probs=1)
+                       q0 = stats::quantile(seqlength, probs=0),
+                       q25 = stats::quantile(seqlength, probs=0.25),
+                       q50 = stats::quantile(seqlength, probs=0.5), # Q50 is median
+                       q75 = stats::quantile(seqlength, probs=0.75),
+                       q100 = stats::quantile(seqlength, probs=1)
       )
 
   } else if(is.data.frame(origin) | is_tibble(origin)){
@@ -366,11 +363,11 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
       dplyr::summarise(nseqs = n(),
                        nspecies=n_distinct(taxid),
                        mean_length = mean(seqlength),
-                       q0 = quantile(seqlength, probs=0),
-                       q25 = quantile(seqlength, probs=0.25),
-                       q50 = quantile(seqlength, probs=0.5), # Q50 is median
-                       q75 = quantile(seqlength, probs=0.75),
-                       q100 = quantile(seqlength, probs=1)
+                       q0 = stats::quantile(seqlength, probs=0),
+                       q25 = stats::quantile(seqlength, probs=0.25),
+                       q50 = stats::quantile(seqlength, probs=0.5), # Q50 is median
+                       q75 = stats::quantile(seqlength, probs=0.75),
+                       q100 = stats::quantile(seqlength, probs=1)
       )
   }
   if(is.character(label)) {

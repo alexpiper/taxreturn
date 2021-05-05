@@ -18,38 +18,39 @@
 #' @param max_N The max number of ambiguous N bases allowed before a sequence is removed.
 #' @param check_frame Whether sequences with insertions or deletions which arent in multiples of 3 should be removed from output. Useful for coding loci such as COI but should not be used for non-coding loci. Default is FALSE.
 #' @param kmer_threshold the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment.
+#' @param k integer giving the k-mer size used to generate the input matrix for k-means clustering.
 #' @param shave Whether bases that are outside (to the left or right) of the PHMM object should be removed from sequences in the output. Default is TRUE.
 #' @param trim_ends Sometimes a trailing base can end up at the end of the alignment, separated by gaps. the trim_ends parameter checks up to n bases from each end of the alignment and if gaps are detected, any trailing bases will be removed.
 #' @param extra How to handle insertions which were not part of the PHMM model. 'drop' will truncate all sequences to the shortest alignment length, while 'fill' will use gaps to pad all sequences out to the longest alignment length.
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected (Maximum available cores - 1), or provide a numeric vector to manually set the number of cores to use. Default is FALSE (single thread)
 #' @param quiet Whether progress should be printed to the console. Note that this will add additional runtime.
+#' @param progress Whether a progress bar is displayed.
 #'
-#' @import aphid
-#' @import insect
-#' @import Biostrings
 #' @import stringr
 #' @import furrr
 #' @import future
 #' @import dplyr
+#' @importFrom ape as.DNAbin
+#' @importFrom ape base.freq
+#' @importFrom methods is
 #'
 #' @return
 #' @export
 #'
-#' @examples
 map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 9, max_gap = Inf, max_N = Inf,
                           check_frame = FALSE, kmer_threshold=0.3, k=5, shave = TRUE, trim_ends=FALSE, extra=NA,
                           multithread = FALSE, quiet = FALSE, progress = FALSE) {
   time <- Sys.time() # get time
 
   # Check inputs
-  if (!is(model, "PHMM")) {
+  if (!methods::is(model, "PHMM")) {
     stop("Model needs to be a PHMM object")
   }
   if(!is.na(extra)){
     if(!extra %in% c("fill", "drop")) stop("extra must be 'fill', 'drop', or NA")
   }
   # Convert to DNAbin
-  if (!is(x, "DNAbin")) {
+  if (!methods::is(x, "DNAbin")) {
     x <- ape::as.DNAbin(x)
     if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
   }
@@ -231,8 +232,10 @@ filt_phmm <- function(s, model, min_score = 100, min_length = 1, max_indel = Inf
 #'
 #' @return
 #' @export
+#' @importFrom kmer mbed
+#' @importFrom insect char2dna
+#' @importFrom aphid generate
 #'
-#' @examples
 kmer_screen <- function(seqs, model, threshold = 0.3, k = 5, quiet=FALSE){
   # Check inputs
   if(!class(model) == "PHMM") {
@@ -279,7 +282,10 @@ kmer_screen <- function(seqs, model, threshold = 0.3, k = 5, quiet=FALSE){
 #' @return
 #' @export
 #'
-#' @examples
+#' @importFrom kmer mbed
+#' @importFrom insect char2dna
+#' @importFrom aphid generate
+#'
 closest_seq <- function(seqs, model, threshold, k=5, quiet=FALSE){
   # Check inputs
   if(!class(model) == "PHMM") {
@@ -341,7 +347,6 @@ subset_long_seq <- function(x, model, split_length, threshold=0.3, k=5, quiet=FA
 }
 
 
-
 # Prune group sizes -------------------------------------------------------
 #' Prune group sizes
 #'
@@ -358,18 +363,19 @@ subset_long_seq <- function(x, model, split_length, threshold=0.3, k=5, quiet=FA
 #' @return
 #' @export
 #'
-#' @import insect
-#' @import magrittr
 #' @import dplyr
 #' @import stringr
-#' @import tibble
-#' @import tidyr
+#' @importFrom insect subset.DNAbin
+#' @importFrom tibble as_tibble
+#' @importFrom tidyr separate
+#' @importFrom openssl md5
+#' @importFrom ape as.DNAbin
+#' @importFrom ape base.freq
+#' @importFrom methods is
 #'
-#'
-#' @examples
 prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "length", quiet = FALSE) {
   # Convert to DNAbin
-  if (!is(x, "DNAbin")) {
+  if (!methods::is(x, "DNAbin")) {
     x <- ape::as.DNAbin(x)
     if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
   }
@@ -437,17 +443,18 @@ prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "lengt
 #' @return
 #' @export
 #'
-#' @import ape
-#' @import Biostrings
 #' @import stringr
+#' @importFrom Biostrings reverseComplement
+#' @importFrom Biostrings translate
+#' @importFrom Biostrings getGeneticCode
+#' @importFrom methods is
 #'
-#' @examples
 get_reading_frame <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority") {
   if(is.null(genetic_code)){
     stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
   }
   # Convert to DNAStringSet
-  if (is(x, "DNAbin")) {
+  if (methods::is(x, "DNAbin")) {
     x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
   }
 
@@ -520,20 +527,20 @@ get_reading_frame <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws=
 #'
 #' @return
 #' @export
-#' @import ape
-#' @import Biostrings
-#' @import DECIPHER
+#' @importFrom ape as.DNAbin
+#' @importFrom Biostrings reverseComplement
+#' @importFrom DECIPHER RemoveGaps
+#' @importFrom methods is
 #'
-#' @examples
 codon_filter <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majority"){
   if(is.null(genetic_code)){
     stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE for other options")
   }
   # Convert to DNAStringSet
-  if (is(x, "DNAbin")) {
+  if (methods::is(x, "DNAbin")) {
     x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
     format <- "DNAbin"
-  } else if(is(x, "DNAStringSet")){
+  } else if(methods::is(x, "DNAStringSet")){
     format <- "DNAStringSet"
   } else {
     stop("x must be a DNAbin or DNAStringSet")
@@ -562,35 +569,35 @@ codon_filter <- function(x, genetic_code = NULL, tryrc=TRUE, resolve_draws="majo
 # Codon entropy  -----------------------------------------------------------
 #' Codon entropy
 #'
-#' @param x
+#' @param x Sequences in DNAStringset or DNAbin format
 #' @param genetic_code A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE
-#' @param forward
-#' @param reverse
-#' @param codon_filter
+#' @param tryrc Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.
+#' @param codon_filter Whether `taxreturn::codon_filter` should be run first to remove sequences containing stop codons or frameshifts.
+#' @param resolve_draws How draws should be resolved when multiple possible frames produce sequences with no stop codons.
+#' Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.
+#' @param method the method employed to estimate entropy. see `?entropy::entropy` for more details
 #'
 #' @return
 #' @export
-#' @import ape
-#' @import Biostrings
-#' @import entropy
 #' @import purrr
+#' @importFrom entropy entropy
+#' @importFrom methods is
 #'
 #'
-#' @examples
-codon_entropy <- function(x, genetic_code = NULL, forward=TRUE, reverse=FALSE, codon_filter = TRUE, method="ML") {
+codon_entropy <- function(x, genetic_code = NULL, tryrc = TRUE, codon_filter = TRUE, resolve_draws = "majority", method = "ML") {
   if(is.null(genetic_code)){
     stop("genetic_code must not be NULL, set to 'SGC4' for Invertebrate mitochondrial or see Biostrings::GENETIC_CODE_TABLE")
   }
-  if (is(x, "DNAbin")) {
+  if (methods::is(x, "DNAbin")) {
     x <- DNAbin2DNAstringset(x, remove_gaps=FALSE)
   }
   #Filter out sequences with stop codons
   if(codon_filter){
-  x <- codon_filter(x, genetic_code = genetic_code, forward = forward, reverse = reverse)
+  x <- codon_filter(x, genetic_code = genetic_code, tryrc=tryrc)
   }
 
   #subset to the reading frame
-  pos <- get_reading_frame(x, genetic_code = genetic_code, forward = forward, reverse = reverse)
+  pos <- get_reading_frame(x, genetic_code = genetic_code, tryrc = tryrc, resolve_draws = resolve_draws)
 
   F_frames <-  as.character(subseq(x, start= pos))
 
@@ -628,16 +635,16 @@ codon_entropy <- function(x, genetic_code = NULL, forward=TRUE, reverse=FALSE, c
 #' Consensus - The consensus taxonomy for each cluster and associated confidence level
 #' All - Return all taxa in mixed clusters and their sequence accession numbers
 #' Count - Return counts of all taxa within each cluster
+#' @param k integer giving the k-mer size used to generate the input matrix for k-means clustering.
 #' @param quiet logical indicating whether progress should be printed to the console.
 #' @param ... further arguments to pass to kmer::otu.
 #'
 #' @return
 #' @export
-#' @import tibble
 #' @import dplyr
-#' @import kmer
-#' @import tibble
-#'
+#' @importFrom kmer otu
+#' @importFrom tibble rownames_to_column
+#' @importFrom methods as
 #' @examples
 #' \dontrun{
 #' seqs <- insect::readFASTA("test.fa.gz")
@@ -646,10 +653,17 @@ codon_entropy <- function(x, genetic_code = NULL, forward=TRUE, reverse=FALSE, c
 #' mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)
 #'
 #' # OTT taxonomy
-#' seqs <- map_to_ott(seqs, dir="ott3.2", from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE)
-#' mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
+#' seqs <- map_to_ott(
+#' seqs, dir="ott3.2", from="ncbi",
+#' resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE
+#' )
+#'
+#' mixed <- get_mixed_clusters(
+#' seqs, db, rank="species",
+#' threshold=0.99, confidence=0.6, quiet=FALSE
+#' )
 #' }
-get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed = FALSE, confidence = 0.8, return = "consensus", nstart=20, quiet = FALSE, ...) {
+get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed = FALSE, confidence = 0.8, return = "consensus", k=5, quiet = FALSE, ...) {
   if(missing(x)) {stop("Error: x is required")}
 
   #Check inputs
@@ -658,7 +672,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
   rank <- tolower(rank)
   return <- tolower(return)
   if(!return %in% c("consensus", "all", "counts")){stop("Return must be one of: 'consensus', 'all', or 'counts'")}
-  if (as(rngseed, "logical")) {
+  if (methods::as(rngseed, "logical")) {
     set.seed(rngseed)
     if (!quiet) {
       message("`set.seed(", rngseed, ")` was used to initialize repeatable random subsampling.")
@@ -682,7 +696,7 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
   # Cluster OTUS
   if (is.null(attr(x, "OTU"))) {
     if (!quiet) {cat(paste0("Clustering OTUs at ", (threshold*100), "%  similarity \n"))}
-    otus <- kmer::otu(x, nstart = 20, threshold = threshold, ...)
+    otus <- kmer::otu(x, k=k , threshold = threshold, ...)
   } else {
     if (!quiet) {cat("Obtaining OTU membership from input object\n")}
     otus <- attr(x, "OTU")

@@ -11,7 +11,7 @@ filter_infraspecifc(x, db, quiet = FALSE)
 
 \item{db}{an OTT taxonomic database}
 
-\item{quiet}{}
+\item{quiet}{Whether progress should be printed to the console.}
 }
 \value{
 

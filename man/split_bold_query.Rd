@@ -12,7 +12,7 @@ split_bold_query(x, chunk_size = 1e+05, quiet = FALSE)
 
 \item{chunk_size}{The maximum amount of records to return per query}
 
-\item{quiet}{(Optional) Print text output}
+\item{quiet}{Whether progress should be printed to the console.}
 }
 \value{
 

@@ -4,10 +4,12 @@
 \alias{resolve_synonyms_ncbi}
 \title{resolve_synonyms_ncbi}
 \usage{
-resolve_synonyms_ncbi(x, dir = NULL, quiet = FALSE, ...)
+resolve_synonyms_ncbi(x, dir = NULL, quiet = FALSE)
 }
 \arguments{
 \item{x}{A DNAbin or DNAStringSet Object}
+
+\item{dir}{A directory containing the NCBI taxonomy that was downloaded using get_ncbi_taxonomy()}
 
 \item{quiet}{Whether progress should be printed to console}
 }

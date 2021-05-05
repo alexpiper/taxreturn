@@ -4,17 +4,16 @@
 
 #' Find executable
 #'
-#' @param exe
-#' @param interactive
+#' @param exe the name of the executable to find
+#' @param quiet Whether errors should be printed to console
 #'
 #' @return
 #' @export
 #'
-#' @examples
-.findExecutable <- function(exe, interactive=TRUE) {
+.findExecutable <- function(exe, quiet=FALSE) {
   path <- Sys.which(exe)
   if(all(path=="")) {
-    if(interactive) stop("Executable for ", paste(exe, collapse=" or "), " not found! Please make sure that the software is correctly installed and, if necessary, path variables are set.", call.=FALSE)
+    if(!quiet) stop("Executable for ", paste(exe, collapse=" or "), " not found! Please make sure that the software is correctly installed and, if necessary, path variables are set.", call.=FALSE)
     return(character(0))
   }
 
@@ -30,16 +29,16 @@
 #' URL to retrieve BLAST version from.
 #' @param dest_dir (Optional)  Default "bin"
 #' Directory to install BLAST within.
-#' @force Whether existing installs should be forcefully overwritten
+#' @param force Whether existing installs should be forcefully overwritten
 #'
 #' @return
 #' @export
 #' @import stringr
-#' @import RCurl
-#' @import utils
-#' @import httr
+#' @importFrom RCurl getURL
+#' @importFrom httr GET
+#' @importFrom httr write_disk
+#' @importFrom utils untar
 #'
-#' @examples
 blast_install <- function(url, dest_dir = "bin", force = FALSE) {
 
   # get start time
@@ -108,13 +107,13 @@ blast_install <- function(url, dest_dir = "bin", force = FALSE) {
 #' @param file (Required) A fasta file to create a database from.
 #' @param dbtype (Optional) Molecule type of database, accepts "nucl" for nucleotide or "prot" for protein.
 #' @param args (Optional) Extra arguments passed to BLAST
+#' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
 #'
 #' @return
 #' @export
-#' @import R.utils
 #' @import stringr
+#' @importFrom R.utils gunzip
 #'
-#' @examples
 makeblastdb <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
   time <- Sys.time() # get time
   .findExecutable("makeblastdb") # Check blast is installed
@@ -143,7 +142,6 @@ makeblastdb <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
 #' @return
 #' @export
 #'
-#' @examples
 blast_params <- function(type = "blastn") {
   system(paste(.findExecutable(c(type)), "-help"))
 }
@@ -169,16 +167,17 @@ blast_params <- function(type = "blastn") {
 #'
 #' @return
 #' @export
-#' @import insect
-#' @import Biostrings
 #' @import stringr
-#' @import tibble
 #' @import dplyr
 #' @import future
+#' @importFrom insect writeFASTA
+#' @importFrom insect char2dna
+#' @importFrom tibble enframe
+#' @importFrom Biostrings writeXStringSet
+#' @importFrom Biostrings DNA_ALPHABET
+#' @importFrom ape as.DNAbin
+#' @importFrom ape del.gaps
 #'
-#' @examples
-#'
-#' Add qcov length filter
 blast <- function (query, db, type="blastn", evalue = 1e-6,
                    output_format = "tabular", args=NULL, ungapped=FALSE,
                    quiet=FALSE, multithread=FALSE){
@@ -328,15 +327,15 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @param max_hsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
 #' @param ranks (Required) The taxonomic ranks contained in the fasta headers
 #' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
+#' @param tie How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.
 #' @param args (Optional) Extra arguments passed to BLAST
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
 #'
 #' @return
 #' @export
 #' @import dplyr
-#' @import tidyr
+#' @importFrom tidyr separate
 #'
-#' @examples
 blast_top_hit <- function(query, db, type="blastn",
                           identity=95, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                           ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
@@ -396,10 +395,9 @@ blast_top_hit <- function(query, db, type="blastn",
 #' @return
 #' @export
 #' @import dplyr
-#' @import tidyr
 #' @import stringr
+#' @importFrom tidyr separate
 #'
-#' @examples
 blast_assign_species <- function(query, db, type="blastn",
                                  identity=97, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                                  ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",

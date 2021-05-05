@@ -6,10 +6,11 @@
 #'
 #' @return
 #' @export
-#' @import utils
-#' @import readr
+#' @importFrom readr read_tsv
+#' @importFrom utils untar
+#' @importFrom utils download.file
 #'
-#' @examples
+#'
 get_ncbi_taxonomy <- function(dest_dir, include_synonyms = TRUE, force=FALSE) {
   if(missing(dest_dir)){
     dest_dir <- getwd()
@@ -21,7 +22,7 @@ get_ncbi_taxonomy <- function(dest_dir, include_synonyms = TRUE, force=FALSE) {
   if (force == TRUE | !file.exists(paste0(tmp, "/rankedlineage.dmp"))) {
     message("Downloading NCBI taxonomy database")
     fn <- "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
-    download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
+    utils::download.file(fn, destfile = paste0(tmp, "/tmp.tar.gz"))
     message("Extracting data\n")
     test <- utils::untar(tarfile = paste0(tmp, "/tmp.tar.gz"), exdir = tmp)
     if (!identical(test, 0L)) {
@@ -60,17 +61,17 @@ get_ncbi_taxonomy <- function(dest_dir, include_synonyms = TRUE, force=FALSE) {
 # get_ncbi_lineage -------------------------------------------------------------
 #' Get lineage
 #'
-#' @param x
-#' @param db
+#' @param x A DNAbin or DNAStringSet object with names in format `accession|tax_id;Genus species`
+#' @param db a database file generated using `taxreturn::get_ncbi_taxonomy()`
 #'
 #' @return
 #' @export
 #' @import stringr
-#' @import tibble
 #' @import dplyr
-#' @import tidyr
+#' @importFrom tidyr separate
+#' @importFrom tidyr unite
+#' @importFrom tibble as_tibble
 #'
-#' @examples
 get_ncbi_lineage <- function(x, db){
   if(missing(db)){ db <- taxreturn::get_ncbi_taxonomy()}
   cat("Getting taxonomic lineage from taxids\n")
@@ -90,18 +91,17 @@ get_ncbi_lineage <- function(x, db){
 # NCBI synonyms -----------------------------------------------------------
 #' Get NCBI synonyms
 #'
-#' @param dir A directory containing the NCBI taxonomy that was downloaded using get_ncbi_taxonomy
+#' @param dir A directory containing the NCBI taxonomy that was downloaded using get_ncbi_taxonomy()
 #' @param recurse Whether to recurse when searching for dir if dir is NULL.
 #' If TRUE recurse fully, if a positive number the number of levels to recurse.
-#' @param quiet Whether progress should be printed to console
+#' @param quiet Whether progress should be printed to the console.
 #'
 #' @return
 #' @export
-#' @import fs
-#' @import readr
 #' @import dplyr
+#' @importFrom fs dir_ls
 #'
-#' @examples
+#'
 get_ncbi_synonyms <- function(dir=NULL, recurse=TRUE, quiet=FALSE) {
   if (is.null(dir)){
     if(!quiet){message("Dir is null, finding ncbi_taxdump directory using recursion")}
@@ -138,19 +138,20 @@ get_ncbi_synonyms <- function(dir=NULL, recurse=TRUE, quiet=FALSE) {
 #' resolve_synonyms_ncbi
 #'
 #' @param x A DNAbin or DNAStringSet Object
+#' @param dir A directory containing the NCBI taxonomy that was downloaded using get_ncbi_taxonomy()
 #' @param quiet Whether progress should be printed to console
 #'
 #' @return
 #' @export
-#' @import ape
-#' @import Biostrings
 #' @import stringr
-#' @import tibble
-#' @import tidyr
 #' @import dplyr
+#' @importFrom tibble as_tibble
+#' @importFrom tidyr separate
+#' @importFrom tidyr unite
+#' @importFrom ape as.DNAbin
+#' @importFrom methods is
 #'
-#' @examples
-resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE, ...) {
+resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE) {
   time <- Sys.time() # get time
   if (quiet == TRUE) {
     verbose <- FALSE
@@ -159,14 +160,14 @@ resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE, ...) {
   }
 
   # Check type of input
-  if (is(x, "DNAbin")) {
+  if (methods::is(x, "DNAbin")) {
     message("Input is DNAbin")
     is.seq <- TRUE
-  } else  if (is(x, "DNAStringSet")| is(x, "DNAString")) {
+  } else  if (methods::is(x, "DNAStringSet")| methods::is(x, "DNAString")) {
     message("Input is DNAStringSet, converting to DNAbin")
     x <- ape::as.DNAbin(x)
     is.seq <- TRUE
-  } else  if (is(x, "character")) {
+  } else  if (methods::is(x, "character")) {
     message("Input is character vector, resolving Genus species binomials")
     is.seq <- FALSE
   }
@@ -215,15 +216,15 @@ resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE, ...) {
 # ncbi_taxid --------------------------------------------------------------
 #' Get ncbi taxid's for a taxon name
 #'
-#' @param x
-#' @param db
+#' @param x A DNAbin or DNAStringSet object with names in format `accession|tax_id;Genus species`
+#' @param db a database file generated using `taxreturn::get_ncbi_taxonomy()`
 #'
 #' @return
 #' @export
-#' @import magrittr
+#' @importFrom magrittr set_colnames
 #' @import dplyr
 #'
-#' @examples
+#'
 ncbi_taxid <- function(x, db=NULL) {
 
   if (is.null(db)) { db <- get_ncbi_taxonomy()}
@@ -244,16 +245,18 @@ ncbi_taxid <- function(x, db=NULL) {
 #' @param chunk_size The size of the chunked searches to conduct.
 #' Warning, chunk sizes over 300 can be too big for the NCBI servers.
 #' @param multithread Whether multithreading should be used
-#' @param quiet (Optional) Print text outputdatabase
+#' @param progress Whether a progress bar is displayed.
+#' @param quiet Whether progress should be printed to the console.
 #'
 #' @return
 #' @export
 #' @import future
 #' @import furrr
-#' @import rentrez
 #' @import purrr
+#' @importFrom rentrez entrez_post
+#' @importFrom rentrez entrez_fetch
 #'
-#' @examples
+#'
 gid_to_acc <- function(ids, database="nuccore", chunk_size=300, multithread=TRUE, progress=FALSE, quiet=FALSE){
   if(!class(ids) %in% c("character", "numeric")){
     stop("input ids must be a character or numeric vector of NCBI gids")

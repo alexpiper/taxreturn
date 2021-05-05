@@ -12,7 +12,7 @@ get_mixed_clusters(
   rngseed = FALSE,
   confidence = 0.8,
   return = "consensus",
-  nstart = 20,
+  k = 5,
   quiet = FALSE,
   ...
 )
@@ -40,6 +40,8 @@ Consensus - The consensus taxonomy for each cluster and associated confidence le
 All - Return all taxa in mixed clusters and their sequence accession numbers
 Count - Return counts of all taxa within each cluster}
 
+\item{k}{integer giving the k-mer size used to generate the input matrix for k-means clustering.}
+
 \item{quiet}{logical indicating whether progress should be printed to the console.}
 
 \item{...}{further arguments to pass to kmer::otu.}
@@ -60,7 +62,14 @@ seqs <- insect::readFASTA("test.fa.gz")
 mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)
 
 # OTT taxonomy
-seqs <- map_to_ott(seqs, dir="ott3.2", from="ncbi", resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE)
-mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.6, quiet=FALSE)
+seqs <- map_to_ott(
+seqs, dir="ott3.2", from="ncbi",
+resolve_synonyms=TRUE, filter_bads=TRUE, remove_na = TRUE, quiet=FALSE
+)
+
+mixed <- get_mixed_clusters(
+seqs, db, rank="species",
+threshold=0.99, confidence=0.6, quiet=FALSE
+)
 }
 }

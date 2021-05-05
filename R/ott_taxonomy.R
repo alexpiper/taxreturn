@@ -8,13 +8,14 @@
 #'
 #' @return
 #' @export
-#' @import xml2
-#' @import rvest
-#' @import httr
 #' @import stringr
-#' @import utils
+#' @importFrom httr GET
+#' @importFrom httr write_disk
+#' @importFrom utils untar
+#' @importFrom rvest html_nodes
+#' @importFrom rvest html_attr
+#' @importFrom xml2 read_html
 #'
-#' @examples
 download_ott_taxonomy <- function(url, dest_dir, force=FALSE) {
 
   if (missing(url)) {
@@ -23,7 +24,7 @@ download_ott_taxonomy <- function(url, dest_dir, force=FALSE) {
     link_hrefs <- download_page %>%
       rvest::html_nodes("a") %>%
       rvest::html_attr("href")
-    url <- grep("http://files.opentreeoflife.org/ott/.*tgz$",link_hrefs, perl = TRUE) %>%
+    url <- grep("http://files.opentreeoflife.org/ott/.*tgz$", link_hrefs, perl = TRUE) %>%
       link_hrefs[.] %>% .[1]
   }
 
@@ -87,11 +88,10 @@ download_ott_taxonomy <- function(url, dest_dir, force=FALSE) {
 #'
 #' @return
 #' @export
-#' @import data.table
-#' @import vroom
 #' @import dplyr
+#' @importFrom vroom vroom
+#' @importFrom data.table data.table
 #'
-#' @examples
 get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
   if (is.null(dir)){
     input <- NA
@@ -124,8 +124,6 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
   return(db)
 }
 
-
-
 # map_to_ott  ------------------------------------------------------------
 
 #' Map taxa to open tree of life
@@ -153,13 +151,13 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
 #'
 #' @return
 #' @export
-#' @import data.table
 #' @import dplyr
 #' @import stringr
-#' @import tidyr
-#' @import tibble
+#' @importFrom tidyr separate
+#' @importFrom tibble as_tibble
+#' @importFrom ape as.DNAbin
+#' @importFrom methods is
 #'
-#' @examples
 map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filter_unplaced=TRUE, remove_na = FALSE, quiet=FALSE){
   time <- Sys.time() # get time
 
@@ -176,14 +174,14 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filt
   if (!from %in% unique(db$source)){ stop("Error: 'from' is not in db")}
 
   #Check input format
-  if (is(x, "DNAbin")) {
+  if (methods::is(x, "DNAbin")) {
     message("Input is DNAbin")
     tax <- names(x) %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else if (is(x, "DNAStringSet")) {
+  } else if (methods::is(x, "DNAStringSet")) {
     message("Input is DNAStringSet")
     tax <- ape::as.DNAbin(x) %>%
       names() %>%
@@ -191,14 +189,14 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filt
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  }else  if (is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
+  }else  if (methods::is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
     tax <- x %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else  if (is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
+  } else  if (methods::is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of species names")
     tax <- data.frame(acc = as.character(NA), id=as.character(NA), tax_name = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
@@ -262,9 +260,9 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filt
   }
 
   #Replace names
-  if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
+  if (methods::is(x, "DNAbin") | methods::is(x, "DNAStringSet")) {
     names(x) <- tax$name
-  } else  if (is(x, "character")) {
+  } else  if (methods::is(x, "character")) {
     x <- tax$name
   }
   time <- Sys.time() - time
@@ -276,9 +274,9 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filt
       dplyr::filter(is.na(tax_id)) %>%
       dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
 
-    if(is(x, "DNAbin") | is(x, "DNAStringSet")){
+    if(methods::is(x, "DNAbin") | methods::is(x, "DNAStringSet")){
       x[names(x) %in% remove$name] <- NULL
-    }else if (is(x, "character")){
+    }else if (methods::is(x, "character")){
       x[x %in% remove$name] <- NULL
     }
     if(!quiet){message(paste0("Removed ", nrow(remove), " sequences that could not be mapped to OTT\n"))}
@@ -295,11 +293,11 @@ map_to_ott <- function(x, db, from="ncbi", resolve_synonyms=TRUE, dir=NULL, filt
 #'
 #' @return
 #' @export
-#' @import vroom
 #' @import stringr
 #' @import dplyr
+#' @importFrom vroom vroom
 #'
-#' @examples
+#'
 parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
   if (is.null(dir)){
     stop("ERROR: provide a directory containing ott taxonomy")
@@ -314,7 +312,6 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
     ) %>%
     dplyr::rename(tax_id = uid, synonym = name) %>%
     dplyr::select(tax_id, tax_name, synonym)
-
   return(out)
 }
 
@@ -327,6 +324,7 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 #' @param db an OTT taxonomic database
 #' @param ranks the taxonomic ranks to filter to. Default is "kingdom", "phylum", "class", "order", "family", "genus", "species"
 #' To get strain level ranks, add "terminal" to ranks
+#' @param output Options are "tax_name" to return taxonomic names for each rank in the lineage or "tax_id" to return taxonomic ID's.
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected (Maximum available cores - 1), or provide a numeric vector to manually set the number of cores to use. Default is FALSE (single thread)
 #' This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation,
 #' for example by running parallel::stopCluster(cores).
@@ -336,20 +334,22 @@ parse_ott_synonyms <- function(dir=NULL, quiet=FALSE) {
 #' @import parallel
 #' @import dplyr
 #' @import stringr
-#' @import tidyr
-#' @import tibble
+#' @importFrom tidyr separate
+#' @importFrom tidyr unite
+#' @importFrom tidyr pivot_wider
+#' @importFrom tibble as_tibble
+#' @importFrom methods is
 #'
-#' @examples
 get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phylum", "class", "order", "family", "genus", "species"), multithread = FALSE){
   #Check input format
-  if (is(x, "DNAbin")) {
+  if (methods::is(x, "DNAbin")) {
     message("Input is DNAbin")
     lineage <- names(x) %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else if (is(x, "DNAStringSet")) {
+  } else if (methods::is(x, "DNAStringSet")) {
     message("Input is DNAStringSet")
     lineage <- as.DNAbin(x) %>%
       names() %>%
@@ -357,19 +357,19 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  }else  if (is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
+  }else  if (methods::is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
     lineage <- x %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else  if (is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
+  } else  if (methods::is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of tax_id's")
     lineage <- data.frame(acc = as.character(NA), tax_name=as.character(NA), tax_id = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
 
-  # setup multithreading
+  # setup multi threading
   cores <- setup_para(multithread, quiet)
 
   # Check for duplicated accessions
@@ -492,37 +492,42 @@ get_ott_lineage <- function(x, db, output="tax_name", ranks = c("kingdom", "phyl
 #'
 #' @param x A DNAbin, DNAStringSet, taxonomy headers formnatted Acc|taxid;taxonomy, or vector of taxids
 #' @param db an OTT taxonomic database
-#' @param quiet
+#' @param quiet Whether progress should be printed to the console.
 #'
 #' @return
 #' @export
+#' @import stringr
+#' @import dplyr
+#' @importFrom tibble as_tibble
+#' @importFrom tidyr separate
+#' @importFrom ape as.DNAbin
+#' @importFrom methods is
 #'
-#' @examples
 filter_unplaced <- function(x, db, quiet=FALSE){
   #Check input format
-  if (is(x, "DNAbin")) {
+  if (methods::is(x, "DNAbin")) {
     message("Input is DNAbin")
     tax <- names(x) %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else if (is(x, "DNAStringSet")) {
+  } else if (methods::is(x, "DNAStringSet")) {
     message("Input is DNAStringSet")
-    tax <- as.DNAbin(x) %>%
+    tax <- ape::as.DNAbin(x) %>%
       names() %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  }else  if (is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
+  }else  if (methods::is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
     tax <- x %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else  if (is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
+  } else  if (methods::is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of species names")
     tax <- data.frame(acc = as.character(NA), tax_id=as.character(NA), tax_name = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
@@ -544,11 +549,11 @@ filter_unplaced <- function(x, db, quiet=FALSE){
     dplyr::filter(is.na(tax_id)) %>%
     dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
 
-  if(is(x, "DNAbin") | is(x, "DNAStringSet")){
+  if(methods::is(x, "DNAbin") | methods::is(x, "DNAStringSet")){
     names(x) <- tax$name
     x <- x[!names(x) %in% remove$name]
 
-  }else if (is(x, "character")){
+  }else if (methods::is(x, "character")){
     x <- tax$name
     x <- x[!x %in% remove$name]
   }
@@ -560,37 +565,41 @@ filter_unplaced <- function(x, db, quiet=FALSE){
 #' Filter infraspecific taxonomic labels
 #' @param x A DNAbin, DNAStringSet, taxonomy headers formnatted Acc|taxid;taxonomy, or vector of taxids
 #' @param db an OTT taxonomic database
-#' @param quiet
+#' @param quiet Whether progress should be printed to the console.
 #'
 #' @return
 #' @export
+#' @import stringr
+#' @importFrom tidyr separate
+#' @import dplyr
+#' @importFrom tibble as_tibble
+#' @importFrom methods is
 #'
-#' @examples
 filter_infraspecifc <- function(x, db, quiet=FALSE){
   #Check input format
-  if (is(x, "DNAbin")) {
+  if (methods::is(x, "DNAbin")) {
     message("Input is DNAbin")
     tax <- names(x) %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else if (is(x, "DNAStringSet")) {
+  } else if (methods::is(x, "DNAStringSet")) {
     message("Input is DNAStringSet")
-    tax <- as.DNAbin(x) %>%
+    tax <- ape::as.DNAbin(x) %>%
       names() %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  }else  if (is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
+  }else  if (methods::is(x, "character") && (str_detect(x, "\\|") & str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;Genus Species' format")
     tax <- x %>%
       stringr::str_split_fixed(";", n = 2) %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
       dplyr::rename(tax_name = V2)
-  } else  if (is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
+  } else  if (methods::is(x, "character") && !(str_detect(x, "\\|") && str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of species names")
     tax <- data.frame(acc = as.character(NA), tax_id=as.character(NA), tax_name = x, stringsAsFactors = FALSE)
   }else (stop("x must be DNA bin or character vector"))
@@ -611,11 +620,11 @@ filter_infraspecifc <- function(x, db, quiet=FALSE){
     dplyr::filter(is.na(tax_id)) %>%
     dplyr::mutate(name = paste0(acc,"|", tax_id,";",tax_name))
 
-  if(is(x, "DNAbin") | is(x, "DNAStringSet")){
+  if(methods::is(x, "DNAbin") | methods::is(x, "DNAStringSet")){
     names(x) <- tax$name
     x <- x[!names(x) %in% remove$name]
 
-  }else if (is(x, "character")){
+  }else if (methods::is(x, "character")){
     x <- tax$name
     x <- x[!x %in% remove$name]
   }

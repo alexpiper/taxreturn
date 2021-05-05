@@ -22,7 +22,11 @@ gbSearch_subsample(
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
 
+\item{database}{The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.}
+
 \item{marker}{The barcode marker used as a search term for the database}
+
+\item{quiet}{Whether progress should be printed to the console.}
 
 \item{output}{The output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -35,6 +39,8 @@ or "standard" which outputs the default format for each database. For genbank th
 \item{min_length}{The minimum length of sequences to download}
 
 \item{max_length}{The maximum length of sequences to download}
+
+\item{subsample}{(Numeric) return a random subsample of sequences from the search.}
 
 \item{chunk_size}{Split up the query into chunks of this size to avoid overloading API servers.
 if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"}

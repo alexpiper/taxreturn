@@ -19,8 +19,7 @@ fetchSeqs(
   force = FALSE,
   multithread = FALSE,
   quiet = TRUE,
-  progress = FALSE,
-  ...
+  progress = FALSE
 )
 }
 \arguments{
@@ -29,8 +28,8 @@ fetchSeqs(
 \item{database}{The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'}
 
-\item{marker}{The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix \link{GENE} will increase the search selectivity.
-The default for Genbank is 'COI\link[=GENE]{Gene} OR COX1\link{GENE} OR COXI\link{GENE}', while the default for BOLD is 'COI-5P'.
+\item{marker}{The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix [GENE]\ will increase the search selectivity.
+The default for Genbank is 'COI\link{Gene} OR COX1\link[=Gene]{GENE} OR COXI\link[=Gene]{GENE}', while the default for BOLD is 'COI-5P'.
 If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
 If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.}
 
@@ -50,6 +49,8 @@ or "standard" which outputs the default format for each database. For bold this 
 \item{max_length}{The maximum length of the query sequence to return.
 This can be useful for ensuring no off-target sequences are returned. Default 2000.}
 
+\item{subsample}{(Numeric) return a random subsample of sequences from the search.}
+
 \item{chunk_size}{Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
 if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 For BOLD queries the default is 100,000 returned records}
@@ -64,7 +65,7 @@ For BOLD queries the default is 100,000 returned records}
 Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
 if x is a vector, or of downstream is being used.}
 
-\item{quiet}{(Optional) Print text output}
+\item{quiet}{Whether progress should be printed to the console.}
 
 \item{progress}{A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.}
 }

@@ -4,10 +4,12 @@
 \alias{.findExecutable}
 \title{Find executable}
 \usage{
-.findExecutable(exe, interactive = TRUE)
+.findExecutable(exe, quiet = FALSE)
 }
 \arguments{
-\item{interactive}{}
+\item{exe}{the name of the executable to find}
+
+\item{quiet}{Whether errors should be printed to console}
 }
 \value{
 

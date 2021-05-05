@@ -7,7 +7,9 @@
 ncbi_taxid(x, db = NULL)
 }
 \arguments{
-\item{db}{}
+\item{x}{A DNAbin or DNAStringSet object with names in format \verb{accession|tax_id;Genus species}}
+
+\item{db}{a database file generated using \code{taxreturn::get_ncbi_taxonomy()}}
 }
 \value{
 

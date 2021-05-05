@@ -45,7 +45,3 @@ See https://www.ncbi.nlm.nih.gov/books/NBK279684/ for custom formatting informat
 \description{
 Run BLAST search
 }
-\examples{
-
-Add qcov length filter
-}

@@ -1,7 +1,7 @@
 #' boldSearch
 #' @param x A taxon name or vector of taxa to download sequences for
 #' @param marker the barcode marker used as a search term for the database
-#' @param quiet (Optional) Print text output
+#' @param quiet Whether progress should be printed to the console.
 #' @param output the output format for the taxonomy in fasta headers.
 #' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
 #' "binom" for just genus species binomials (SeqID;Genus Species),
@@ -13,17 +13,22 @@
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
 #' @param out_dir Output directory to write fasta files to
+#' @param db (Optional) a database file generated using `taxreturn::get_ncbi_taxonomy()` or `taxreturn::get_ott_taxonomy()`
 #'
-#' @import bold
 #' @import dplyr
-#' @import tidyr
 #' @import stringr
-#' @import Biostrings
+#' @importFrom bold bold_seqspec
+#' @importFrom tidyr unite
+#' @importFrom tidyr drop_na
+#' @importFrom Biostrings DNAStringSet
+#' @importFrom Biostrings fasta.index
+#' @importFrom Biostrings writeXStringSet
+#' @importFrom methods is
 #'
 #' @return
 #' @export
 #'
-#' @examples
+#'
 boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
                        out_file = NULL, compress = FALSE, force=FALSE,
                        out_dir = NULL, db=NULL) {
@@ -66,7 +71,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 
   # Bold search
   data <- bold::bold_seqspec(taxon = x, sepfasta = FALSE)
-  if (length(data) >0 && is(data, "data.frame")) {
+  if (length(data) >0 && methods::is(data, "data.frame")) {
     data <- data %>%
       dplyr::na_if("") %>%
       dplyr::filter(markercode == marker) %>% # Remove all sequences for unwanted markers
@@ -162,7 +167,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
   }
 
   # Count total sequences that should have been downloaded
-  if(is(data, "data.frame")){
+  if(methods::is(data, "data.frame")){
     total_counter <- nrow(data)
   } else {
     total_counter <- 0
@@ -188,7 +193,7 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #' @param x A taxon name or vector of taxa to download sequences for
 #' @param fasta A fasta file or list of fasta files to check for existing sequence accessions
 #' @param marker the barcode marker used as a search term for the database
-#' @param quiet (Optional) Print text output
+#' @param quiet Whether progress should be printed to the console.
 #' @param output the output format for the taxonomy in fasta headers.
 #' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
 #' "binom" for just genus species binomials (SeqID;Genus Species),
@@ -197,21 +202,24 @@ boldSearch <- function(x, marker = "COI-5P", quiet = FALSE, output = "h",
 #' "gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process
 #' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
 #' @param suffix The suffix to add to newly downloaded files. Defaults to 'updates'
-#' @param out_file The file to write to, if empty it defaults to the search term
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option ot overwright files if they already exist
 #' @param out_dir Output directory to write fasta files to
-#' @param db
+#' @param db (Optional) a database file generated using `taxreturn::get_ncbi_taxonomy()` or `taxreturn::get_ott_taxonomy()`
 #'
 #'
 #' @return
-#' @import bold
 #' @import dplyr
-#' @import tidyr
 #' @import stringr
-#' @import Biostrings
+#' @importFrom bold bold_specimens
+#' @importFrom bold bold_seqspec
+#' @importFrom tidyr unite
+#' @importFrom tidyr drop_na
+#' @importFrom Biostrings DNAStringSet
+#' @importFrom Biostrings fasta.index
+#' @importFrom Biostrings writeXStringSet
+#' @importFrom methods is
 #'
-#' @examples
 boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h", suffix="updates", compress = FALSE, force=FALSE,
                        out_dir = NULL, db=NULL) {
 
@@ -269,7 +277,7 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 
   # Find differences
 
-  if (length(data) >0 && !is(data, "logical")) {
+  if (length(data) >0 && !methods::is(data, "logical")) {
     data <- data %>%
       dplyr::na_if("") %>%
       dplyr::filter(stringr::str_detect(marker, markercode)) %>% # Remove all sequences for unwanted markers
@@ -364,7 +372,7 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
   }
 
   # Count total sequences that should have been downloaded
-  if(is(data, "data.frame")){
+  if(methods::is(data, "data.frame")){
     total_counter <- nrow(data)
   } else {
     total_counter <- 0
@@ -384,12 +392,26 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 
 
 # Genbank fetching function -----------------------------------------------
+# Some useful entrez queries
+#' all `[filter]` 	Retrieves everthing
+#' Specified `[property]` 	Formal binomial and trinomial
+#' at or below species level `[property]`
+#' family `[rank]` 	Rank-based query
+#' taxonomy genome `[filter]` 	Taxa with a direct link to a genome sequence
+#' 2009/10/21:2020 `[date]` 	Date-bounded query
+#' mammalia `[subtree]` 	All taxa within the Mammalia
+#' extinct `[property]` 	Extinct organisms
+#' Terminal `[property]` 	Terminal nodes in the tree
+#' loprovencyclife `[filter]` 	Entries with LinkOut links to the Encyclopedia of Life
+#'
+
 #' Genbank search function
 #'
 #' @param x A taxon name or vector of taxa to download sequences for
+#' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 #' @param marker The barcode marker used as a search term for the database.
 #' If this is set to "mitochondria" or "mitochondrion" it will download full mitochondrial genomes. If set to "genome" it will download entire genomes only.
-#' @param quiet (Optional) Print text output
+#' @param quiet Whether progress should be printed to the console.
 #' @param output The output format for the taxonomy in fasta headers.
 #' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
 #' "binom" for just genus species binomials (SeqID;Genus Species),
@@ -406,34 +428,28 @@ boldUpdate <- function(x, fasta, marker = "COI-5P", quiet = FALSE, output = "h",
 #' @param out_dir Output directory to write fasta files to
 #'
 #'
-#' @import rentrez
-#' @import biofiles
-#' @import Biostrings
-#' @import tidyr
 #' @import dplyr
 #' @import stringr
 #' @import purrr
-#' @import tibble
+#' @importFrom biofiles gbRecord
+#' @importFrom biofiles getAccession
+#' @importFrom biofiles getDefinition
+#' @importFrom biofiles getTaxonomy
+#' @importFrom biofiles getOrganism
+#' @importFrom biofiles getSequence
+#' @importFrom biofiles dbxref
+#' @importFrom rentrez entrez_search
+#' @importFrom rentrez entrez_fetch
+#' @importFrom tidyr unite
+#' @importFrom Biostrings fasta.index
+#' @importFrom Biostrings writeXStringSet
 #'
 #' @return
 #' @export
+#' @details
 #'
-#' Some useful Entrez queries
-#'
-#' all [filter] 	Retrieves everthing
-#' Specified [property] 	Formal binomial and trinomial
-#' at or below species level [property]
-#' family [rank] 	Rank-based query
-#' taxonomy genome [filter] 	Taxa with a direct link to a genome sequence
-#' 2009/10/21:2020 [date] 	Date-bounded query
-#' mammalia [subtree] 	All taxa within the Mammalia
-#' extinct [property] 	Extinct organisms
-#' Terminal [property] 	Terminal nodes in the tree
-#' loprovencyclife [filter] 	Entries with LinkOut links to the Encyclopedia of Life
-#'
-#'  # Return res - Taxa - x of y sequences in n chunks in n secs to output
 gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h",
-                     min_length = 1, max_length = 2000, subsample=NULL, chunk_size=NULL, out_dir = NULL,
+                     min_length = 1, max_length = 2000, chunk_size=NULL, out_dir = NULL,
                      compress = FALSE, force=FALSE) {
 
   # function setup
@@ -600,17 +616,11 @@ gbSearch <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]
 
 
 # Cat_acctax --------------------------------------------------------------
-
 #' Helper function for processing taxids
 #'
-#' @param x
-#'
-#' @return
-#' @import purrr
-#' @import biofiles
-#'
-#'
-#' @examples
+#' @param x a gb object
+#' @importFrom biofiles getAccession
+#' @importFrom biofiles dbxref
 cat_acctax <- function(x) {
   if(length(biofiles::getAccession(x)) > 1){
     taxid <- purrr::map(x, biofiles::dbxref, "taxon")
@@ -629,8 +639,9 @@ cat_acctax <- function(x) {
 #' Genbank subsampling
 #'
 #' @param x A taxon name or vector of taxa to download sequences for
+#' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 #' @param marker The barcode marker used as a search term for the database
-#' @param quiet
+#' @param quiet Whether progress should be printed to the console.
 #' @param output The output format for the taxonomy in fasta headers.
 #' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
 #' "binom" for just genus species binomials (SeqID;Genus Species),
@@ -640,6 +651,7 @@ cat_acctax <- function(x) {
 #' or "standard" which outputs the default format for each database. For genbank this is `Accession Sequence definition`
 #' @param min_length The minimum length of sequences to download
 #' @param max_length The maximum length of sequences to download
+#' @param subsample (Numeric) return a random subsample of sequences from the search.
 #' @param chunk_size Split up the query into chunks of this size to avoid overloading API servers.
 #' if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 #' @param compress  Option to compress output fasta files using gzip
@@ -647,17 +659,26 @@ cat_acctax <- function(x) {
 #' @param out_dir Output directory to write fasta files to
 #'
 #'
-#' @import rentrez
 #' @import dplyr
-#' @import tidyr
 #' @import stringr
 #' @import purrr
-#' @import biofiles
-#' @import Biostrings
+#' @importFrom biofiles gbRecord
+#' @importFrom biofiles getAccession
+#' @importFrom biofiles getDefinition
+#' @importFrom biofiles getTaxonomy
+#' @importFrom biofiles getOrganism
+#' @importFrom biofiles getSequence
+#' @importFrom biofiles dbxref
+#' @importFrom rentrez entrez_search
+#' @importFrom rentrez entrez_post
+#' @importFrom rentrez entrez_fetch
+#' @importFrom tidyr unite
+#' @importFrom Biostrings fasta.index
+#' @importFrom Biostrings writeXStringSet
 #'
 #' @return
 #'
-#' @examples
+#'
 gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"),
                                quiet = FALSE, output = "h", min_length = 1, max_length = 2000,
                                subsample=1000, chunk_size=300, compress = FALSE, force=FALSE, out_dir = NULL) {
@@ -830,8 +851,9 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
 #'
 #' @param x A taxon name or vector of taxa to download sequences for
 #' @param fasta A fasta file or list of fasta files to check for existing sequence accessions
+#' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 #' @param marker The barcode marker used as a search term for the database. If this is set to "mitochondria" it will download full mitochondrial genomes.
-#' @param quiet (Optional) Print text output
+#' @param quiet Whether progress should be printed to the console.
 #' @param output The output format for the taxonomy in fasta headers.
 #' Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
 #' "binom" for just genus species binomials (SeqID;Genus Species),
@@ -852,13 +874,21 @@ gbSearch_subsample <- function(x, database = "nuccore", marker = c("COI[GENE]", 
 #' @return
 #' @export
 #' @import stringr
-#' @import rentrez
 #' @import future
 #' @import furrr
-#' @import biofiles
-#' @import Biostrings
+#' @importFrom biofiles gbRecord
+#' @importFrom biofiles getAccession
+#' @importFrom biofiles getDefinition
+#' @importFrom biofiles getTaxonomy
+#' @importFrom biofiles getOrganism
+#' @importFrom biofiles getSequence
+#' @importFrom biofiles dbxref
+#' @importFrom rentrez entrez_search
+#' @importFrom rentrez entrez_post
+#' @importFrom rentrez entrez_fetch
+#' @importFrom Biostrings fasta.index
+#' @importFrom Biostrings writeXStringSet
 #'
-#' @examples
 gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), quiet = FALSE, output = "h", suffix="updates",
                      min_length = 1, max_length = 2000, chunk_size=300, out_dir = NULL,
                      compress = FALSE, force=FALSE, multithread = FALSE, progress=FALSE){
@@ -1042,7 +1072,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 #' @param x A taxon name or vector of taxon names to download sequences for.
 #' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 #' Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'
-#' @param marker The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix [GENE] will increase the search selectivity.
+#' @param marker The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix \[GENE]\ will increase the search selectivity.
 #' The default for Genbank is 'COI[Gene] OR COX1[GENE] OR COXI[GENE]', while the default for BOLD is 'COI-5P'.
 #' If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
 #' If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.
@@ -1058,6 +1088,7 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 #' @param min_length The maximum length of the query sequence to return. Default 1.
 #' @param max_length The maximum length of the query sequence to return.
 #' This can be useful for ensuring no off-target sequences are returned. Default 2000.
+#' @param subsample (Numeric) return a random subsample of sequences from the search.
 #' @param out_dir Output directory to write fasta files to
 #' @param compress Option to compress output fasta files using gzip
 #' @param force Option to overwrite files if they already exist
@@ -1067,30 +1098,24 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
 #' if x is a vector, or of downstream is being used.
-#' @param quiet (Optional) Print text output
+#' @param quiet Whether progress should be printed to the console.
 #' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
 #'
-#' @import bold
 #' @import dplyr
-#' @import tidyr
 #' @import stringr
-#' @import rentrez
 #' @import purrr
 #' @import future
 #' @import furrr
-#' @import biofiles
-#' @import Biostrings
-#' @import taxize
-#'
+#' @importFrom taxize downstream
+#' @importFrom methods as
 #'
 #' @return
 #' @export
 #'
-#' @examples
 fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
                       output = "h", min_length = 1, max_length = 2000,
                       subsample=FALSE, chunk_size=NULL, out_dir = NULL, compress = TRUE,
-                      force=FALSE, multithread = FALSE, quiet = TRUE, progress=FALSE, ...) {
+                      force=FALSE, multithread = FALSE, quiet = TRUE, progress=FALSE) {
 
   if(!database %in% c("nuccore", "genbank", "bold")) {
     stop("database is invalid. See help page for more details")
@@ -1124,7 +1149,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
 
     taxlist <- taxize::downstream(x, db = switch(database, bold = "bold", genbank = "ncbi", nuccore = "ncbi"),
                                   downto = downstream) %>%
-      as("list") %>%
+      methods::as("list") %>%
       dplyr::bind_rows() %>%
       dplyr::filter(rank == stringr::str_to_lower(!!downstream)) %>%
       dplyr::mutate(downloaded = FALSE)
@@ -1150,7 +1175,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
         taxon, gbSearch, database = database, marker = marker,
         output = output, min_length = min_length, max_length = max_length,
         compress = compress, chunk_size=chunk_size, out_dir= out_dir,
-        force=force, quiet = quiet, .progress = progress, ...=...)
+        force=force, quiet = quiet, .progress = progress)
 
     } else if (is.numeric(subsample)){
       message("Downloading from genbank - With subsampling")
@@ -1158,7 +1183,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
         taxon, gbSearch_subsample, database = database, marker = marker,
         out_dir = out_dir, output = output, subsample = subsample,
         min_length = min_length, max_length = max_length, chunk_size=chunk_size,
-        force=force, compress = compress, quiet = quiet,  .progress = progress, ...=...)
+        force=force, compress = compress, quiet = quiet,  .progress = progress)
     }
 
   } else if (database == "bold") {
@@ -1173,7 +1198,7 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
     res <- furrr::future_map(
       bold_taxon, boldSearch, marker = marker, db=db,
       out_dir = out_dir, out_file = NULL, output = output,
-      compress = compress, quiet = quiet,  .progress = progress, force=force, ...=...)
+      compress = compress, quiet = quiet,  .progress = progress, force=force)
   }
 
   # Explicitly close multisession workers
@@ -1191,12 +1216,16 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
 #'
 #' @param x The input taxonomic query
 #' @param chunk_size The maximum amount of records to return per query
-#' @param quiet (Optional) Print text output
+#' @param quiet Whether progress should be printed to the console.
 #'
 #' @return
 #' @export
 #'
-#' @examples
+#' @import dplyr
+#' @importFrom taxize downstream
+#' @importFrom bold bold_stats
+#' @importFrom methods as
+#'
 split_bold_query <- function(x, chunk_size=100000, quiet=FALSE){
 
   rcds <- bold::bold_stats(x, dataType = "overview") %>%
@@ -1216,7 +1245,7 @@ split_bold_query <- function(x, chunk_size=100000, quiet=FALSE){
       if(!quiet) {message("Found over ", chunk_size, " (chunk_size value) BOLD records for ", x, ", searching for lower taxonomic ranks to reduce query size")}
       downstream2 <- stringr::str_remove(colnames(rcds[1]), ".count")
       lower_ranks <- taxize::downstream(x, db = "bold", downto = downstream2) %>%
-        as("list") %>%
+        methods::as("list") %>%
         dplyr::bind_rows() %>%
         dplyr::filter(rank == stringr::str_to_lower(!!downstream2)) %>%
         dplyr::pull(name)

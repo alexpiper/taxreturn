@@ -7,10 +7,7 @@
 cat_acctax(x)
 }
 \arguments{
-\item{x}{}
-}
-\value{
-
+\item{x}{a gb object}
 }
 \description{
 Helper function for processing taxids

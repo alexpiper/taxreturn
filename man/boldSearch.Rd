@@ -21,7 +21,7 @@ boldSearch(
 
 \item{marker}{the barcode marker used as a search term for the database}
 
-\item{quiet}{(Optional) Print text output}
+\item{quiet}{Whether progress should be printed to the console.}
 
 \item{output}{the output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -38,6 +38,8 @@ or "standard" which outputs the default format for each database. For bold this 
 \item{force}{Option ot overwright files if they already exist}
 
 \item{out_dir}{Output directory to write fasta files to}
+
+\item{db}{(Optional) a database file generated using \code{taxreturn::get_ncbi_taxonomy()} or \code{taxreturn::get_ott_taxonomy()}}
 }
 \value{
 

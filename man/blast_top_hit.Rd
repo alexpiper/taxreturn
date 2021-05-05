@@ -42,6 +42,8 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 \item{delim}{(Required) The delimiter between taxonomic ranks in fasta headers}
 
+\item{tie}{How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.}
+
 \item{args}{(Optional) Extra arguments passed to BLAST}
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}

@@ -7,16 +7,25 @@
 codon_entropy(
   x,
   genetic_code = NULL,
-  forward = TRUE,
-  reverse = FALSE,
+  tryrc = TRUE,
   codon_filter = TRUE,
+  resolve_draws = "majority",
   method = "ML"
 )
 }
 \arguments{
+\item{x}{Sequences in DNAStringset or DNAbin format}
+
 \item{genetic_code}{A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE}
 
-\item{codon_filter}{}
+\item{tryrc}{Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.}
+
+\item{codon_filter}{Whether \code{taxreturn::codon_filter} should be run first to remove sequences containing stop codons or frameshifts.}
+
+\item{resolve_draws}{How draws should be resolved when multiple possible frames produce sequences with no stop codons.
+Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.}
+
+\item{method}{the method employed to estimate entropy. see \code{?entropy::entropy} for more details}
 }
 \value{
 

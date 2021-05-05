@@ -12,6 +12,8 @@ makeblastdb(file, dbtype = "nucl", args = NULL, quiet = FALSE)
 \item{dbtype}{(Optional) Molecule type of database, accepts "nucl" for nucleotide or "prot" for protein.}
 
 \item{args}{(Optional) Extra arguments passed to BLAST}
+
+\item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 }
 \value{
 

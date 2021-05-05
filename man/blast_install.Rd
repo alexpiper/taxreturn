@@ -12,6 +12,8 @@ URL to retrieve BLAST version from.}
 
 \item{dest_dir}{(Optional)  Default "bin"
 Directory to install BLAST within.}
+
+\item{force}{Whether existing installs should be forcefully overwritten}
 }
 \value{
 

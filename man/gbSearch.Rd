@@ -2,7 +2,16 @@
 % Please edit documentation in R/fetch_sequences.R
 \name{gbSearch}
 \alias{gbSearch}
-\title{Genbank search function}
+\title{all \verb{[filter]} 	Retrieves everthing
+Specified \verb{[property]} 	Formal binomial and trinomial
+at or below species level \verb{[property]}
+family \verb{[rank]} 	Rank-based query
+taxonomy genome \verb{[filter]} 	Taxa with a direct link to a genome sequence
+2009/10/21:2020 \verb{[date]} 	Date-bounded query
+mammalia \verb{[subtree]} 	All taxa within the Mammalia
+extinct \verb{[property]} 	Extinct organisms
+Terminal \verb{[property]} 	Terminal nodes in the tree
+loprovencyclife \verb{[filter]} 	Entries with LinkOut links to the Encyclopedia of Life}
 \usage{
 gbSearch(
   x,
@@ -12,7 +21,6 @@ gbSearch(
   output = "h",
   min_length = 1,
   max_length = 2000,
-  subsample = NULL,
   chunk_size = NULL,
   out_dir = NULL,
   compress = FALSE,
@@ -22,10 +30,12 @@ gbSearch(
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
 
+\item{database}{The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.}
+
 \item{marker}{The barcode marker used as a search term for the database.
 If this is set to "mitochondria" or "mitochondrion" it will download full mitochondrial genomes. If set to "genome" it will download entire genomes only.}
 
-\item{quiet}{(Optional) Print text output}
+\item{quiet}{Whether progress should be printed to the console.}
 
 \item{output}{The output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -53,4 +63,7 @@ if left NULL, the default will be 10,000 for regular queries, 1,000 if marker is
 }
 \description{
 Genbank search function
+}
+\details{
+
 }

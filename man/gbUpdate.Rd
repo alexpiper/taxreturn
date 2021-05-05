@@ -27,9 +27,11 @@ gbUpdate(
 
 \item{fasta}{A fasta file or list of fasta files to check for existing sequence accessions}
 
+\item{database}{The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.}
+
 \item{marker}{The barcode marker used as a search term for the database. If this is set to "mitochondria" it will download full mitochondrial genomes.}
 
-\item{quiet}{(Optional) Print text output}
+\item{quiet}{Whether progress should be printed to the console.}
 
 \item{output}{The output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),

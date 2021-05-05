@@ -2,7 +2,7 @@
 % Please edit documentation in R/deprecated.R
 \name{clean_seqs}
 \alias{clean_seqs}
-\title{Clean Sequences with PHMM}
+\title{Clean Sequences with PHMM (DEPRECATED)}
 \usage{
 clean_seqs(
   x,
@@ -12,8 +12,7 @@ clean_seqs(
   maxNs = 0,
   cores = 1,
   quiet = FALSE,
-  progress = FALSE,
-  ...
+  progress = FALSE
 )
 }
 \arguments{
@@ -30,10 +29,12 @@ clean_seqs(
 \item{cores}{The number of CPUs to parallelize the operation over}
 
 \item{quiet}{Whether progress should be printed to the console.}
+
+\item{progress}{Whether a progress bar should be printed.}
 }
 \value{
 
 }
 \description{
-Clean Sequences with PHMM
+Clean Sequences with PHMM (DEPRECATED)
 }

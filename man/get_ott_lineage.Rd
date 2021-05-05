@@ -18,6 +18,8 @@ get_ott_lineage(
 
 \item{db}{an OTT taxonomic database}
 
+\item{output}{Options are "tax_name" to return taxonomic names for each rank in the lineage or "tax_id" to return taxonomic ID's.}
+
 \item{ranks}{the taxonomic ranks to filter to. Default is "kingdom", "phylum", "class", "order", "family", "genus", "species"
 To get strain level ranks, add "terminal" to ranks}
 

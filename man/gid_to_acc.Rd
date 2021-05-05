@@ -23,7 +23,9 @@ Warning, chunk sizes over 300 can be too big for the NCBI servers.}
 
 \item{multithread}{Whether multithreading should be used}
 
-\item{quiet}{(Optional) Print text outputdatabase}
+\item{progress}{Whether a progress bar is displayed.}
+
+\item{quiet}{Whether progress should be printed to the console.}
 }
 \value{
 

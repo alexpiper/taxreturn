@@ -7,13 +7,13 @@
 #'
 #' @return
 #' @export
-#' @import ape
-#' @import Biostrings
 #' @import purrr
+#' @importFrom Biostrings DNA_ALPHABET
+#' @importFrom Biostrings DNAStringSet
+#' @importFrom methods is
 #'
-#' @examples
 DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
-  if(!is(x, "DNAbin")){
+  if(!methods::is(x, "DNAbin")){
     stop("Input must be a DNAbin")
   }
   x %>%
@@ -39,8 +39,8 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
 #'
 #' @return
 #' @export
+#' @importFrom insect char2dna
 #'
-#' @examples
 random_seq <- function(n, length, alphabet = c("A","G","T","C")){
   out <- seq(1, n, 1) %>%
     purrr::map2(length, function(x,y ){
@@ -62,14 +62,12 @@ random_seq <- function(n, length, alphabet = c("A","G","T","C")){
 #'
 #' @return
 #' @export
-#' @import ape
-#' @import Biostrings
 #' @import stringr
+#' @importFrom methods is
 #'
-#' @examples
 acc2hex <- function(x, force=FALSE){
   #Check input format
-  if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
+  if (methods::is(x, "DNAbin") | methods::is(x, "DNAStringSet")) {
     message("Input is ", class(x),", assuming header is in 'Accession|taxid;taxonomy' format")
     #Check if already hexed
     if(.ishex(names(x)[[1]] %>% stringr::str_remove("\\|.*$")) & isFALSE(force)){
@@ -81,7 +79,7 @@ acc2hex <- function(x, force=FALSE){
     names(x) <- names(x) %>%
       stringr::str_remove("^.*(?=\\|)") %>%
       paste0(acc, .)
-  }else  if (is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
+  }else  if (methods::is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;taxonomy' format")
     if(.ishex(x[[1]] %>% stringr::str_remove("\\|.*$")) & isFALSE(force)){
       stop("Accessions are  already in hexadecimal format, set force = TRUE to override this error")
@@ -92,7 +90,7 @@ acc2hex <- function(x, force=FALSE){
     x <- x %>%
       stringr::str_remove("^.*(?=\\|)") %>%
       paste0(acc, .)
-  } else  if (is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
+  } else  if (methods::is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of accessions")
     if(.ishex(x[[1]]) & isFALSE(force)){
       stop("Accessions are  already in hexadecimal format, set force = TRUE to override this error")
@@ -113,14 +111,12 @@ acc2hex <- function(x, force=FALSE){
 #' @param force override checks if string is already hexadecimal
 #' @return
 #' @export
-#' @import ape
-#' @import Biostrings
 #' @import stringr
+#' @importFrom methods is
 #'
-#' @examples
 hex2acc <- function(x, force=FALSE){
   #Check input format
-  if (is(x, "DNAbin") | is(x, "DNAStringSet")) {
+  if (methods::is(x, "DNAbin") | methods::is(x, "DNAStringSet")) {
     message("Input is ", class(x),", assuming header is in 'Accession|taxid;taxonomy' format")
     if(!.ishex(names(x)[[1]] %>% stringr::str_remove("\\|.*$")) & isFALSE(force)){
       stop("Accessions are already in alphanumeric, set force = TRUE to override this error")
@@ -131,7 +127,7 @@ hex2acc <- function(x, force=FALSE){
     names(x) <- names(x) %>%
       str_remove("^.*(?=\\|)") %>%
       paste0(acc, .)
-  }else  if (is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
+  }else  if (methods::is(x, "character") && (stringr::str_detect(x, "\\|") & stringr::str_detect(x, ";"))) {
     message("Detected | and ; delimiters, assuming 'Accession|taxid;taxonomy' format")
     if(!.ishex(x[[1]] %>% stringr::str_remove("\\|.*$")) & isFALSE(force)){
       stop("Accessions are already in alphanumeric, set force = TRUE to override this error")
@@ -142,7 +138,7 @@ hex2acc <- function(x, force=FALSE){
     x <- x %>%
       stringr::str_remove("^.*(?=\\|)") %>%
       paste0(acc, .)
-  } else  if (is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
+  } else  if (methods::is(x, "character") && !(stringr::str_detect(x, "\\|") && stringr::str_detect(x, ";"))) {
     message("Did not detect | and ; delimiters, assuming a vector of accessions")
     if(!.ishex(x[[1]]) & isFALSE(force)){
       stop("Accessions are already in alphanumeric, set force = TRUE to override this error")
@@ -161,7 +157,7 @@ hex2acc <- function(x, force=FALSE){
 #'
 #' @return
 #'
-#' @examples
+#'
 .hex <- function(y){
   paste(charToRaw(y),  collapse="")
 }
@@ -172,7 +168,7 @@ hex2acc <- function(x, force=FALSE){
 #'
 #' @return
 #'
-#' @examples
+#'
 .unhex <- function(y){
   h <- sapply(seq(1, nchar(y), by=2), function(x) substr(y, x, x+1))
   rawToChar(as.raw(strtoi(h, 16L)))
@@ -185,7 +181,7 @@ hex2acc <- function(x, force=FALSE){
 #'
 #' @return
 #'
-#' @examples
+#'
 .ishex <- function(y) {
   h <- sapply(seq(1, nchar(y), by = 2), function(x) substr(y, x, x + 1))
   if(any(is.na(strtoi(h, 16L)))){

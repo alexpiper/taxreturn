@@ -18,9 +18,12 @@ train_idtaxa(
 \arguments{
 \item{x}{A DNAbin}
 
-\item{max_group_size}{The}
+\item{max_group_size}{The maximum size of any taxonomic group. This be set to Inf (infinity) to allow for an unlimited number of sequences per group.}
 
-\item{max_iterations}{The number of iterations to conduct training for}
+\item{max_iterations}{The number of iterations to conduct training for in order to identify  any training sequences whose assigned classifications completely disagree with their predicted classification}
+
+\item{allow_group_removal}{Whether sequences that are the last remaining representatives of an entire group in the training data can be removed
+This can occur if the entire group appears to be misplaced in the taxonomic tree.}
 
 \item{orient}{Training sequences must all be in the same orientation. Set this to TRUE to reorient the sequences if you are unsure.}
 
