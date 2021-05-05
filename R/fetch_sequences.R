@@ -1072,8 +1072,8 @@ gbUpdate <- function(x, fasta, database = "nuccore", marker = c("COI[GENE]", "CO
 #' @param x A taxon name or vector of taxon names to download sequences for.
 #' @param database The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
 #' Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'
-#' @param marker The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix \[GENE]\ will increase the search selectivity.
-#' The default for Genbank is 'COI[Gene] OR COX1[GENE] OR COXI[GENE]', while the default for BOLD is 'COI-5P'.
+#' @param marker The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix \[GENE\] will increase the search selectivity.
+#' The default for Genbank is 'COI\[GENE\] OR COX1\[GENE\] OR COXI\[GENE\]', while the default for BOLD is 'COI-5P'.
 #' If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
 #' If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.
 #' @param downstream Instead of search for the query sequence, this provides the option of instead searching for a downstream taxonomic rank.
