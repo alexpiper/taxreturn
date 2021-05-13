@@ -37,12 +37,12 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
   }
 
   up <- primer[!primer %in% as.raw(c(2, 4))]
-  vitF <- aphid::Viterbi(model, up, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
+  vitF <- aphid::Viterbi(model, up, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
 
   if (tryrc == TRUE) {
     down <- ape::complement(primer)
     down <- down[!down %in% as.raw(c(2, 4))]
-    vitR <- aphid::Viterbi(model, down, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA")
+    vitR <- aphid::Viterbi(model, down, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
     if (vitF$score > vitR$score && vitF$score > min_score) {
       if (!quiet) {
         message("Forward complement matched alignment")
@@ -65,8 +65,7 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
     path <- vitF$path
     score <- vitF$score
   } else {
-    score <- max(vitF$score, vitR$score)
-    out <- data.frame(primer = input, start = NA, end = NA, score=score)
+    out <- data.frame(primer = input, start = NA, end = NA, score=vitF$score)
     return(out)
     Stop("Error: Forward complement of primer was below min_score")
   }
