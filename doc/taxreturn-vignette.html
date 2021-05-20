@@ -12,7 +12,7 @@
 
 <meta name="author" content="Author: Alexander M Piper" />
 
-<meta name="date" content="2021-05-05" />
+<meta name="date" content="2021-05-20" />
 
 <title>taxreturn</title>
 
@@ -141,7 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1 class="title toc-ignore">taxreturn</h1>
 <h3 class="subtitle">An R package for download and curation of public DNA barcode reference data</h3>
 <h4 class="author">Author: Alexander M Piper</h4>
-<h4 class="date">2021-05-05</h4>
+<h4 class="date">2021-05-20</h4>
 
 
 
@@ -186,34 +186,33 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="download-sequences-from-ncbi-genbank" class="section level2">
 <h2>Download sequences from NCBI GenBank</h2>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Fetch sequences from GenBank by searching for a taxon name</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, </span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">downstream=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;COI[GENE] OR COX1[GENE] OR COXI[GENE]&quot;</span>, </span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span><span class="cn">FALSE</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">quiet=</span><span class="cn">FALSE</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI[GENE] OR COX1[GENE] OR COXI[GENE]&quot;</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>genbank_seqs <span class="ot">&lt;-</span> <span class="fu">fetch_seqs</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI[GENE] OR COX1[GENE] OR COXI[GENE]&quot;</span>, </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>genbank_seqs <span class="ot">&lt;-</span> <span class="fu">fetch_seqs</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI[GENE] OR COX1[GENE] OR COXI[GENE]&quot;</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 </div>
 <div id="download-sequences-from-bold" class="section level2">
 <h2>Download sequences from BOLD</h2>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Fetch sequences from BOLD by searching for a taxon name</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;bold&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;bold&quot;</span>, </span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">downstream=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;COI-5P&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, </span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;bold&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;bold&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI-5P&quot;</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">force=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>bold_seqs <span class="ot">&lt;-</span> <span class="fu">fetch_seqs</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;bold&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI-5P&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>bold_seqs <span class="ot">&lt;-</span> <span class="fu">fetch_seqs</span>(</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;bold&quot;</span>, <span class="at">marker=</span><span class="st">&quot;COI-5P&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 </div>
 <div id="download-mitochondrial-genomes-from-genbank" class="section level2">
@@ -221,19 +220,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the map_to_model function to pull out our target region from the genome.</p>
 <p>The fetch_seqs function accepts a special input argument of marker=“mitochondria” to do this.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fetch mitochondrial genomes from genbank by searching for a taxon name</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Scaptodrosophila&quot;</span>, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">quiet=</span><span class="cn">FALSE</span>, <span class="at">marker=</span><span class="st">&quot;mitochondria&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">force=</span><span class="cn">TRUE</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch_seqs</span>(</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">out_dir=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">quiet=</span><span class="cn">FALSE</span>,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">marker=</span><span class="st">&quot;mitochondria&quot;</span>, <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">force=</span><span class="cn">TRUE</span>,</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">compress=</span><span class="cn">TRUE</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>genbank_mito <span class="ot">&lt;-</span> <span class="fu">fetch_seqs</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Drosophila suzukii&quot;</span>, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">marker=</span><span class="st">&quot;mitochondria&quot;</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>, <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="do">## OR fetch sequences from a species list</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>spp_list <span class="ot">&lt;-</span> <span class="fu">readLines</span>(<span class="st">&quot;species_list.txt&quot;</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>genbank_mito <span class="ot">&lt;-</span> <span class="fu">fetch_seqs</span>(</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  spp_list, <span class="at">database=</span><span class="st">&quot;genbank&quot;</span>, <span class="at">marker=</span><span class="st">&quot;mitochondria&quot;</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">&quot;gb-binom&quot;</span>,  <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 </div>
 </div>
 <div id="curating-public-reference-sequences" class="section level1">
@@ -267,22 +265,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Firstly we will merge the sequences from each database together. As BOLD and GenBank share a number of sequences, we subset the merged file to only the unique sequences to speed things up.</p>
 <p>As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases outside the range defined by the model. As here we are looking at a coding gene, we will set check_frame to TRUE to ensure that any insertions or deletions are in multiples of 3.</p>
 <p>When extracting the target region from longer sequences such as mitochondrial genomes, the dynamic programming algorithm used to align to the PHMM can take a very long time. Therefore, sequences that are more than twice the length of the input model are split into chunks, and a rapid k-mer pre-screening is used to find the closest matching chunk, which is used to seed the PHMM alignment. This k-mer screening is also used as a rapid screen of shorter sequences to ensure they arent too diverged to be worthwhile aligning to the PHMM. The stringency of this screen can be modified using the kmer_threshold parameter, with the default excluding any sequence more than 30% diverged at k=5. To further speed things up, you can set multithread to the number of cores you wish to use.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#read in all fastas and merge</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>seqs <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">readDNAStringSet</span>(<span class="fu">list.files</span>(<span class="st">&quot;genbank&quot;</span>, <span class="at">pattern =</span> <span class="st">&quot;.fa&quot;</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">readDNAStringSet</span>(<span class="fu">list.files</span>(<span class="st">&quot;bold&quot;</span>, <span class="at">pattern =</span> <span class="st">&quot;.fa&quot;</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove those sequnce accessions that are identical across both databases</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Using a regex that splits to just the accessions</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>uniq_seqs <span class="ot">&lt;-</span> seqs[<span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">str_extract</span>(<span class="fu">names</span>(seqs), <span class="st">&quot;^.*</span><span class="sc">\\</span><span class="st">|&quot;</span> )),] </span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#remove non-homologous sequences</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>filtered <span class="ot">&lt;-</span> <span class="fu">map_to_model</span>(</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  uniq_seqs, model, <span class="at">min_score =</span> <span class="dv">100</span>, <span class="at">min_length =</span> <span class="dv">200</span>, <span class="at">max_N=</span><span class="cn">Inf</span>, <span class="at">max_gap=</span><span class="cn">Inf</span>, </span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">shave=</span><span class="cn">TRUE</span>, <span class="at">check_frame=</span><span class="cn">TRUE</span>, <span class="at">kmer_threshold =</span> <span class="fl">0.3</span>, <span class="at">k=</span><span class="dv">5</span>,</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge all downloaded sequences</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>seqs <span class="ot">&lt;-</span> <span class="fu">concat_DNAbin</span>(genbank_seqs, bold_seqs, genbank_mito)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove those sequnce accessions that are identical across both databases</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Using a regex that splits to just the accessions</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>uniq_seqs <span class="ot">&lt;-</span> seqs[<span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">str_extract</span>(<span class="fu">names</span>(seqs), <span class="st">&quot;^.*</span><span class="sc">\\</span><span class="st">|&quot;</span> ))] </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#remove non-homologous sequences</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>filtered <span class="ot">&lt;-</span> <span class="fu">map_to_model</span>(</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  uniq_seqs, model, <span class="at">min_score =</span> <span class="dv">100</span>, <span class="at">min_length =</span> <span class="dv">200</span>, <span class="at">max_N=</span><span class="cn">Inf</span>, <span class="at">max_gap=</span><span class="cn">Inf</span>, </span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">shave=</span><span class="cn">TRUE</span>, <span class="at">check_frame=</span><span class="cn">TRUE</span>, <span class="at">kmer_threshold =</span> <span class="fl">0.3</span>, <span class="at">k=</span><span class="dv">5</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">multithread =</span> <span class="cn">FALSE</span>, <span class="at">quiet=</span><span class="cn">FALSE</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 </div>
 <div id="resolve-contaminated-sequences-and-misannotated-taxonomy" class="section level2">
 <h2>Resolve Contaminated sequences and misannotated taxonomy</h2>
@@ -305,7 +300,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Get current accession numbers</span></span>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>acc <span class="ot">&lt;-</span> <span class="fu">str_replace</span>(<span class="fu">names</span>(filtered), <span class="st">&quot;(?:.(?!;))+$&quot;</span>, <span class="st">&quot;&quot;</span>)</span>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove any bad accessions</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove any accessions that were found to be in mixed clusters</span></span>
 <span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>purged  <span class="ot">&lt;-</span> filtered[<span class="sc">!</span>acc <span class="sc">%in%</span> rem]</span></code></pre></div>
 </div>
 <div id="optional-filter-for-stop-codons" class="section level2">
@@ -313,7 +308,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>As the COI barcode is a protein coding region, underlying evolutionary constraints mean that any sequences containing stop codons or indels of lengths which are not a multiple of 3 commonly indicate pseudogenes.</p>
 <p>The below function will remove any sequences containing these patterns. If you are not working with a protein coding gene, skip this section.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#SGC4 is invertebrate mitochondrial genetic code</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>codon_filt <span class="ot">&lt;-</span> <span class="fu">codon_filter</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>purged <span class="ot">&lt;-</span> <span class="fu">codon_filter</span>(</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  purged, <span class="at">genetic_code =</span> <span class="st">&quot;SGC4&quot;</span>, <span class="at">tryrc =</span> <span class="cn">TRUE</span>, <span class="at">resolve_draws =</span> <span class="st">&quot;majority&quot;</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 </div>
@@ -327,7 +322,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="prune-large-groups" class="section level2">
 <h2>Prune large groups</h2>
-<p>In many cases groups of taxa are over-represented in databases, which can slow down and bias the taxonomic assignment process. Here we prune over-represented groups down to 5 sequences. This function has the option of discarding these sequences by length (ie removing smaller sequences first), or randomly.</p>
+<p>In many cases groups of taxa are over-represented in databases, which can slow down and bias the taxonomic assignment process. Here we prune over-represented groups down to 5 sequences. This function has the option of discarding these sequences by length (removing smaller sequences first), or randomly.</p>
 <p>We can also choose to de-duplicate the sequences here, which will remove all completely identical sequences before pruning down the group sizes.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Prune group sizes down to 5, removing all identical sequences first</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>pruned <span class="ot">&lt;-</span> <span class="fu">prune_groups</span>(</span>
@@ -371,7 +366,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(hierarchy) <span class="sc">%&gt;%</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_split_fixed</span>(<span class="st">&quot;;&quot;</span>, <span class="at">n=</span><span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">separate</span>(V1, <span class="at">into=</span><span class="fu">c</span>(<span class="st">&quot;Sequences&quot;</span>, <span class="st">&quot;taxids&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">separate</span>(V1, <span class="at">into=</span><span class="fu">c</span>(<span class="st">&quot;Sequences&quot;</span>, <span class="st">&quot;tax_ids&quot;</span>), <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\\</span><span class="st">|&quot;</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  magrittr<span class="sc">::</span><span class="fu">set_colnames</span>(<span class="fu">c</span>(<span class="st">&quot;Sequences&quot;</span>, <span class="st">&quot;tax_ids&quot;</span>, <span class="st">&quot;kingdom&quot;</span>, <span class="st">&quot;phylum&quot;</span>,</span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                           <span class="st">&quot;class&quot;</span>, <span class="st">&quot;order&quot;</span>, <span class="st">&quot;family&quot;</span>, <span class="st">&quot;genus&quot;</span>, <span class="st">&quot;species&quot;</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise_all</span>(n_distinct)</span></code></pre></div>

@@ -2,7 +2,16 @@
 % Please edit documentation in R/fetch_sequences.R
 \name{fetch_genbank}
 \alias{fetch_genbank}
-\title{Fetch sequences from genbank}
+\title{all \verb{[filter]} 	Retrieves everthing
+Specified \verb{[property]} 	Formal binomial and trinomial
+at or below species level \verb{[property]}
+family \verb{[rank]} 	Rank-based query
+taxonomy genome \verb{[filter]} 	Taxa with a direct link to a genome sequence
+2009/10/21:2020 \verb{[date]} 	Date-bounded query
+mammalia \verb{[subtree]} 	All taxa within the Mammalia
+extinct \verb{[property]} 	Extinct organisms
+Terminal \verb{[property]} 	Terminal nodes in the tree
+loprovencyclife \verb{[filter]} 	Entries with LinkOut links to the Encyclopedia of Life}
 \usage{
 fetch_genbank(
   x,
@@ -43,7 +52,13 @@ or "standard" which outputs the default format for each database. For bold this 
 
 \item{chunk_size}{Split up the query into chunks of this size to avoid overloading API servers. if left NULL, the default will be 300}
 
+\item{db}{a database file generated using \code{taxreturn::get_ncbi_taxonomy()}. Generated automatically if NULL.}
+
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
+
 \item{quiet}{Whether progress should be printed to the console.}
+
+\item{progress}{A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.}
 }
 \value{
 

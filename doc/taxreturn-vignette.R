@@ -27,49 +27,47 @@ knitr::opts_chunk$set(
 
 ## ----Download all sequences, eval=FALSE, include=TRUE-------------------------
 #  ## Fetch sequences from GenBank by searching for a taxon name
-#  fetch_seqs(
-#    "Scaptodrosophila", database="genbank", out_dir="genbank",
-#    downstream=FALSE, marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]",
-#    output = "gb-binom", compress=TRUE, force=TRUE, multithread =FALSE
+#  genbank_seqs <- fetch_seqs(
+#    "Scaptodrosophila", database="genbank", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]",
+#    output = "gb-binom", multithread = FALSE, quiet=FALSE
 #    )
 #  
 #  ## OR fetch sequences from a species list
 #  spp_list <- readLines("species_list.txt")
-#  fetch_seqs(
-#    spp_list, database="genbank", out_dir="genbank", quiet=FALSE,
-#    output = "gb-binom", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]",
-#    compress=TRUE, force=TRUE, multithread = FALSE
+#  
+#  genbank_seqs <- fetch_seqs(
+#    spp_list, database="genbank", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]",
+#    output = "gb-binom", multithread = FALSE, quiet=FALSE
 #    )
 
 ## ----Download BOLD Sequences, eval=FALSE, include=TRUE------------------------
 #  ## Fetch sequences from BOLD by searching for a taxon name
-#  fetch_seqs(
-#    "Scaptodrosophila", database="bold", out_dir="bold",
-#    downstream=FALSE, marker="COI-5P", output = "gb-binom",
-#    compress=TRUE, force=TRUE, multithread = FALSE
+#  bold_seqs <- fetch_seqs(
+#    "Scaptodrosophila", database="bold", marker="COI-5P", output = "gb-binom",
+#    multithread = FALSE, quiet=FALSE
 #    )
 #  
 #  ## OR fetch sequences from a species list
 #  spp_list <- readLines("species_list.txt")
-#  fetch_seqs(
-#    spp_list, database="bold", out_dir="bold", marker="COI-5P",
-#    output = "gb-binom", compress=TRUE, force=TRUE, multithread = FALSE
+#  
+#  bold_seqs <- fetch_seqs(
+#    spp_list, database="bold", marker="COI-5P", output = "gb-binom",
+#    multithread = FALSE, quiet=FALSE
 #    )
 
 ## ----Download mitochondria, eval=FALSE, include=TRUE--------------------------
 #  # Fetch mitochondrial genomes from genbank by searching for a taxon name
-#  fetch_seqs(
-#    "Scaptodrosophila", database="genbank", out_dir="genbank",
-#    quiet=FALSE, marker="mitochondria", output = "gb-binom", force=TRUE,
-#    compress=TRUE, multithread = FALSE
+#  genbank_mito <- fetch_seqs(
+#    "Drosophila suzukii", database="genbank", marker="mitochondria",
+#    output = "gb-binom", multithread = FALSE, quiet=FALSE
 #    )
 #  
 #  ## OR fetch sequences from a species list
 #  spp_list <- readLines("species_list.txt")
-#  fetch_seqs(
-#    spp_list, database="genbank", out_dir="genbank", quiet=FALSE,
-#    marker="mitochondria", output = "gb-binom", force=TRUE,
-#    compress=TRUE, multithread = FALSE
+#  
+#  genbank_mito <- fetch_seqs(
+#    spp_list, database="genbank", marker="mitochondria",
+#    output = "gb-binom",  multithread = FALSE, quiet=FALSE
 #    )
 
 ## ----load model---------------------------------------------------------------
@@ -95,15 +93,12 @@ knitr::opts_chunk$set(
 #  model <- aphid::derivePHMM(amplicon_filtered)
 
 ## ----map to model-------------------------------------------------------------
-#  #read in all fastas and merge
-#  seqs <- c(
-#    readDNAStringSet(list.files("genbank", pattern = ".fa", full.names = TRUE)),
-#    readDNAStringSet(list.files("bold", pattern = ".fa", full.names = TRUE))
-#    )
+#  # Merge all downloaded sequences
+#  seqs <- concat_DNAbin(genbank_seqs, bold_seqs, genbank_mito)
 #  
 #  # Remove those sequnce accessions that are identical across both databases
 #  # Using a regex that splits to just the accessions
-#  uniq_seqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" )),]
+#  uniq_seqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" ))]
 #  
 #  #remove non-homologous sequences
 #  filtered <- map_to_model(
@@ -132,12 +127,12 @@ knitr::opts_chunk$set(
 #  # Get current accession numbers
 #  acc <- str_replace(names(filtered), "(?:.(?!;))+$", "")
 #  
-#  # Remove any bad accessions
+#  # Remove any accessions that were found to be in mixed clusters
 #  purged  <- filtered[!acc %in% rem]
 
 ## ----Stop codons--------------------------------------------------------------
 #  #SGC4 is invertebrate mitochondrial genetic code
-#  codon_filt <- codon_filter(
+#  purged <- codon_filter(
 #    purged, genetic_code = "SGC4", tryrc = TRUE, resolve_draws = "majority"
 #    )
 
@@ -183,7 +178,7 @@ knitr::opts_chunk$set(
 #  names(hierarchy) %>%
 #    str_split_fixed(";", n=8) %>%
 #    as_tibble() %>%
-#    tidyr::separate(V1, into=c("Sequences", "taxids")) %>%
+#    tidyr::separate(V1, into=c("Sequences", "tax_ids"), sep = "\\|") %>%
 #    magrittr::set_colnames(c("Sequences", "tax_ids", "kingdom", "phylum",
 #                             "class", "order", "family", "genus", "species")) %>%
 #    summarise_all(n_distinct)

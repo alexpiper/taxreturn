@@ -8,19 +8,15 @@ fetch_seqs(
   x,
   database,
   marker = NULL,
-  downstream = FALSE,
-  output = "h",
+  output = "gb-binom",
   min_length = 1,
   max_length = 2000,
   subsample = FALSE,
   chunk_size = NULL,
-  out_dir = NULL,
-  compress = TRUE,
-  force = FALSE,
+  db = NULL,
   multithread = FALSE,
-  quiet = TRUE,
-  progress = FALSE,
-  db = NULL
+  quiet = FALSE,
+  progress = FALSE
 )
 }
 \arguments{
@@ -33,9 +29,6 @@ Alternatively sequences can be downloaded from the Barcode of Life Data System (
 The default for Genbank is 'COI[GENE] OR COX1[GENE] OR COXI[GENE]', while the default for BOLD is 'COI-5P'.
 If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
 If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.}
-
-\item{downstream}{Instead of search for the query sequence, this provides the option of instead searching for a downstream taxonomic rank.
-This is useful for big queries where >100k sequences will be downloaded. For example, when x is 'Insecta', and downsteam is Order, this will download all Orders within insecta and thus not overload the query. Default is FALSE.}
 
 \item{output}{The output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (Accession;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -56,15 +49,9 @@ This can be useful for ensuring no off-target sequences are returned. Default 20
 if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
 For BOLD queries the default is 100,000 returned records}
 
-\item{out_dir}{Output directory to write fasta files to}
+\item{db}{a database file generated using \code{taxreturn::get_ncbi_taxonomy()}. Generated automatically if NULL.}
 
-\item{compress}{Option to compress output fasta files using gzip}
-
-\item{force}{Option to overwrite files if they already exist}
-
-\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
-Note, the way this is currently implemented, a seperate worker thread is assigned to each taxon, therefore multithreading will only work
-if x is a vector, or of downstream is being used.}
+\item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
 
 \item{quiet}{Whether progress should be printed to the console.}
 

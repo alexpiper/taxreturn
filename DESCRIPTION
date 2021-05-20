@@ -28,13 +28,11 @@ Imports:
     stringr,
     bold,
     parallel,
-    biofiles,
     data.table,
     data.tree,
     dplyr,
     entropy,
     magrittr,
-    pbapply,
     purrr,
     taxize,
     tibble,
@@ -55,9 +53,8 @@ Imports:
     phytools,
     openssl,
     methods,
-    BiocManager
-Remotes: 
-    gschofl/biofiles
+    BiocManager,
+    stats
 BiocViews:
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1.9001

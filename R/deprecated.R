@@ -10,81 +10,12 @@
 #' @param quiet Whether progress should be printed to the console.
 #' @param progress Whether a progress bar should be printed.
 #'
-#' @import stringr
-#' @import parallel
-#' @importFrom pbapply pblapply
-#' @importFrom insect subset.DNAbin
-#' @importFrom ape as.DNAbin
-#' @importFrom ape base.freq
-#' @importFrom ape as.character.DNAbin
-#' @importFrom methods is
 #' @return
 #' @export
 #'
 clean_seqs <- function(x, model, min_score = 100, shave = TRUE, maxNs = 0, cores = 1,
                        quiet = FALSE, progress = FALSE) {
-  .Deprecated("taxreturn::map_to_model", package="taxreturn",  old = as.character(sys.call(sys.parent()))[1L])
-  time <- Sys.time() # get time
-
-  # Convert to DNAbin
-  if (!methods::is(x, "DNAbin")) {
-    x <- ape::as.DNAbin(x)
-    if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
-  }
-  if (!methods::is(model, "PHMM")) {
-    stop("Model needs to be a PHMM object")
-  }
-
-  nseq <- length(x)
-
-  if (cores == 1 && progress == TRUE) {
-    requireNamespace("pbapply", quietly = TRUE)
-    x <- pbapply::pblapply(x, filt_phmm, model, min_score)
-  } else if (cores == 1 && progress == FALSE) {
-    x <- lapply(x, filt_phmm, model, min_score)
-  } else if (cores > 1 && progress == TRUE) {
-    stop("Progress bar currently not supported for multithreading")
-  } else {
-    navailcores <- parallel::detectCores()
-    if (identical(cores, "autodetect")) cores <- navailcores - 1
-    if (!(mode(cores) %in% c("numeric", "integer"))) stop("Invalid 'cores'")
-    if (cores > navailcores) stop("Number of cores is more than available")
-
-    if (cores > 1) {
-      if (!quiet) cat("Multithreading with", cores, "cores\n")
-
-      cores <- parallel::makeCluster(cores, outfile = "out.txt")
-      # parallel::clusterExport(cores, c("model", "min_score"))
-      junk <- parallel::clusterEvalQ(cores, sapply(c("aphid", "insect", "ape"), require, character.only = TRUE)) # Discard result
-
-      x <- parallel::parLapply(cores, x, filt_phmm, model, min_score)
-      parallel::stopCluster(cores)
-    } else {
-      x <- lapply(x, filt_phmm, model, min_score)
-    }
-  }
-
-  discards <- sapply(x, is.null)
-  nseq <- sum(!discards)
-
-  if (nseq > 0) {
-    if (!quiet) cat("Retained", nseq, "sequences after alignment to PHMM\n")
-    scores <- unlist(lapply(x, function(s) attr(s, "score")), use.names = FALSE)
-    x <- x[!discards]
-    x <- ape::as.DNAbin(ape::as.character.DNAbin(x))
-  } else {
-    if (!quiet) cat("None of the sequences met PHMM specificity criteria. Returning NULL\n")
-    x <- NULL
-  }
-  if (!quiet) cat("Filtering ambiguous sequences\n")
-  discards <- sapply(x, function(s) sum(s == 0xf0) / length(s)) > maxNs
-  x <- insect::subset.DNAbin(x, subset = !discards)
-  if (!quiet) cat(length(x), "sequences retained after applying ambiguity filter\n")
-  if (!quiet) cat("Bases overhanging PHMM shaved from alignment\n")
-  if (!quiet) cat("Done\n")
-  time <- Sys.time() - time
-  if (!quiet) (message(paste0("finished in ", format(time, digits = 2))))
-  return(x)
+  .Defunct("taxreturn::map_to_model", package="taxreturn")
 }
 
 # Propagate taxonomic assignments to species level ------------------------
@@ -158,13 +89,6 @@ propagate_tax <- function(tax, from = "Family") {
 #' @param quiet Whether progress should be printed to the console.
 #' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
 #'
-#' @import dplyr
-#' @import stringr
-#' @import purrr
-#' @import future
-#' @import furrr
-#' @importFrom taxize downstream
-#' @importFrom methods as
 #'
 #' @return
 #' @export
@@ -173,101 +97,8 @@ fetchSeqs <- function(x, database, marker = NULL, downstream = FALSE,
                       output = "h", min_length = 1, max_length = 2000,
                       subsample=FALSE, chunk_size=NULL, out_dir = NULL, compress = TRUE,
                       force=FALSE, multithread = FALSE, quiet = TRUE, progress=FALSE) {
-  .Deprecated("taxreturn::fetch_seqs", package="taxreturn",  old = as.character(sys.call(sys.parent()))[1L])
-
-
-  if(!database %in% c("nuccore", "genbank", "bold")) {
-    stop("database is invalid. See help page for more details")
-  }
-
-  if (!output %in% c("standard", "h", "binom", "gb", "bold", "gb-binom")) {
-    stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
-  }
-
-  #stop if subsample and BOLD is true
-  if (is.numeric(subsample ) & database=="bold"){ stop("Subsampling is currently not supported for BOLD")}
-
-  # Get NCBI taxonomy database if NCBI format outputs are desired
-  if (database == "bold" && output %in% c("gb", "gb-binom")) {
-    db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
-  }
-
-  #Define directories
-  if (is.null(out_dir)) {
-    out_dir <- database
-    if (!quiet) (message(paste0("No input out_dir given, saving output file to: ", out_dir)))
-  }
-  if (!dir.exists(out_dir)) {
-    dir.create(out_dir)
-  }
-  out_dir <- normalizePath(out_dir)
-
-  # Evaluate downstream
-  if (is.character(downstream)) {
-    if (!quiet) cat(paste0("Getting downstream taxa to the level of: ", downstream, "\n"))
-
-    taxlist <- taxize::downstream(x, db = switch(database, bold = "bold", genbank = "ncbi", nuccore = "ncbi"),
-                                  downto = downstream) %>%
-      methods::as("list") %>%
-      dplyr::bind_rows() %>%
-      dplyr::filter(rank == stringr::str_to_lower(!!downstream)) %>%
-      dplyr::mutate(downloaded = FALSE)
-
-    if (nrow(taxlist) > 0) {
-      taxon <- switch(database, bold = taxlist$name, genbank = taxlist$childtaxa_name, nuccore = taxlist$childtaxa_name)
-    } else {
-      (taxon <- x)
-    }
-    if (!quiet) cat(paste0(length(taxon), " downstream taxa found\n"))
-  } else {
-    taxon <- x
-  }
-
-  # Setup multithreading - only makes sense if downstream = TRUE
-  setup_multithread(multithread = multithread, quiet=quiet)
-
-  # Genbank
-  if (database %in% c("genbank", "nuccore")) {
-    if (subsample==FALSE) {
-      message("Downloading from genbank - No subsampling")
-      res <-  furrr::future_map_dfr(
-        taxon, gbSearch, database = database, marker = marker,
-        output = output, min_length = min_length, max_length = max_length,
-        compress = compress, chunk_size=chunk_size, out_dir= out_dir,
-        force=force, quiet = quiet, .progress = progress)
-
-    } else if (is.numeric(subsample)){
-      message("Downloading from genbank - With subsampling")
-      res <-  furrr::future_map_dfr(
-        taxon, gbSearch_subsample, database = database, marker = marker,
-        out_dir = out_dir, output = output, subsample = subsample,
-        min_length = min_length, max_length = max_length, chunk_size=chunk_size,
-        force=force, compress = compress, quiet = quiet,  .progress = progress)
-    }
-
-  } else if (database == "bold") {
-    # Split any querys above chunk_size
-    if(is.null(chunk_size)){
-      chunk_size <- 100000
-    }
-    bold_taxon <- furrr::future_map(taxon, split_bold_query, chunk_size=chunk_size, quiet=quiet, .progress = progress) %>%
-      unlist()
-
-    if(!quiet) {message("Downloading ", length(bold_taxon)," taxa from BOLD")}
-    res <- furrr::future_map(
-      bold_taxon, boldSearch, marker = marker, db=db,
-      out_dir = out_dir, out_file = NULL, output = output,
-      compress = compress, quiet = quiet,  .progress = progress, force=force)
-  }
-
-  # Explicitly close multisession workers
-  future::plan(future::sequential)
-
-  # Return results summary
-  return(res %>%
-           dplyr::bind_rows())
+  .Defunct("taxreturn::fetch_seqs", package="taxreturn")
 }
-
 
 # Make Blast DB -----------------------------------------------------------
 

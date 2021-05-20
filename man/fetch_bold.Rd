@@ -2,16 +2,9 @@
 % Please edit documentation in R/fetch_sequences.R
 \name{fetch_bold}
 \alias{fetch_bold}
-\title{Title}
+\title{Fetch sequences from BOLD}
 \usage{
-fetch_bold(
-  x,
-  marker = "COI-5P",
-  output = "gb-binom",
-  quiet = FALSE,
-  db = NULL,
-  update = NULL
-)
+fetch_bold(x, marker = "COI-5P", output = "gb-binom", quiet = FALSE, db = NULL)
 }
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
@@ -34,5 +27,5 @@ or "standard" which outputs the default format for each database. For bold this 
 
 }
 \description{
-Title
+Fetch sequences from BOLD
 }
