@@ -5,12 +5,14 @@
 \title{Split bold query
 This function recursively splits a bold taxonomic query until the amount of records returned is under chunk_size}
 \usage{
-split_bold_query(x, chunk_size = 1e+05, quiet = FALSE)
+split_bold_query(x, chunk_size = 1e+05, split_if_under = FALSE, quiet = FALSE)
 }
 \arguments{
 \item{x}{The input taxonomic query}
 
 \item{chunk_size}{The maximum amount of records to return per query}
+
+\item{split_if_under}{whether to split the query down 1 level even if already below chunksize. This can be useful for making suitable queries for multithread searching.}
 
 \item{quiet}{Whether progress should be printed to the console.}
 }

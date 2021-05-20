@@ -377,6 +377,15 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
 }
 
 # Multithread -------------------------------------------------------------
+#' Setup multithreading
+#'
+#' @param multithread Number of cores
+#' @param quiet Whether progress should be printed to console
+#'
+#' @return
+#' @import future
+#'
+#' @examples
 setup_multithread <- function(multithread, quiet=FALSE){
   ncores <- future::availableCores() -1
   if(isTRUE(multithread)){
@@ -387,7 +396,7 @@ setup_multithread <- function(multithread, quiet=FALSE){
     cores <- multithread
     if(cores > ncores){
       cores <- ncores
-      message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
+      warning("The value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
     }
     if(!quiet){message("Multithreading with ", cores, " cores")}
     future::plan(future::multiprocess, workers=cores)
@@ -398,6 +407,15 @@ setup_multithread <- function(multithread, quiet=FALSE){
   )
 }
 
+#' Setup parallel
+#'
+#' @param multithread Number of cores
+#' @param quiet Whether progress should be printed to console
+#'
+#' @return
+#' @importFrom future availableCores
+#'
+#' @examples
 setup_para <- function(multithread, quiet=FALSE){
   ncores <- future::availableCores() -1
   if(isTRUE(multithread)){
@@ -407,7 +425,7 @@ setup_para <- function(multithread, quiet=FALSE){
     cores <- multithread
     if(cores > ncores){
       cores <- ncores
-      message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
+      warning("The value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
     }
     if(!quiet){message("Multithreading with ", cores, " cores")}
   } else if(isFALSE(multithread) | multithread==1){

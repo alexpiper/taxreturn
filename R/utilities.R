@@ -101,6 +101,48 @@ acc2hex <- function(x, force=FALSE){
   return(x)
 }
 
+#' Concatenate DNAbin objects while preserving attributes.
+#' This function joins two or more \code{DNAbin} objects, retaining any
+#'   attributes whose lengths match those of the input objects (e.g. "species",
+#'   "lineage" and/or "taxID" attributes).
+#' @param ... \code{DNAbin} objects, or list of DNAbins to be concatenated.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+concat_DNAbin <- function(...){
+  dots <- list(...)
+  if(is.list(dots[[1]])){
+    dots <- dots[[1]]
+  }
+  nlsts <- length(dots)
+  DNA <- any(sapply(dots, class) == "DNAbin")
+  if(nlsts == 0) return(NULL)
+  if(nlsts == 1) return(dots[[1]])
+  islist <- sapply(dots, is.list)
+  for(i in which(!islist)){
+    tmpattr <- attributes(dots[[i]])
+    attributes(dots[[i]]) <- NULL
+    dots[[i]] <- list(dots[[i]])
+    attributes(dots[[i]]) <- tmpattr
+  }
+  dots <- lapply(dots, unclass)
+  findattr <- function(x){
+    names(attributes(x))[sapply(attributes(x), length) == length(x)]
+  }
+  attrlist <- lapply(dots, findattr)
+  ual <- unique(unlist(attrlist, use.names = FALSE))
+  validattrs <- ual[sapply(ual, function(e) all(sapply(attrlist, function(g) e %in% g)))]
+  validattrs <- validattrs[!validattrs %in% c("names", "class")]
+  res <- unlist(dots, recursive = FALSE, use.names = TRUE)
+  for(i in validattrs){
+    attr(res, i) <- unlist(lapply(dots, attr, i), use.names = FALSE)
+  }
+  class(res) <- "DNAbin"
+  return(res)
+}
+
 
 # Hexadecimal coding to accession -----------------------------------------
 #' Hexadecimal coding to accession numberD
@@ -190,3 +232,5 @@ hex2acc <- function(x, force=FALSE){
     return(TRUE)
   }
 }
+
+

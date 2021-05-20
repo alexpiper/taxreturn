@@ -72,4 +72,5 @@ seqs, db, rank="species",
 threshold=0.99, confidence=0.6, quiet=FALSE
 )
 }
+
 }

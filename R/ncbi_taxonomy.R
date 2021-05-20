@@ -2,7 +2,7 @@
 #'
 #' @param dest_dir A directory to save the downloaded ncbi taxdump files. If empty a new folder in the working directory will be created
 #' @param include_synonyms Whether synonyms should be included in the database
-#' @param force Whether already downloaded files should be overwritten
+#' @param force Whether already downloaded files should be overwrittenget
 #'
 #' @return
 #' @export
@@ -73,6 +73,7 @@ get_ncbi_taxonomy <- function(dest_dir, include_synonyms = TRUE, force=FALSE) {
 #' @importFrom tibble as_tibble
 #'
 get_ncbi_lineage <- function(x, db){
+  if(missing(x)){stop("x must be a DNAbin or DNAStringSet object")}
   if(missing(db)){ db <- taxreturn::get_ncbi_taxonomy()}
   cat("Getting taxonomic lineage from taxids\n")
   na_taxids <- names(x)[stringr::str_extract(names(x), "(?<=\\|).+?(?=;)") == "NA"]
@@ -81,7 +82,7 @@ get_ncbi_lineage <- function(x, db){
   }
   lineage <- names(x) %>%
     tibble::as_tibble() %>%
-    tidyr::separate(col=value, into=c("acc", "tax_id", "genus", "species"), sep="\\||;| ", extra="merge")%>%
+    tidyr::separate(col=value, into=c("acc", "tax_id", "genus", "species"), sep="\\||;| |_", extra="merge")%>%
     dplyr::mutate(tax_id = suppressWarnings(as.numeric(tax_id))) %>%
     dplyr::left_join (db %>% dplyr::select(-species, -genus), by = "tax_id")  %>%
     tidyr::unite(col = Acc, c(acc, tax_id), sep = "|")
@@ -104,7 +105,7 @@ get_ncbi_lineage <- function(x, db){
 #'
 get_ncbi_synonyms <- function(dir=NULL, recurse=TRUE, quiet=FALSE) {
   if (is.null(dir)){
-    if(!quiet){message("Dir is null, finding ncbi_taxdump directory using recursion")}
+    if(!quiet){message("Dir is NULL, searching subdirectories for ncbi_taxdump")}
     dir <- fs::dir_ls(path = getwd(), type = "directory", glob = "*ncbi_taxdump", recurse = recurse)
     if(length(dir) >0){
       if(!quiet){message("ncbi_taxdump found at ", dir)}
@@ -124,7 +125,7 @@ get_ncbi_synonyms <- function(dir=NULL, recurse=TRUE, quiet=FALSE) {
   out <- parsed %>%
     dplyr::group_by(tax_id) %>%
     dplyr::filter(any(class=="synonym")) %>%
-    ungroup() %>%
+    dplyr::ungroup() %>%
     dplyr::filter(!class=="scientific name")  %>%
     dplyr::select(-class, synonym = tax_name) %>%
     dplyr::left_join(parsed %>%
@@ -178,11 +179,13 @@ resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE) {
   if (is.seq) {
     query <- names(x) %>%
       stringr::str_split_fixed(";", n = 2) %>%
+      as.data.frame() %>%
       tibble::as_tibble() %>%
       tidyr::separate(col = V1, into = c("acc", "tax_id"), sep = "\\|") %>%
-      dplyr::rename(query = V2)
+      dplyr::rename(query = V2) %>%
+      dplyr::mutate(query = stringr::str_replace_all(query, "_", " "))
   } else if (!is.seq) {
-    query <- data.frame(query= x)
+    query <- data.frame(query= x %>% stringr::str_replace_all(query, "_", " "))
     query$tax_id <- "NA" # Add dummy columns
     query$acc <- "NA"
   }
@@ -191,16 +194,16 @@ resolve_synonyms_ncbi <- function(x, dir=NULL, quiet = FALSE) {
   to_replace <- query %>%
     dplyr::select(-tax_id) %>%
     dplyr::filter(query %in% syns$synonym) %>%
-    dplyr::left_join(syns %>% dplyr::rename(query = synonym)) %>%
+    dplyr::left_join(syns %>% dplyr::rename(query = synonym), by="query") %>%
     dplyr::select(-query) %>%
-    dplyr::filter(!duplicated(acc)) #where ar these coming from?
+    dplyr::filter(!duplicated(acc)) #where are these coming from?
 
   if(nrow(to_replace) > 0){
   out <- query %>%
     dplyr::rename(tax_name = query) %>%
     dplyr::rows_update(to_replace, by="acc") %>%
-    tidyr::unite(col = V1, c("acc", "tax_id"), sep = "|")
-
+    tidyr::unite(col = V1, c("acc", "tax_id"), sep = "|") %>%
+    dplyr::mutate(tax_name = tax_name %>% stringr::str_replace_all(" ", "_"))
 
   if(is.seq) {
       names(x) <- paste(out$V1, out$tax_name, sep = ";")

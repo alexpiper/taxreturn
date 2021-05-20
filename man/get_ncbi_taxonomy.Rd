@@ -11,7 +11,7 @@ get_ncbi_taxonomy(dest_dir, include_synonyms = TRUE, force = FALSE)
 
 \item{include_synonyms}{Whether synonyms should be included in the database}
 
-\item{force}{Whether already downloaded files should be overwritten}
+\item{force}{Whether already downloaded files should be overwrittenget}
 }
 \value{
 

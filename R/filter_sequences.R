@@ -574,11 +574,14 @@ prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "lengt
     if (!quiet) cat(paste0((dup - length(x)), " duplicate sequences removed \n"))
   }
 
+  # Work on hashes of spp name instead of taxid!!
   groups <- names(x) %>%
     stringr::str_split_fixed(";", n = 2) %>%
     tibble::as_tibble(.name_repair = ~ c("acc", "taxon")) %>%
-    tidyr::separate(acc, into = c("acc", "taxid"), sep="\\|") %>%
-    dplyr::pull(taxid)
+    dplyr::pull(taxon) %>%
+    openssl::md5()
+    #tidyr::separate(acc, into = c("acc", "taxid"), sep="\\|") %>%
+    #dplyr::pull(taxid)
   groupCounts <- table(groups) # Count number of seqs per group
   u_groups <- names(groupCounts) # Get unique groups
 
@@ -588,15 +591,15 @@ prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "lengt
       index <- which(groups == u_groups[i])
       keep <- sample( # Take random sample
         length(index),
-        max_group_size
+        max_group_size,
+        replace = FALSE
       )
       remove[index[-keep]] <- TRUE
     }
   } else if (discardby == "length") {
-    y <- dna2char(x)
     for (i in which(groupCounts > max_group_size)) {
       index <- which(groups == u_groups[i])
-      rem <- stringr::str_count(y[index], "A|C|T|G")
+      rem <- sapply(x[index], function(s) length(s) - sum(s == as.raw(c(4)))) # Get lengths
       names(rem) <- index
       rem <- sort(rem, decreasing = TRUE)
       keep <- as.integer(names(rem[1:max_group_size]))
@@ -656,6 +659,7 @@ prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "lengt
 #' threshold=0.99, confidence=0.6, quiet=FALSE
 #' )
 #' }
+#'
 get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed = FALSE, confidence = 0.8, return = "consensus", k=5, quiet = FALSE, ...) {
   if(missing(x)) {stop("Error: x is required")}
 

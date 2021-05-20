@@ -19,7 +19,8 @@ fetch_seqs(
   force = FALSE,
   multithread = FALSE,
   quiet = TRUE,
-  progress = FALSE
+  progress = FALSE,
+  db = NULL
 )
 }
 \arguments{
@@ -37,12 +38,12 @@ If this is set to "genome" and database is 'nuccore', or 'genbank'it will downlo
 This is useful for big queries where >100k sequences will be downloaded. For example, when x is 'Insecta', and downsteam is Order, this will download all Orders within insecta and thus not overload the query. Default is FALSE.}
 
 \item{output}{The output format for the taxonomy in fasta headers.
-Options include "h" for full heirarchial taxonomy (SeqID;Domain;Phylum;Class;Order;Family;Genus;Species),
-"binom" for just genus species binomials (SeqID;Genus Species),
-"bold" for BOLD taxonomic ID only (SeqID;BoldTaxID),
-"gb" for genbank taxonomic ID (SeqID;GBTaxID),
-"gb-binom" which outputs Genus species binomials, as well as genbank taxonomic ID's, and translates all BOLD taxonomic ID's to genbank taxonomic ID's in the process,
-or "standard" which outputs the default format for each database. For bold this is \verb{sampleid|species name|markercode|genbankid} while for genbank this is \verb{Accession Sequence definition}}
+Options include "h" for full heirarchial taxonomy (Accession;Domain;Phylum;Class;Order;Family;Genus;Species),
+"binom" for just genus species binomials (Accession;Genus_species),
+"bold" for BOLD taxonomic ID only (Accession;BoldTaxID),
+"gb" for genbank taxonomic ID (Accession|GBTaxID),
+"gb-binom" which outputs genbank taxonomic ID's and Genus species binomials, translating BOLD taxonomic ID's to genbank in the process (Accession|GBTaxID;Genus_species)
+or "standard" which outputs the default format for each database. For bold this is \verb{sampleid|species name|markercode|genbankid}}
 
 \item{min_length}{The maximum length of the query sequence to return. Default 1.}
 
