@@ -17,7 +17,8 @@ blast_top_hit(
   delim = ";",
   tie = "first",
   args = NULL,
-  quiet = FALSE
+  quiet = FALSE,
+  ...
 )
 }
 \arguments{

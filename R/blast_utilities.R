@@ -121,7 +121,11 @@ make_blast_db <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
   if (stringr::str_detect(file, ".gz")) {
     message("Unzipping file")
     compressed <- TRUE
-    R.utils::gunzip(file, remove=FALSE)
+    if (file.exists(file %>% stringr::str_replace(".gz", ".tmp"))){
+      #remove existing temp file
+      invisible(file.remove(file %>% stringr::str_replace(".gz", ".tmp")))
+    }
+    R.utils::gunzip(file, remove=FALSE, overwrite=TRUE)
     file <- stringr::str_replace(file, ".gz", "")
   }else (compressed <- FALSE)
   results <- system2(command = .findExecutable("makeblastdb"),
@@ -131,7 +135,6 @@ make_blast_db <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
   time <- Sys.time() - time
   if (compressed) {file.remove(file)}
   if (!quiet) (message(paste0("made BLAST DB in ", format(time, digits = 2))))
-
 }
 
 
@@ -177,6 +180,12 @@ blast_params <- function(type = "blastn") {
 #' @importFrom Biostrings DNA_ALPHABET
 #' @importFrom ape as.DNAbin
 #' @importFrom ape del.gaps
+#' @importFrom stringr str_remove
+#' @importFrom stringr str_extract
+#' @importFrom stringr str_split_fixed
+#' @importFrom stringr str_to_upper
+#' @importFrom stringr str_split
+#' @importFrom future availableCores
 #'
 blast <- function (query, db, type="blastn", evalue = 1e-6,
                    output_format = "tabular", args=NULL, ungapped=FALSE,
@@ -190,7 +199,25 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   .findExecutable(type) # check blast is installed
 
   #Setup multithreading
-  setup_multithread(multithread = multithread, quiet=quiet)
+  ncores <- future::availableCores() -1
+  if((isTRUE(multithread) | is.numeric(multithread) & multithread > 1) & db=="remote"){
+    stop("Multithreading must be set to false for remote searches")
+  } else if(isTRUE(multithread)){
+    cores <- ncores
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+  } else if (is.numeric(multithread) & multithread > 1){
+    cores <- multithread
+    if(cores > ncores){
+      cores <- ncores
+      message("Warning: the value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
+    }
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+  } else if(isFALSE(multithread) | multithread==1){
+    cores <- 1
+  } else (
+    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
+  )
+  nthreads <- ifelse(cores > 1, paste0("-num_threads ", unname(cores)), "")
 
   # Check outfmt
   if(output_format=="tabular"){
@@ -201,11 +228,11 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   } else if(is.numeric(output_format)){
     outfmt <- output_format
     parsecols <- NULL
-  } else if (!is.na(str_extract(output_format, "."))){
+  } else if (!is.na(stringr::str_extract(output_format, "."))){
     outfmt <- paste0("\"",output_format,"\"")
     parsecols <- output_format %>%
-      str_remove("^..") %>%
-      str_split_fixed("\ ", n=Inf) %>%
+      stringr::str_remove("^..") %>%
+      stringr::str_split_fixed("\ ", n=Inf) %>%
       as.character()
   }
 
@@ -216,13 +243,13 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   } else if(inherits(db, "DNAbin")){
     if (!quiet) { message("Database input is DNAbin: Creating temporary blast database") }
     insect::writeFASTA(db, tmpdb)
-    makeblastdb(tmpdb)
+    make_blast_db(tmpdb)
     db <- tmpdb
     remote <- ""
   } else if (inherits(db, "DNAString") | inherits(db, "DNAStringSet")){
     if (!quiet) { message("Database input is DNAStringSet: Creating temporary blast database") }
     Biostrings::writeXStringSet(db, tmpdb)
-    makeblastdb(tmpdb)
+    make_blast_db(tmpdb)
     db <- tmpdb
     remote <- ""
   } else if (inherits(db, "character") &&  all(stringr::str_to_upper(stringr::str_split(db,"")[[1]]) %in% Biostrings::DNA_ALPHABET)) { # Handle text input
@@ -230,11 +257,11 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
     if (nchar(db[1]) == 1) {db <- paste0(db, collapse = "")}
     db <- insect::char2dna(db)
     insect::writeFASTA(db, tmpdb)
-    makeblastdb(tmpdb)
+    make_blast_db(tmpdb)
     db <- tmpdb
     remote <- ""
   } else if (inherits(db, "character") &&  file.exists(file.path(db))){ # Handle filename
-    makeblastdb(db)
+    make_blast_db(db)
     db <- stringr::str_replace(db, ".gz", "")
     remote <- ""
   } else {
@@ -253,7 +280,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
     query <- ape::del.gaps(query)
     insect::writeFASTA(query, tmpquery)
     input <- tmpquery
-  }else if (inherits(query, "character") &&  all(str_to_upper(str_split(query,"")[[1]]) %in% Biostrings::DNA_ALPHABET)) { # Handle text query
+  }else if (inherits(query, "character") &&  all(stringr::str_to_upper(stringr::str_split(query,"")[[1]]) %in% Biostrings::DNA_ALPHABET)) { # Handle text query
     if (!quiet) { message("Query is character string: Creating temporary fasta file") }
     if (nchar(query[1]) == 1) {query <- paste0(query, collapse = "")}
     query <- insect::char2dna(query)
@@ -268,8 +295,6 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 
   #Setup ungapped
   ungapped <- ifelse(ungapped, "-ungapped ","")
-
-  nthreads <- ifelse(cores > 1, paste0("-num_threads ",unname(cores)), "")
 
   #  Conduct BLAST search
   if (!quiet) { message("Running BLASTn query: ", paste(c("-db", db,
@@ -291,6 +316,9 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
                               ungapped),
                      wait = TRUE,
                      stdout = TRUE)
+
+  # Remove the error messages
+  results <- results[!stringr::str_detect(results, "Title ends with at least 20 valid nucleotide characters")]
 
   # Parse BLAST results
   if(!is.null(parsecols)){
@@ -339,7 +367,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 blast_top_hit <- function(query, db, type="blastn",
                           identity=95, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                           ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
-                          tie="first", args=NULL, quiet=FALSE ){
+                          tie="first", args=NULL, quiet=FALSE,...){
 
   # set input filters in advance to speed up blast
   args <- paste("-perc_identity", identity, "-max_target_seqs", max_target_seqs, "-max_hsps", max_hsp, args)
