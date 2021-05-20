@@ -17,7 +17,8 @@ Suggests:
     testthat,
     spelling,
     knitr,
-    rmarkdown
+    rmarkdown,
+    markdown
 Language: en-US
 Imports: 
     rentrez,
