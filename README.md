@@ -5,6 +5,7 @@
 
 <!-- badges: start -->
 
+![Version](https://img.shields.io/github/r-package/v/alexpiper/taxreturn)
 [![R-CMD-check](https://github.com/alexpiper/taxreturn/workflows/R-CMD-check/badge.svg)](https://github.com/alexpiper/taxreturn/actions)
 ![licence](https://img.shields.io/github/license/alexpiper/taxreturn)
 ![downloads](https://img.shields.io/github/downloads/alexpiper/taxreturn/total)
