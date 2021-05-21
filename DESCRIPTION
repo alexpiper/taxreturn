@@ -11,7 +11,7 @@ Description: taxreturn is an R package for fetching DNA barcode sequences and as
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/alexpiper/taxreturn
+URL: https://alexpiper.github.io/taxreturn
 BugReports: https://github.com/alexpiper/taxreturn/issues
 Suggests: 
     testthat,
