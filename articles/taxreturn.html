@@ -89,31 +89,31 @@
 <div id="introduction" class="section level1">
 <h1 class="hasAnchor">
 <a href="#introduction" class="anchor"></a>Introduction</h1>
-<p>As with conventional DNA barcoding, accurate taxonomic assignment in metabarcoding studies relies on a well-curated reference database of DNA marker sequences to compare query sequences against. The primary public nucleotide databases of relevance to eukaryotic metabarcoding are the NCBI GenBank database and the Barcode of Life Data System (BOLD), both of which taxreturn supports. While GenBank hosts greater overall sequence data, BOLD represents a more curated DNA barcoding database that aims to maintain consistent links between sequences, validated morphological specimens, and associated specimen collection metadata.</p>
-<p>Despite the best efforts of submitters, both these databases have well documented issues with barcode sequences being either insufficiently annotated, annotated with the incorrect species, or multiple morpho-species assigned to the same DNA barcode, which may reflect misidentifications or the existence of species complexes.While some metabarcoding studies have responded to the aforementioned issues by exclusively using in-house reference databases for taxonomic assignment [90, 93–95], because many insect surveillance programmes aim to detect species that are not locally present, the reliance on public data to supplement in-house sequences may be unavoidable. Curating public reference data is therefore crucial for ensuring the robustness of a metabarcoding analysis, and this is the role that the taxreturn package aims to fulfil.</p>
+<p>Accurate taxonomic assignment in metabarcoding studies relies on a well-curated reference database of DNA marker sequences to compare query sequences against. taxreturn is an R package for retrieving DNA barcode sequences and associated taxonomic annotations from public databases, curating these sequences, and formatting them into training sets compatible with popular taxonomic classifiers. The primary public nucleotide databases of relevance to Eukaryotic metabarcoding are the NCBI GenBank database and the Barcode of Life Data System (BOLD), both of which taxreturn supports.</p>
+<p>While GenBank hosts greater overall sequence data, BOLD represents a more curated DNA barcoding database that aims to maintain consistent links between sequences, validated morphological specimens, and associated specimen collection metadata.Despite the best efforts of submitters, both these databases have well documented issues with barcode sequences being insufficiently annotated, annotated with the incorrect species, or multiple morpho-species sharing the same barcode. Curating public reference data is therefore crucial for ensuring the robustness of a metabarcoding analysis, and this is the role that the taxreturn package aims to fulfill.</p>
 <p>The main steps of the taxreturn workflow are as follows:</p>
 <ul>
-<li>Download relevant barcode sequences and Mitochondrial genomes from BOLD and Genbank</li>
-<li>Use a profile hidden markov model trained on a reference alignment for the locus to remove non-homologous loci and cut the desired region from mitogenomes/longer sequences</li>
-<li>Use sequence similarity clustering to remove misannotated sequences (ie 99% similar sequences should share species level taxononmy)</li>
-<li>Resolve taxonomic synonyms using a reference taxonomy database (NCBI or open tree of life)</li>
+<li>Download relevant barcode sequences and Mitochondrial genomes from BOLD and GenBank.</li>
+<li>Use a profile hidden markov model to remove non-homologous loci and extract the desired region from mitogenomes or any longer sequences.</li>
+<li>Use sequence similarity clustering to identify putatively misannotated sequences.</li>
+<li>Resolve taxonomic synonyms using a reference taxonomy database.</li>
 <li>Prune sequences from over-represented groups</li>
-<li>Reformat into a taxonomic hierarchy format (ie Kingdom;phylum….;Species) appropriate for metabarcoding classifiers.</li>
+<li>Reformat into a format appropriate for taxonomic classification software.</li>
 </ul>
 </div>
 <div id="a-worked-example" class="section level1">
 <h1 class="hasAnchor">
 <a href="#a-worked-example" class="anchor"></a>A Worked example</h1>
-<p>The following vignette will run through an example analysis of retrieving insect COI barcode sequences and mitochondrial genomes, curating these, and outputting a reference database.</p>
+<p>The following vignette will run through an example analysis of retrieving some insect COI barcode sequences and Mitochondrial genomes, curating these, and outputting a reference database.</p>
 <div id="install-load-package" class="section level2">
 <h2 class="hasAnchor">
 <a href="#install-load-package" class="anchor"></a>Install &amp; load package</h2>
-<p>First, make sure that the devtools, Biostrings and ape packages are installed and up to date. Then install and load the latest development version of the taxreturn package from GitHub as follows:</p>
+<p>First, make sure that the devtools, Biostrings, insect, and ape packages are installed and up to date. Then install and load the latest development version of the taxreturn package from GitHub as follows:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"alexpiper/taxreturn"</span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://alexpiper.github.io/taxreturn">taxreturn</a></span><span class="op">)</span>
 
-<span class="co"># Load other necessary packages</span>
+<span class="co"># Load other necessary packages for this workflow</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/Biostrings">Biostrings</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://ape-package.ird.fr/">ape</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://github.com/shaunpwilkinson/insect">insect</a></span><span class="op">)</span>
@@ -123,11 +123,9 @@
 <div id="fetching-sequences-from-genbank-and-bold" class="section level1">
 <h1 class="hasAnchor">
 <a href="#fetching-sequences-from-genbank-and-bold" class="anchor"></a>Fetching sequences from GenBank and BOLD</h1>
-<p>The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetch_seqs function, which wraps an interface to entrez and BOLD API’s respectively. This function can either take a single higher level rank, i.e. the family ‘Trioza’, or it can take a vector of taxon names, such as the species contained on a priority pest list or those of conservation concern.</p>
-<p>The downstream option lets the function know if you want to conduct searches and output fasta files using the input rank, or at a taxonomic rank downstream of it, i.e. Species. The downto option then determines what that downstream rank is. This functionality is important for getting around server limits when conducting large searches for example ‘Insecta’, however comes with some computational overhead when downloading few taxa.</p>
-<p>The marker option determines what will be in the search, note that the naming of loci differs between Genbank and bold so i suggest conducting a test search on their respective websites to confirm the desired marker.</p>
-<p>The compress option toggles whether to output as a gzipped fasta file to save space. All further functions in this package should be capable of handling gzipped files.</p>
-<p>Finally, the cores option determines how many cores to use when downloading sequences, using more cores can speed up searches. <em>note - i dont believe cores is currently working properly so use 1 core for now</em></p>
+<p>The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetch_seqs function, which wraps an interface to entrez and BOLD API’s respectively. This function can either take a single higher level rank, i.e. the genus ‘Scaptodrosophila’, or it can take a vector of taxon names from a file.</p>
+<p>The marker option determines what will be in the search, note that the naming of loci differs between Genbank and bold so i suggest conducting a test search on their respective websites to confirm the desired marker. For COI,</p>
+<p>This function can be multithreaded by setting multithread to the desired number of cores, or TRUE (to autodetect number of cores). Note that querying the server is the main bottleneck here, and using too many threads may overload the server and produce errors.</p>
 <p>Depending on the amount of sequences you are downloading, and the speed of your internet connection this step can take from minutes to hours, i suggest running this overnight for large searches with over a million sequences.</p>
 <div id="download-sequences-from-ncbi-genbank" class="section level2">
 <h2 class="hasAnchor">
@@ -168,8 +166,7 @@
 <div id="download-mitochondrial-genomes-from-genbank" class="section level2">
 <h2 class="hasAnchor">
 <a href="#download-mitochondrial-genomes-from-genbank" class="anchor"></a>Download mitochondrial genomes from GenBank</h2>
-<p>We can also use these functions to download mitochondrial genomes, and use the PHMM implemented in the map_to_model function to pull out our target region from the genome.</p>
-<p>The fetch_seqs function accepts a special input argument of marker=“mitochondria” to do this.</p>
+<p>The fetch_seqs function can also download mitochondrial genomes, and accepts a special input argument of marker=“mitochondria” to do this.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Fetch mitochondrial genomes from genbank by searching for a taxon name</span>
 <span class="va">genbank_mito</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_seqs.html">fetch_seqs</a></span><span class="op">(</span>
@@ -189,22 +186,24 @@
 <div id="curating-public-reference-sequences" class="section level1">
 <h1 class="hasAnchor">
 <a href="#curating-public-reference-sequences" class="anchor"></a>Curating public reference sequences</h1>
-<p>Due to the aforementioned issues with misannotated sequences in public reference databases we will use a number of filtering steps.</p>
+<p>Due to the aforementioned issues with misannotated or low quality sequences in public reference databases we will use a number of filtering steps.</p>
 <div id="removing-non-homologous-sequences" class="section level2">
 <h2 class="hasAnchor">
 <a href="#removing-non-homologous-sequences" class="anchor"></a>Removing non-homologous sequences</h2>
-<p>The first step is to remove non-homologous loci by mapping to a reference of COI. In order to reduce bias involved in mapping sequences to a single reference sequence, we will align them to a profile hidden markov model of the gene that uses a probablistic framework to take into account a wider range of diversity. To make this model we will use the aphid R package, and a curated alignment of insect COI sequences obtained from the Midori dataset and trimmed to the folmer region.</p>
-<p>A pretrained model of the conventional COI barcode or ‘folmer’ region can be loaded from the package data as below. This model was trained on the midori longest dataset of all COI sequences.</p>
+<p>The first sequence curation step is to remove non-homologous loci by mapping to a reference Profile Hidden Markov Model (PHMM) of the target loci. PHMMs turn a multiple sequence alignment into a position-specific scoring system suitable for searching databases for remotely homologous sequences. This approach circumvents the bias that can be introduced when mapping sequences to a single reference sequence. To create the PHMM model we will use the aphid R package, and a curated alignment of insect COI sequences obtained from the Midori dataset (Machida et al, 2017) and trimmed to the folmer region.</p>
+<p>A pre-trained model of the conventional COI barcode or ‘folmer’ region can be loaded from the package data as below. This model was trained on the midori longest dataset of all COI sequences.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#This loads the model into the workspace</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"model"</span>, package<span class="op">=</span><span class="st">"taxreturn"</span><span class="op">)</span>
 
 <span class="co">#See what it looks like</span>
 <span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></code></pre></div>
-<p>However if you are workign with a different barcode locus, or if you wish to improve accuracy by training on a specific taxonomic group you can train a new PHMM model using the aphid R package as below:</p>
-<p>Note: if you are using a public dataset as a reference alignment to build the model, it may be worth further curating it manually first, as a poor reference alignment will produce a poor model and greatly affect downstream analysis</p>
+<p>However if you are working with a different barcode locus, or if you wish to improve accuracy by training on a specific taxonomic group you can train a new PHMM model using the aphid R package as below:</p>
+<p>Note: if you are using a public dataset as a reference alignment to build the model, it may be worth curating it manually first, as a poor reference alignment will produce a poor model and greatly affect downstream analysis.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># Read in sequence dataset to be used in model training</span>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://github.com/shaunpwilkinson/aphid">aphid</a></span><span class="op">)</span>
+
+<span class="co"># Read in sequence dataset to be used in model training</span>
 <span class="va">seqs</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/Biostrings/man/XStringSet-io.html">readDNAStringSet</a></span><span class="op">(</span><span class="st">"MIDORI_LONGEST_20180221_COI.fasta"</span><span class="op">)</span>
 
 <span class="co"># Trim the sequences to the amplified region using a virtual PCR</span>
@@ -217,10 +216,10 @@
 <span class="co">#Only retain amplicons of the appropriate length (in this case 658bp)</span>
 <span class="va">amplicon_filtered</span> <span class="op">&lt;-</span> <span class="va">amplicon</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/lengths.html">lengths</a></span><span class="op">(</span><span class="va">amplicon</span><span class="op">)</span> <span class="op">==</span> <span class="fl">658</span><span class="op">]</span>
 <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">aphid</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/aphid/man/derivePHMM.html">derivePHMM</a></span><span class="op">(</span><span class="va">amplicon_filtered</span><span class="op">)</span></code></pre></div>
-<p>Now that we have our train PHMM model, we will use the map_to_model function with the model to remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.</p>
-<p>Firstly we will merge the sequences from each database together. As BOLD and GenBank share a number of sequences, we subset the merged file to only the unique sequences to speed things up.</p>
-<p>As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases outside the range defined by the model. As here we are looking at a coding gene, we will set check_frame to TRUE to ensure that any insertions or deletions are in multiples of 3.</p>
-<p>When extracting the target region from longer sequences such as mitochondrial genomes, the dynamic programming algorithm used to align to the PHMM can take a very long time. Therefore, sequences that are more than twice the length of the input model are split into chunks, and a rapid k-mer pre-screening is used to find the closest matching chunk, which is used to seed the PHMM alignment. This k-mer screening is also used as a rapid screen of shorter sequences to ensure they arent too diverged to be worthwhile aligning to the PHMM. The stringency of this screen can be modified using the kmer_threshold parameter, with the default excluding any sequence more than 30% diverged at k=5. To further speed things up, you can set multithread to the number of cores you wish to use.</p>
+<p>Now that we have our trained PHMM, it can be used with the map_to_model function wto remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.</p>
+<p>Firstly we will merge the sequences from each database together. As BOLD and GenBank share some sequence, we will dereplicate the merged file to only the unique accession numbers to speed things up.</p>
+<p>As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases outside the range defined by the model. As here we are looking at a coding gene, we will also set check_frame to TRUE to ensure that any insertions or deletions are in multiples of 3, which is a quick and dirty way of identifying and removing pseudogenic sequences.</p>
+<p>When extracting the target region from longer sequences such as mitochondrial genomes, the dynamic programming algorithm used to align to the PHMM can take a very long time so this function implements a k-mer based pre-screening to reduce the number of wasteful alignments. This works by splitting any sequence that is more than twice the length of the input model into chunks, finding the most similar chunk to the reference using a rapid k-mer pre-screen, then using the most similar chunk and its neighbours to seed the PHMM alignment. The stringency of this screen can be modified using the kmer_threshold parameter, with the default excluding any sequence more than 30% diverged (kmer_threshold = 0.3) for 5-mers (k = 5). To further speed things up, you can set multithread to the number of cores you wish to use, or TRUE to autodetect number of cores.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Merge all downloaded sequences</span>
 <span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/concat_DNAbin.html">concat_DNAbin</a></span><span class="op">(</span><span class="va">genbank_seqs</span>, <span class="va">bold_seqs</span>, <span class="va">genbank_mito</span><span class="op">)</span>
@@ -239,7 +238,7 @@
 <div id="resolve-contaminated-sequences-and-misannotated-taxonomy" class="section level2">
 <h2 class="hasAnchor">
 <a href="#resolve-contaminated-sequences-and-misannotated-taxonomy" class="anchor"></a>Resolve Contaminated sequences and misannotated taxonomy</h2>
-<p>The other main form of misannotation that can effect metabarcoding datasets is incorrect taxonomy for the reference sequences. To resolve this issue, we will cluster sequences at a specific similarity threshold (in this case 97% simularity), and compares the heirarchial taxonomy within clusters. When the taxonomy of a sequences diverges from the other sequences in its cluster, it is removed as a putative misannotation. The confidence required the remove a sequence can be adjusted. In this case we use a confidence threshold of 0.8, which indicates the putative misannotated sequence must diverge from 4/5 other sequences in its cluster to be removed from the dataset.</p>
+<p>The other main form of misannotation that can effect metabarcoding datasets is misannotated taxonomy for the reference sequences. To detect putatively misannotated sequences we will cluster sequences at a specific similarity threshold (in this case 97% similarity), and compare the taxonomy at a certain rank (Genus in this case) within clusters. A sequence will be flagged if its taxonomy diverges from the other sequences within its respective cluster by more than a certain confidence (0.8 by default, meaning the putatively misannotated sequence must diverge from 4/5 other sequences in its cluster)</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Load the NCBI taxonomy </span>
 <span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_ncbi_taxonomy.html">get_ncbi_taxonomy</a></span><span class="op">(</span><span class="op">)</span>
@@ -265,8 +264,7 @@
 <div id="optional-filter-for-stop-codons" class="section level2">
 <h2 class="hasAnchor">
 <a href="#optional-filter-for-stop-codons" class="anchor"></a>Optional: Filter for stop codons</h2>
-<p>As the COI barcode is a protein coding region, underlying evolutionary constraints mean that any sequences containing stop codons or indels of lengths which are not a multiple of 3 commonly indicate pseudogenes.</p>
-<p>The below function will remove any sequences containing these patterns. If you are not working with a protein coding gene, skip this section.</p>
+<p>As the COI barcode is a protein coding region, underlying evolutionary constraints mean that any sequences containing stop codons or indels of lengths which are not a multiple of 3 commonly indicate pseudogenes. The codon_filter function detects the reading frame of the sequence, and ensures it contains no frameshifts or stop codons. Note that you must select the appropriate genetic code here otherwise you risk losing all your sequences. Available codes can be found using <code><a href="https://rdrr.io/pkg/Biostrings/man/GENETIC_CODE.html">Biostrings::GENETIC_CODE_TABLE</a></code>. If you are not working with a protein coding gene, skip this section.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#SGC4 is invertebrate mitochondrial genetic code</span>
 <span class="va">purged</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/codon_filter.html">codon_filter</a></span><span class="op">(</span>
@@ -276,7 +274,7 @@
 <div id="resolve-synonyms" class="section level2">
 <h2 class="hasAnchor">
 <a href="#resolve-synonyms" class="anchor"></a>Resolve synonyms</h2>
-<p>Classification of sequences into reference taxonomy can be complicated by the existence of taxonomic synonyms. To resolve this we use the NCBI names file to check each name to see if it represents a currently valid taxa. If it represents a synonym, the name is replaced with the accepted taxon name.</p>
+<p>Classification of sequences into reference taxonomy can be complicated by the existence of taxonomic synonyms. To resolve this we use the NCBI synonyms list to ensure each name represents a currently valid taxa, and replace known synonyms with accepted taxon names.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">resolved</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolve_synonyms_ncbi.html">resolve_synonyms_ncbi</a></span><span class="op">(</span><span class="va">purged</span><span class="op">)</span>
 
@@ -298,7 +296,7 @@
 <div id="optional-trim-to-primer-regions" class="section level2">
 <h2 class="hasAnchor">
 <a href="#optional-trim-to-primer-regions" class="anchor"></a>Optional: Trim to primer regions</h2>
-<p>Depending on the taxonomic classifier used, it can be beneficial to trim the reference sequences down to the actual region amplified by the primers. Below we will trim the sequences to the primer regions we use for metabarcoding using the virtualPCR function from the insect R pacakge.</p>
+<p>Depending on the taxonomic classifier used, it can be beneficial to trim the reference sequences down to the actual region amplified by the primers. Below we will trim the sequences to the primer regions we use for metabarcoding using the virtualPCR function from the insect R package.</p>
 <p>However, if you wish to keep the full length sequences, skip this section.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Trim to primer region using virtualPCR from insect package</span>
@@ -379,7 +377,7 @@
 <div id="idtaxa" class="section level3">
 <h3 class="hasAnchor">
 <a href="#idtaxa" class="anchor"></a>IDTAXA</h3>
-<p>Taxreturn implements a wrapper function for training the IDTAXA classifier, as below:</p>
+<p>taxreturn implements a wrapper function for training the IDTAXA classifier, as below:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Load NCBI taxonomy</span>
 <span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_ncbi_taxonomy.html">get_ncbi_taxonomy</a></span><span class="op">(</span><span class="op">)</span>
