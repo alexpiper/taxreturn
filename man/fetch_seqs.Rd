@@ -16,7 +16,9 @@ fetch_seqs(
   db = NULL,
   multithread = FALSE,
   quiet = FALSE,
-  progress = FALSE
+  progress = FALSE,
+  retry_attempt = 3,
+  retry_wait = 5
 )
 }
 \arguments{
@@ -56,6 +58,10 @@ For BOLD queries the default is 100,000 returned records}
 \item{quiet}{Whether progress should be printed to the console.}
 
 \item{progress}{A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.}
+
+\item{retry_attempt}{The number of query attempts in case of query failure due to poor internet connection. (Genbank only)}
+
+\item{retry_wait}{How long to wait between query attempts. (Genbank only)}
 }
 \value{
 

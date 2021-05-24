@@ -33,13 +33,15 @@
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' @param quiet Whether progress should be printed to the console.
 #' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
+#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection. (Genbank only)
+#' @param retry_wait How long to wait between query attempts. (Genbank only)
 #'
 #' @return
 #'
 #' @examples
 fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), output = "h",
                            min_length = 1, max_length = 2000, subsample=FALSE, chunk_size=100, db=NULL,
-                          multithread = FALSE, quiet = FALSE, progress=FALSE) {
+                          multithread = FALSE, quiet = FALSE, progress=FALSE, retry_attempt=3, retry_wait=5) {
   if(!database %in% c("nuccore", "genbank")){
     stop("database is invalid: only nuccore and genbank is currently supported")
   }
@@ -61,6 +63,8 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
   if(database=="genbank"){
     database="nuccore"
   }
+  # Setup multithreading
+  setup_multithread(multithread, quiet=quiet)
 
   # Main function
   if (!tolower(marker) %in% c("mitochondria", "mitochondrion", "genome")) {
@@ -84,34 +88,27 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
       if (!quiet) {message(paste0(search_results$count, " Sequences to be downloaded for: ", searchQ))}
       ids <- search_results$ids
     }
-    # setup multithread
-    if(isTRUE(multithread) | (is.numeric(multithread) & multithread > 1)){
-      setup_multithread(multithread, quiet=quiet)
 
-      # Split into chunks
-      n <- length(ids)
+    # Split query into chunks
+    n <- length(ids)
+    r <- rep(1:ceiling(n/chunk_size), each=chunk_size)[1:n]
+    id_list <- split(ids, r) %>% magrittr::set_names(NULL)
 
-      # Let chunks = chunk_size
-      r <- rep(1:ceiling(n/chunk_size), each=chunk_size)[1:n]
-      id_list <- split(ids, r) %>% magrittr::set_names(NULL)
+    # Retrieve each chunk
+    seqs <- furrr::future_map(
+    id_list, read_genbank_chunk, quiet = FALSE, retry_attempt = retry_attempt, retry_wait = retry_wait, .progress = progress)
 
-      # Fetch fasta
-      seqs <- furrr::future_map(
-        id_list, ape::read.GenBank, species.names	= ifelse(output == "standard", FALSE, TRUE),
-        chunk.size = chunk_size, quiet = TRUE, .progress = progress) %>%
-        concat_DNAbin()
-      spp <- attr(seqs, "species") %>% stringr::str_replace_all("_", " ")
-
-    } else {
-      seqs <- ape::read.GenBank(ids, species.names	= ifelse(output == "standard", FALSE, TRUE), chunk.size = chunk_size, quiet = quiet)
-      spp <- attr(seqs, "species") %>% stringr::str_replace_all("_", " ")
-    }
-
+    #seqs <- purrr::map(
+    #  id_list, read_genbank_chunk, quiet = FALSE, retry_attempt = retry_attempt, retry_wait = retry_wait)
+    failed <- id_list[sapply(seqs, is.null)]
+    seqs <- seqs[sapply(seqs, class)=="DNAbin"]
+    seqs <- concat_DNAbin(seqs)
+    spp <- attr(seqs, "species") %>% stringr::str_replace_all("_", " ")
     # get accession numbers
-    acc <- attr(seqs, "description") %>% stringr::str_remove(" .*$")
+    acc <- names(seqs) %>% stringr::str_remove(" .*$")
 
     if (output == "standard") { # Standard output
-      names <- attr(seqs, "description")
+      names <- names(seqs)
     } else if (output == "binom") {
       names <- paste0(acc, ";", spp)
     } else if (output == "h") { # Hierarchial output
@@ -139,6 +136,7 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
     }
     names(seqs) <- names %>% stringr::str_replace_all(" ", "_")
     out <- seqs
+    attr(out, "failed") <- failed
   } else {
     if (!quiet)(message("No sequences available for query: ", searchQ))
     out <- NULL
@@ -147,6 +145,115 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
   future::plan(future::sequential)
   return(out)
 }
+
+#' Parse genbank flat files
+#'
+#' @param gb A genbank flat file
+#'
+#' @return
+#' @importFrom insect char2dna
+#' @importFrom stringr str_remove_all
+#' @examples
+parse_gb <- function(gb){
+  # Truncate record at last // to avoid broken records
+  gb <- tryCatch({
+    gb[1:max(which(grepl("^//", gb)))]
+  }, error = function(e){
+    warning("Failed parsing")
+    print(max(which(grepl("^//", gb))))
+    return(NULL)
+  })
+  n_seqs <- sum(grepl("ACCESSION", gb))
+  if(n_seqs < 1){
+    return(NULL)
+  }
+  start <- which(grepl("^ORIGIN", gb))
+  stop <- which(grepl("^//", gb))
+  #if((!length(start) == n_seqs) | (!length(stop)==n_seqs)){
+  #  return(gb)
+  #  stop("error detected NA")
+  #}
+  seqs <- vector("character", length = n_seqs)
+  for (l in 1:n_seqs){
+    seqs[[l]] <- toupper(paste(stringr::str_remove_all(gb[(start[l]+1):(stop[l]-1)], "[^A-Za-z]"), collapse=""))
+  }
+  names(seqs) <- gsub("+ACCESSION +", "", grep("ACCESSION", gb, value = TRUE))
+  seqs <- insect::char2dna(seqs)
+  sp <- gsub(" +ORGANISM +", "", grep("ORGANISM", gb, value = TRUE))
+  attr(seqs, "species") <- gsub(" ", "_", sp)
+  return(seqs)
+}
+
+#' Read genbank chunk
+#'
+#' @param gid a vector of GenBank ID's
+#' @param quiet Whether progress should be printed to console.
+#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection.
+#' @param retry_wait How long to wait between query attempts
+#'
+#' @return
+#'
+#' @examples
+read_genbank_chunk <- function(gid, quiet = FALSE, retry_attempt=3, retry_wait=5) {
+  n_seqs <- length(gid)
+  URL <- paste("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=", paste(gid, collapse = ","), "&rettype=gb&retmode=text", sep = "")
+  gb <- NULL
+  seqs <- NULL
+  attempt <- 1
+  # Download with error handling
+  while((is.null(gb) | (length(seqs) < length(gid))) && attempt <= (retry_attempt+1)) {
+    gb <- tryCatch({
+      scan(file = URL, what = "", sep = "\n", quiet = TRUE)
+    }, error = function(e){
+      if (!quiet) {cat(paste("Failed attempt ", attempt,"\n"))}
+      Sys.sleep(retry_wait)
+      NULL
+    })
+    if(!is.null(gb)){
+      seqs <- parse_gb(gb)
+    }
+    attempt <- attempt + 1
+  }
+  if(length(seqs) == length(gid)){
+    return(seqs)
+  } else{
+    if(!quiet)warning("length of returned sequences does not match length of query")
+    return(NULL)
+  }
+}
+
+
+
+
+#read_genbank_chunk <- function(acc, quiet = FALSE, retry_attempt=3, retry_wait=5) {
+#  n_seqs <- length(acc)
+#  URL <- paste("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=", paste(acc, collapse = ","), "&rettype=gb&retmode=text", sep = "")
+#  gb <- NULL
+#  attempt <- 1
+#  # Download with error handling - What if i do while GB is <length acc?
+#  while(is.null(gb) && attempt <= (retry_attempt+1)) {
+#    gb <- tryCatch({
+#      scan(file = URL, what = "", sep = "\n", quiet = TRUE)
+#    }, error = function(e){
+#      if (!quiet) {cat(paste("Failed attempt ", attempt,"\n"))}
+#      Sys.sleep(retry_wait)
+#      NULL
+#    })
+#    attempt <- attempt + 1
+#  }
+#  if(!is.null(gb)){
+#    seqs <- parse_gb(gb)
+#    if(length(seqs) == length(acc)){
+#      return(seqs)
+#    } else{
+#      if(!quiet)warning("length of returned sequences does not match length of query")
+#      return(NULL)
+#    }
+#  } else{
+#    return(NULL)
+#  }
+#}
+
 
 # BOLD functions --------------------------------------------------------
 
@@ -382,6 +489,8 @@ split_bold_query <- function(x, chunk_size=100000, split_if_under = FALSE, quiet
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' @param quiet Whether progress should be printed to the console.
 #' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
+#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection. (Genbank only)
+#' @param retry_wait How long to wait between query attempts. (Genbank only)
 #'
 #' @import dplyr
 #' @import stringr
@@ -398,7 +507,7 @@ split_bold_query <- function(x, chunk_size=100000, split_if_under = FALSE, quiet
 fetch_seqs <- function(x, database, marker = NULL, output = "gb-binom",
                        min_length = 1, max_length = 2000, subsample=FALSE,
                        chunk_size=NULL, db=NULL, multithread = FALSE,
-                       quiet = FALSE, progress=FALSE) {
+                       quiet = FALSE, progress=FALSE, retry_attempt=3, retry_wait=5) {
   # function setup
   time <- Sys.time() # get time
 

@@ -80,9 +80,12 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank by searching for a taxon name
 genbank_seqs <- fetch_seqs(
-  "Scaptodrosophila", database="genbank", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", 
+  "Drosophila", database="genbank", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", 
   output = "gb-binom", multithread = FALSE, quiet=FALSE
   )
+
+# MAybe returned failed sequences as an attribute on the output?
+
 
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
@@ -118,7 +121,7 @@ The fetch_seqs function can also download mitochondrial genomes, and accepts a s
 ```{r Download mitochondria, eval=FALSE, include=TRUE}
 # Fetch mitochondrial genomes from genbank by searching for a taxon name
 genbank_mito <- fetch_seqs(
-  "Drosophila suzukii", database="genbank", marker="mitochondria",
+  "Scaptodrosophila", database="genbank", marker="mitochondria",
   output = "gb-binom", multithread = FALSE, quiet=FALSE
   )
 
