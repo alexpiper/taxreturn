@@ -9,6 +9,7 @@ prune_groups(
   max_group_size = 5,
   dedup = TRUE,
   discardby = "length",
+  prefer = NULL,
   quiet = FALSE
 )
 }
@@ -21,9 +22,10 @@ prune_groups(
 
 \item{discardby}{How sequences from groups with size above max_group_size should be discarded.
 Options include "length" (Default) which will discard sequences from smallest to largest until the group is below max_group_size,
-"random" which will randomly pick sequences to discard until the group is below max_group_size,
-and "novelty" which will conduct a local alignment, and discard the least unique sequences first until all sequences are unique,
-then discard sequences by length until the group is below max_group_size (Note: "novelty" is not yet implemented)}
+"random" which will randomly pick sequences to discard until the group is below max_group_size.}
+
+\item{prefer}{A vector of sequence names that will be preferred when subsampling groups when discardby=random,
+or prefered when breaking ties in sequences of the same length when discardby=length. For instance high quality in-house sequences.}
 
 \item{quiet}{Whether progress should be printed to the console.}
 }

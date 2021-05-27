@@ -531,13 +531,12 @@ subset_long_seq <- function(x, model, split_length, threshold=0.3, k=5, quiet=FA
 #' @param x A DNAbin or DNAStringset object
 #' @param max_group_size The maximum number of sequences with the same taxonomic annotation to keep
 #' @param dedup Whether sequences with identical taxonomic name and nucleotide bases sequences should be discarded first
-#' @param quiet Whether progress should be printed to the console.
 #' @param discardby How sequences from groups with size above max_group_size should be discarded.
 #' Options include "length" (Default) which will discard sequences from smallest to largest until the group is below max_group_size,
-#' "random" which will randomly pick sequences to discard until the group is below max_group_size,
-#' and "novelty" which will conduct a local alignment, and discard the least unique sequences first until all sequences are unique,
-#' then discard sequences by length until the group is below max_group_size (Note: "novelty" is not yet implemented)
-#'
+#' "random" which will randomly pick sequences to discard until the group is below max_group_size.
+#' @param prefer A vector of sequence names that will be preferred when subsampling groups when discardby=random,
+#' or prefered when breaking ties in sequences of the same length when discardby=length. For instance high quality in-house sequences.
+#' @param quiet Whether progress should be printed to the console.
 #' @return
 #' @export
 #'
@@ -551,58 +550,122 @@ subset_long_seq <- function(x, model, split_length, threshold=0.3, k=5, quiet=FA
 #' @importFrom ape base.freq
 #' @importFrom methods is
 #'
-prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "length", quiet = FALSE) {
+prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "length", prefer=NULL, quiet = FALSE) {
   # Convert to DNAbin
   if (!methods::is(x, "DNAbin")) {
     x <- ape::as.DNAbin(x)
     if (all(is.na(ape::base.freq(x)))) {stop("Error: Object is not coercible to DNAbin \n")}
   }
+  if (!is.null(prefer) & !is.character(prefer)){
+    stop("prefer must be either NULL or a vector of sequence names to prefer")
+  }
 
+  # Remove duplicate sequences
   if (dedup) {
-    ## Consider taxonomic name and sequence identity in deduplication
     dup <- length(x)
     taxids <- names(x) %>%
       stringr::str_remove("^.*;")
 
+    ## Consider taxonomic name and sequence identity in deduplication
     hashes <- purrr::map2(x, taxids, ~{
       openssl::md5(paste(c(.y, as.vector(.x)), collapse=""))
     }) %>%
       unlist()
 
-    dupes <- duplicated(hashes)
-    x <- insect::subset.DNAbin(x, subset = !dupes)
+    # get list of all duplicated hashes
+    dupes <- unique(hashes[duplicated(hashes)])
+    remove <- logical(length(x))
+    for (i in 1:length(dupes)) {
+      index <- which(hashes %in% dupes[i])
+      # Check if in prefered - If so keep first element in the prefered
+      if (is.character(prefer) & any(names(x)[index] %in% prefer)){
+        keep <- index[names(x)[index] %in% prefer][1]
+      } else {
+        # otherwise just pick first element
+        keep <- index[1]
+      }
+      remove[index[!index %in% keep]] <- TRUE
+    }
+    x <- x[!remove]
     if (!quiet) cat(paste0((dup - length(x)), " duplicate sequences removed \n"))
   }
 
-  # Work on hashes of spp name instead of taxid!!
+  # Remove sequences from groups where more species names than max_group_size
   groups <- names(x) %>%
     stringr::str_split_fixed(";", n = 2) %>%
     tibble::as_tibble(.name_repair = ~ c("acc", "taxon")) %>%
     dplyr::pull(taxon) %>%
     openssl::md5()
-    #tidyr::separate(acc, into = c("acc", "taxid"), sep="\\|") %>%
-    #dplyr::pull(taxid)
   groupCounts <- table(groups) # Count number of seqs per group
   u_groups <- names(groupCounts) # Get unique groups
 
   remove <- logical(length(x))
+  # Random discarding
   if (discardby == "random") {
     for (i in which(groupCounts > max_group_size)) {
       index <- which(groups == u_groups[i])
-      keep <- sample( # Take random sample
-        length(index),
-        max_group_size,
-        replace = FALSE
-      )
+      # Deal with prefered
+      if (is.character(prefer) & any(names(x)[index] %in% prefer)){
+        in_pref <- index[names(x)[index] %in% prefer]
+        # Check if can sample just from prefered, or need a mix of the two
+        if(in_pref >= max_group_size){
+          keep <- sample(
+            x = in_pref,
+            size = max_group_size,
+            replace = FALSE
+          )
+        } else{
+          to_sample <- max_group_size - length(in_pref)
+          keep <- c(in_pref,
+                    sample(
+                      x = index[-in_pref],
+                      size = to_sample,
+                      replace = FALSE
+                    ))
+        }
+      } else {
+        # otherwise just take random sample
+        keep <- sample(
+          x = index,
+          size = max_group_size,
+          replace = FALSE
+        )
+      }
       remove[index[-keep]] <- TRUE
     }
+    # length discarding
   } else if (discardby == "length") {
     for (i in which(groupCounts > max_group_size)) {
       index <- which(groups == u_groups[i])
       rem <- sapply(x[index], function(s) length(s) - sum(s == as.raw(c(4)))) # Get lengths
       names(rem) <- index
       rem <- sort(rem, decreasing = TRUE)
-      keep <- as.integer(names(rem[1:max_group_size]))
+
+      # deal with prefered
+      if (is.character(prefer) & any(names(x)[index] %in% prefer)){
+        in_pref <- index[names(x)[index] %in% prefer]
+        non_pref <- index[!names(x)[index] %in% prefer]
+
+        # Get the minimum length of sequences that are being dropped
+        min_len <- min(rem[1:max_group_size])
+
+        # Check if there are mixed prefered and non prefered at that length
+        mixed_pref <- rem[names(rem) %in% in_pref] == min_len
+        mixed_pref <- names(mixed_pref)[mixed_pref]
+        mixed_non_pref <- rem[names(rem) %in% non_pref] == min_len
+        mixed_non_pref <- names(mixed_non_pref)[mixed_non_pref]
+
+        if((length(mixed_pref) > 0) & (length(mixed_pref) > 0)){
+          # re-sort vector to prefer
+          sample_from <- as.integer(c(names(rem)[rem > min_len], mixed_pref, mixed_non_pref, names(rem)[rem < min_len]))
+          keep <- as.integer(sample_from[1:max_group_size])
+        } else {
+          # otherwise just take the longest
+          keep <- as.integer(names(rem[1:max_group_size]))
+        }
+      } else{
+        keep <- as.integer(names(rem[1:max_group_size]))
+      }
       remove[index[!index %in% keep]] <- TRUE
     }
   }
