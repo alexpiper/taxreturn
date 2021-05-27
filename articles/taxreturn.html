@@ -77,7 +77,7 @@
             <h3 class="subtitle">An R package for download and curation of public DNA barcode reference data</h3>
                         <h4 class="author">Author: Alexander M Piper</h4>
             
-            <h4 class="date">2021-05-21</h4>
+            <h4 class="date">2021-05-27</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/alexpiper/taxreturn/blob/master/vignettes/taxreturn.Rmd"><code>vignettes/taxreturn.Rmd</code></a></small>
       <div class="hidden name"><code>taxreturn.Rmd</code></div>
@@ -133,9 +133,12 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">## Fetch sequences from GenBank by searching for a taxon name</span>
 <span class="va">genbank_seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_seqs.html">fetch_seqs</a></span><span class="op">(</span>
-  <span class="st">"Scaptodrosophila"</span>, database<span class="op">=</span><span class="st">"genbank"</span>, marker<span class="op">=</span><span class="st">"COI[GENE] OR COX1[GENE] OR COXI[GENE]"</span>, 
+  <span class="st">"Drosophila"</span>, database<span class="op">=</span><span class="st">"genbank"</span>, marker<span class="op">=</span><span class="st">"COI[GENE] OR COX1[GENE] OR COXI[GENE]"</span>, 
   output <span class="op">=</span> <span class="st">"gb-binom"</span>, multithread <span class="op">=</span> <span class="cn">FALSE</span>, quiet<span class="op">=</span><span class="cn">FALSE</span>
   <span class="op">)</span>
+
+<span class="co"># MAybe returned failed sequences as an attribute on the output?</span>
+
 
 <span class="co">## OR fetch sequences from a species list</span>
 <span class="va">spp_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readLines.html">readLines</a></span><span class="op">(</span><span class="st">"species_list.txt"</span><span class="op">)</span>
@@ -170,7 +173,7 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Fetch mitochondrial genomes from genbank by searching for a taxon name</span>
 <span class="va">genbank_mito</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_seqs.html">fetch_seqs</a></span><span class="op">(</span>
-  <span class="st">"Drosophila suzukii"</span>, database<span class="op">=</span><span class="st">"genbank"</span>, marker<span class="op">=</span><span class="st">"mitochondria"</span>,
+  <span class="st">"Scaptodrosophila"</span>, database<span class="op">=</span><span class="st">"genbank"</span>, marker<span class="op">=</span><span class="st">"mitochondria"</span>,
   output <span class="op">=</span> <span class="st">"gb-binom"</span>, multithread <span class="op">=</span> <span class="cn">FALSE</span>, quiet<span class="op">=</span><span class="cn">FALSE</span>
   <span class="op">)</span>
 

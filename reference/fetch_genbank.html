@@ -162,7 +162,9 @@ loprovencyclife <code>[filter]</code> 	Entries with LinkOut links to the Encyclo
   db <span class='op'>=</span> <span class='cn'>NULL</span>,
   multithread <span class='op'>=</span> <span class='cn'>FALSE</span>,
   quiet <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  progress <span class='op'>=</span> <span class='cn'>FALSE</span>
+  progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  retry_attempt <span class='op'>=</span> <span class='fl'>3</span>,
+  retry_wait <span class='op'>=</span> <span class='fl'>5</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -222,6 +224,14 @@ or "standard" which outputs the default format for each database. For bold this 
     <tr>
       <th>progress</th>
       <td><p>A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.</p></td>
+    </tr>
+    <tr>
+      <th>retry_attempt</th>
+      <td><p>The number of query attempts in case of query failure due to poor internet connection. (Genbank only)</p></td>
+    </tr>
+    <tr>
+      <th>retry_wait</th>
+      <td><p>How long to wait between query attempts. (Genbank only)</p></td>
     </tr>
     </table>
 

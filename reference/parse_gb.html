@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>fetch_seqs function — fetch_seqs • taxreturn</title>
+<title>Parse genbank flat files — parse_gb • taxreturn</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="fetch_seqs function — fetch_seqs" />
-<meta property="og:description" content="fetch_seqs function" />
+<meta property="og:title" content="Parse genbank flat files — parse_gb" />
+<meta property="og:description" content="Parse genbank flat files" />
 
 
 
@@ -114,103 +114,23 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>fetch_seqs function</h1>
+    <h1>Parse genbank flat files</h1>
     <small class="dont-index">Source: <a href='https://github.com/alexpiper/taxreturn/blob/master/R/fetch_sequences.R'><code>R/fetch_sequences.R</code></a></small>
-    <div class="hidden name"><code>fetch_seqs.Rd</code></div>
+    <div class="hidden name"><code>parse_gb.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>fetch_seqs function</p>
+    <p>Parse genbank flat files</p>
     </div>
 
-    <pre class="usage"><span class='fu'>fetch_seqs</span><span class='op'>(</span>
-  <span class='va'>x</span>,
-  <span class='va'>database</span>,
-  marker <span class='op'>=</span> <span class='cn'>NULL</span>,
-  output <span class='op'>=</span> <span class='st'>"gb-binom"</span>,
-  min_length <span class='op'>=</span> <span class='fl'>1</span>,
-  max_length <span class='op'>=</span> <span class='fl'>2000</span>,
-  subsample <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  chunk_size <span class='op'>=</span> <span class='cn'>NULL</span>,
-  db <span class='op'>=</span> <span class='cn'>NULL</span>,
-  multithread <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  quiet <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  progress <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  retry_attempt <span class='op'>=</span> <span class='fl'>3</span>,
-  retry_wait <span class='op'>=</span> <span class='fl'>5</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>parse_gb</span><span class='op'>(</span><span class='va'>gb</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>A taxon name or vector of taxon names to download sequences for.</p></td>
-    </tr>
-    <tr>
-      <th>database</th>
-      <td><p>The database to download from. For NCBI GenBank this currently onlt accepts the arguments 'nuccore' or 'genbank' which is an alias for nuccore.
-Alternatively sequences can be downloaded from the Barcode of Life Data System (BOLD) using 'bold'</p></td>
-    </tr>
-    <tr>
-      <th>marker</th>
-      <td><p>The barcode marker used as a search term for the database. If you are targetting a gene, adding a suffix [GENE] will increase the search selectivity.
-The default for Genbank is 'COI[GENE] OR COX1[GENE] OR COXI[GENE]', while the default for BOLD is 'COI-5P'.
-If this is set to "mitochondria" and database is 'nuccore', or 'genbank'it will download mitochondrial genomes only.
-If this is set to "genome" and database is 'nuccore', or 'genbank'it will download complete genome sequences only.</p></td>
-    </tr>
-    <tr>
-      <th>output</th>
-      <td><p>The output format for the taxonomy in fasta headers.
-Options include "h" for full heirarchial taxonomy (Accession;Domain;Phylum;Class;Order;Family;Genus;Species),
-"binom" for just genus species binomials (Accession;Genus_species),
-"bold" for BOLD taxonomic ID only (Accession;BoldTaxID),
-"gb" for genbank taxonomic ID (Accession|GBTaxID),
-"gb-binom" which outputs genbank taxonomic ID's and Genus species binomials, translating BOLD taxonomic ID's to genbank in the process (Accession|GBTaxID;Genus_species)
-or "standard" which outputs the default format for each database. For bold this is <code>sampleid|species name|markercode|genbankid</code></p></td>
-    </tr>
-    <tr>
-      <th>min_length</th>
-      <td><p>The maximum length of the query sequence to return. Default 1.</p></td>
-    </tr>
-    <tr>
-      <th>max_length</th>
-      <td><p>The maximum length of the query sequence to return.
-This can be useful for ensuring no off-target sequences are returned. Default 2000.</p></td>
-    </tr>
-    <tr>
-      <th>subsample</th>
-      <td><p>(Numeric) return a random subsample of sequences from the search.</p></td>
-    </tr>
-    <tr>
-      <th>chunk_size</th>
-      <td><p>Split up the queries made (for genbank), or returned records(for BOLD) into chunks of this size to avoid overloading API servers.
-if left NULL, the default for genbank searches will be 10,000 for regular queries, 1,000 if marker is "mitochondria", and 1 if marker is "genome"
-For BOLD queries the default is 100,000 returned records</p></td>
-    </tr>
-    <tr>
-      <th>db</th>
-      <td><p>a database file generated using <code><a href='get_ncbi_taxonomy.html'>taxreturn::get_ncbi_taxonomy()</a></code>. Generated automatically if NULL.</p></td>
-    </tr>
-    <tr>
-      <th>multithread</th>
-      <td><p>Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use</p></td>
-    </tr>
-    <tr>
-      <th>quiet</th>
-      <td><p>Whether progress should be printed to the console.</p></td>
-    </tr>
-    <tr>
-      <th>progress</th>
-      <td><p>A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.</p></td>
-    </tr>
-    <tr>
-      <th>retry_attempt</th>
-      <td><p>The number of query attempts in case of query failure due to poor internet connection. (Genbank only)</p></td>
-    </tr>
-    <tr>
-      <th>retry_wait</th>
-      <td><p>How long to wait between query attempts. (Genbank only)</p></td>
+      <th>gb</th>
+      <td><p>A genbank flat file</p></td>
     </tr>
     </table>
 
