@@ -100,7 +100,8 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
 
     #seqs <- purrr::map(
     #  id_list, read_genbank_chunk, quiet = FALSE, retry_attempt = retry_attempt, retry_wait = retry_wait)
-    failed <- id_list[sapply(seqs, is.null)]
+
+    failed <- id_list[!sapply(seqs, class)=="DNAbin"]
     seqs <- seqs[sapply(seqs, class)=="DNAbin"]
     seqs <- concat_DNAbin(seqs)
     spp <- attr(seqs, "species") %>% stringr::str_replace_all("_", " ")
@@ -111,7 +112,7 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
       names <- names(seqs)
     } else if (output == "binom") {
       names <- paste0(acc, ";", spp)
-    } else if (output == "h") { # Hierarchial output
+    } else if (output == "h") { # Hierarchical output
       names <- tibble::enframe(spp, name=NULL, value="tax_name") %>%
         dplyr::mutate(sampleid = acc) %>%
         dplyr::left_join(db, by="tax_name") %>%
@@ -119,7 +120,6 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
         dplyr::mutate(names = names %>%
                         stringr::str_replace_all(pattern = ";;", replacement = ";")) %>%
         dplyr::pull(names)
-
     } else if (output == "gb") { # Genbank taxID output
       names <- tibble::enframe(spp, name=NULL, value="tax_name") %>%
         dplyr::mutate(sampleid = acc) %>%
@@ -169,17 +169,13 @@ parse_gb <- function(gb){
   }
   start <- which(grepl("^ORIGIN", gb))
   stop <- which(grepl("^//", gb))
-  #if((!length(start) == n_seqs) | (!length(stop)==n_seqs)){
-  #  return(gb)
-  #  stop("error detected NA")
-  #}
   seqs <- vector("character", length = n_seqs)
   for (l in 1:n_seqs){
     seqs[[l]] <- toupper(paste(stringr::str_remove_all(gb[(start[l]+1):(stop[l]-1)], "[^A-Za-z]"), collapse=""))
   }
   names(seqs) <- gsub("+ACCESSION +", "", grep("ACCESSION", gb, value = TRUE))
   seqs <- insect::char2dna(seqs)
-  sp <- gsub(" +ORGANISM +", "", grep("ORGANISM", gb, value = TRUE))
+  sp <- gsub(" +ORGANISM +", "", grep(" +ORGANISM +", gb, value = TRUE))
   attr(seqs, "species") <- gsub(" ", "_", sp)
   return(seqs)
 }
@@ -215,45 +211,14 @@ read_genbank_chunk <- function(gid, quiet = FALSE, retry_attempt=3, retry_wait=5
     attempt <- attempt + 1
   }
   if(length(seqs) == length(gid)){
-    return(seqs)
+    out <- seqs
   } else{
     if(!quiet)warning("length of returned sequences does not match length of query")
-    return(NULL)
+    out <- NULL
   }
+  attr(out, "query") <- gid
+  return(out)
 }
-
-
-
-
-#read_genbank_chunk <- function(acc, quiet = FALSE, retry_attempt=3, retry_wait=5) {
-#  n_seqs <- length(acc)
-#  URL <- paste("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=", paste(acc, collapse = ","), "&rettype=gb&retmode=text", sep = "")
-#  gb <- NULL
-#  attempt <- 1
-#  # Download with error handling - What if i do while GB is <length acc?
-#  while(is.null(gb) && attempt <= (retry_attempt+1)) {
-#    gb <- tryCatch({
-#      scan(file = URL, what = "", sep = "\n", quiet = TRUE)
-#    }, error = function(e){
-#      if (!quiet) {cat(paste("Failed attempt ", attempt,"\n"))}
-#      Sys.sleep(retry_wait)
-#      NULL
-#    })
-#    attempt <- attempt + 1
-#  }
-#  if(!is.null(gb)){
-#    seqs <- parse_gb(gb)
-#    if(length(seqs) == length(acc)){
-#      return(seqs)
-#    } else{
-#      if(!quiet)warning("length of returned sequences does not match length of query")
-#      return(NULL)
-#    }
-#  } else{
-#    return(NULL)
-#  }
-#}
-
 
 # BOLD functions --------------------------------------------------------
 
@@ -537,7 +502,7 @@ fetch_seqs <- function(x, database, marker = NULL, output = "gb-binom",
       res <- purrr::map(x, fetch_genbank, database = database, marker = marker,
         output = output, min_length = min_length, max_length = max_length,
         subsample=subsample, chunk_size=chunk_size, quiet = quiet, multithread=multithread,
-        db=db, progress = progress)
+        db=db, retry_attempt = retry_attempt, retry_wait = retry_wait, progress = progress)
       res <- res[!sapply(res, is.null)]
       res <- concat_DNAbin(res)
       res

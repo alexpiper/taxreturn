@@ -113,18 +113,23 @@ acc2hex <- function(x, force=FALSE){
 #' @examples
 concat_DNAbin <- function(...){
   dots <- list(...)
-  if(is.list(dots[[1]])){
+  if(is.list(dots[[1]]) & length(dots) == 1){
     dots <- dots[[1]]
   }
+  to_remove <- sapply(dots, is.null)
+  dots <- dots[!to_remove]
   nlsts <- length(dots)
   DNA <- any(sapply(dots, class) == "DNAbin")
   if(nlsts == 0) return(NULL)
   if(nlsts == 1) return(dots[[1]])
   islist <- sapply(dots, is.list)
   for(i in which(!islist)){
+    print(i)
     tmpattr <- attributes(dots[[i]])
     attributes(dots[[i]]) <- NULL
     dots[[i]] <- list(dots[[i]])
+
+    print(tmpattr)
     attributes(dots[[i]]) <- tmpattr
   }
   dots <- lapply(dots, unclass)

@@ -387,9 +387,9 @@ summarise_fasta <- function(x, label=NULL, origin=NULL) {
 #'
 #' @examples
 setup_multithread <- function(multithread, quiet=FALSE){
-  ncores <- future::availableCores() -1
+  ncores <- future::availableCores()
   if(isTRUE(multithread)){
-    cores <- ncores
+    cores <- ncores-1
     if(!quiet){message("Multithreading with ", cores, " cores")}
     future::plan(future::multiprocess, workers=cores)
   } else if (is.numeric(multithread) & multithread > 1){
