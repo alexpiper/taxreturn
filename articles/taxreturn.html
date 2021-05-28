@@ -77,7 +77,7 @@
             <h3 class="subtitle">An R package for download and curation of public DNA barcode reference data</h3>
                         <h4 class="author">Author: Alexander M Piper</h4>
             
-            <h4 class="date">2021-05-27</h4>
+            <h4 class="date">2021-05-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/alexpiper/taxreturn/blob/master/vignettes/taxreturn.Rmd"><code>vignettes/taxreturn.Rmd</code></a></small>
       <div class="hidden name"><code>taxreturn.Rmd</code></div>
@@ -136,9 +136,6 @@
   <span class="st">"Drosophila"</span>, database<span class="op">=</span><span class="st">"genbank"</span>, marker<span class="op">=</span><span class="st">"COI[GENE] OR COX1[GENE] OR COXI[GENE]"</span>, 
   output <span class="op">=</span> <span class="st">"gb-binom"</span>, multithread <span class="op">=</span> <span class="cn">FALSE</span>, quiet<span class="op">=</span><span class="cn">FALSE</span>
   <span class="op">)</span>
-
-<span class="co"># MAybe returned failed sequences as an attribute on the output?</span>
-
 
 <span class="co">## OR fetch sequences from a species list</span>
 <span class="va">spp_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readLines.html">readLines</a></span><span class="op">(</span><span class="st">"species_list.txt"</span><span class="op">)</span>
@@ -209,21 +206,21 @@
 <span class="co"># Read in sequence dataset to be used in model training</span>
 <span class="va">seqs</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/Biostrings/man/XStringSet-io.html">readDNAStringSet</a></span><span class="op">(</span><span class="st">"MIDORI_LONGEST_20180221_COI.fasta"</span><span class="op">)</span>
 
-<span class="co"># Trim the sequences to the amplified region using a virtual PCR</span>
-<span class="va">amplicon</span> <span class="op">&lt;-</span> <span class="fu">insect</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/insect/man/virtualPCR.html">virtualPCR</a></span><span class="op">(</span>
-  <span class="va">seqs</span>, up <span class="op">=</span> <span class="st">"TITCIACIAAYCAYAARGAYATTGG"</span>,  <span class="co">#Forward primer</span>
-  down<span class="op">=</span> <span class="st">"TAIACYTCIGGRTGICCRAARAAYCA"</span>, <span class="co">#Reverse primer</span>
-  cores<span class="op">=</span><span class="fl">1</span>, rcdown <span class="op">=</span> <span class="cn">TRUE</span>, trimprimers <span class="op">=</span> <span class="cn">TRUE</span>
-  <span class="op">)</span>
-
-<span class="co">#Only retain amplicons of the appropriate length (in this case 658bp)</span>
-<span class="va">amplicon_filtered</span> <span class="op">&lt;-</span> <span class="va">amplicon</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/lengths.html">lengths</a></span><span class="op">(</span><span class="va">amplicon</span><span class="op">)</span> <span class="op">==</span> <span class="fl">658</span><span class="op">]</span>
-<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">aphid</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/aphid/man/derivePHMM.html">derivePHMM</a></span><span class="op">(</span><span class="va">amplicon_filtered</span><span class="op">)</span></code></pre></div>
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">aphid</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/aphid/man/derivePHMM.html">derivePHMM</a></span><span class="op">(</span><span class="va">seqs</span><span class="op">)</span></code></pre></div>
+</div>
+<div id="optional-trim-model-to-desired-amplicon" class="section level2">
+<h2 class="hasAnchor">
+<a href="#optional-trim-model-to-desired-amplicon" class="anchor"></a>Optional: Trim model to desired amplicon</h2>
+<p>Depending on the taxonomic classifier used, it can be beneficial to trim the reference sequences down to the actual region amplified by the primers. This can be achieved by subsetting the full PHMM model using primer sequences or binding positions. Below we will subset the model to the region amplified by the fwhF2-fwhR2n primers of Vamos et al 2017.</p>
+<p>However, if you wish to keep the full length sequences, skip this section.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R">
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_model.html">subset_model</a></span><span class="op">(</span><span class="va">model</span>, primers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GGDACWGGWTGAACWGTWTAYCCHCC"</span>, <span class="st">"GTRATWGCHCCDGCTARWACWGG"</span><span class="op">)</span>, trimprimers <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <p>Now that we have our trained PHMM, it can be used with the map_to_model function wto remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.</p>
 <p>Firstly we will merge the sequences from each database together. As BOLD and GenBank share some sequence, we will dereplicate the merged file to only the unique accession numbers to speed things up.</p>
 <p>As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases outside the range defined by the model. As here we are looking at a coding gene, we will also set check_frame to TRUE to ensure that any insertions or deletions are in multiples of 3, which is a quick and dirty way of identifying and removing pseudogenic sequences.</p>
 <p>When extracting the target region from longer sequences such as mitochondrial genomes, the dynamic programming algorithm used to align to the PHMM can take a very long time so this function implements a k-mer based pre-screening to reduce the number of wasteful alignments. This works by splitting any sequence that is more than twice the length of the input model into chunks, finding the most similar chunk to the reference using a rapid k-mer pre-screen, then using the most similar chunk and its neighbours to seed the PHMM alignment. The stringency of this screen can be modified using the kmer_threshold parameter, with the default excluding any sequence more than 30% diverged (kmer_threshold = 0.3) for 5-mers (k = 5). To further speed things up, you can set multithread to the number of cores you wish to use, or TRUE to autodetect number of cores.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Merge all downloaded sequences</span>
 <span class="va">seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/concat_DNAbin.html">concat_DNAbin</a></span><span class="op">(</span><span class="va">genbank_seqs</span>, <span class="va">bold_seqs</span>, <span class="va">genbank_mito</span><span class="op">)</span>
 
@@ -233,7 +230,7 @@
 
 <span class="co">#remove non-homologous sequences</span>
 <span class="va">filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/map_to_model.html">map_to_model</a></span><span class="op">(</span>
-  <span class="va">uniq_seqs</span>, <span class="va">model</span>, min_score <span class="op">=</span> <span class="fl">100</span>, min_length <span class="op">=</span> <span class="fl">200</span>, max_N<span class="op">=</span><span class="cn">Inf</span>, max_gap<span class="op">=</span><span class="cn">Inf</span>, 
+  <span class="va">uniq_seqs</span>, <span class="va">model</span>, min_score <span class="op">=</span> <span class="fl">100</span>, min_length <span class="op">=</span> <span class="fl">100</span>, max_N<span class="op">=</span><span class="cn">Inf</span>, max_gap<span class="op">=</span><span class="cn">Inf</span>, 
   shave<span class="op">=</span><span class="cn">TRUE</span>, check_frame<span class="op">=</span><span class="cn">TRUE</span>, kmer_threshold <span class="op">=</span> <span class="fl">0.3</span>, k<span class="op">=</span><span class="fl">5</span>,
   multithread <span class="op">=</span> <span class="cn">FALSE</span>, quiet<span class="op">=</span><span class="cn">FALSE</span>
   <span class="op">)</span></code></pre></div>
@@ -242,7 +239,7 @@
 <h2 class="hasAnchor">
 <a href="#resolve-contaminated-sequences-and-misannotated-taxonomy" class="anchor"></a>Resolve Contaminated sequences and misannotated taxonomy</h2>
 <p>The other main form of misannotation that can effect metabarcoding datasets is misannotated taxonomy for the reference sequences. To detect putatively misannotated sequences we will cluster sequences at a specific similarity threshold (in this case 97% similarity), and compare the taxonomy at a certain rank (Genus in this case) within clusters. A sequence will be flagged if its taxonomy diverges from the other sequences within its respective cluster by more than a certain confidence (0.8 by default, meaning the putatively misannotated sequence must diverge from 4/5 other sequences in its cluster)</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Load the NCBI taxonomy </span>
 <span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_ncbi_taxonomy.html">get_ncbi_taxonomy</a></span><span class="op">(</span><span class="op">)</span>
 
@@ -268,7 +265,7 @@
 <h2 class="hasAnchor">
 <a href="#optional-filter-for-stop-codons" class="anchor"></a>Optional: Filter for stop codons</h2>
 <p>As the COI barcode is a protein coding region, underlying evolutionary constraints mean that any sequences containing stop codons or indels of lengths which are not a multiple of 3 commonly indicate pseudogenes. The codon_filter function detects the reading frame of the sequence, and ensures it contains no frameshifts or stop codons. Note that you must select the appropriate genetic code here otherwise you risk losing all your sequences. Available codes can be found using <code><a href="https://rdrr.io/pkg/Biostrings/man/GENETIC_CODE.html">Biostrings::GENETIC_CODE_TABLE</a></code>. If you are not working with a protein coding gene, skip this section.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#SGC4 is invertebrate mitochondrial genetic code</span>
 <span class="va">purged</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/codon_filter.html">codon_filter</a></span><span class="op">(</span>
   <span class="va">purged</span>, genetic_code <span class="op">=</span> <span class="st">"SGC4"</span>, tryrc <span class="op">=</span> <span class="cn">TRUE</span>, resolve_draws <span class="op">=</span> <span class="st">"majority"</span>
@@ -278,7 +275,7 @@
 <h2 class="hasAnchor">
 <a href="#resolve-synonyms" class="anchor"></a>Resolve synonyms</h2>
 <p>Classification of sequences into reference taxonomy can be complicated by the existence of taxonomic synonyms. To resolve this we use the NCBI synonyms list to ensure each name represents a currently valid taxa, and replace known synonyms with accepted taxon names.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">resolved</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolve_synonyms_ncbi.html">resolve_synonyms_ncbi</a></span><span class="op">(</span><span class="va">purged</span><span class="op">)</span>
 
 <span class="co">#Check for differences in names</span>
@@ -289,27 +286,12 @@
 <a href="#prune-large-groups" class="anchor"></a>Prune large groups</h2>
 <p>In many cases groups of taxa are over-represented in databases, which can slow down and bias the taxonomic assignment process. Here we prune over-represented groups down to 5 sequences. This function has the option of discarding these sequences by length (removing smaller sequences first), or randomly.</p>
 <p>We can also choose to de-duplicate the sequences here, which will remove all completely identical sequences before pruning down the group sizes.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Prune group sizes down to 5, removing all identical sequences first</span>
 <span class="va">pruned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prune_groups.html">prune_groups</a></span><span class="op">(</span>
   <span class="va">resolved</span>, max_group_size <span class="op">=</span> <span class="fl">5</span>, discardby <span class="op">=</span> <span class="st">"length"</span>,
   dedup<span class="op">=</span><span class="cn">TRUE</span>, quiet <span class="op">=</span> <span class="cn">FALSE</span>
   <span class="op">)</span></code></pre></div>
-</div>
-<div id="optional-trim-to-primer-regions" class="section level2">
-<h2 class="hasAnchor">
-<a href="#optional-trim-to-primer-regions" class="anchor"></a>Optional: Trim to primer regions</h2>
-<p>Depending on the taxonomic classifier used, it can be beneficial to trim the reference sequences down to the actual region amplified by the primers. Below we will trim the sequences to the primer regions we use for metabarcoding using the virtualPCR function from the insect R package.</p>
-<p>However, if you wish to keep the full length sequences, skip this section.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">#Trim to primer region using virtualPCR from insect package</span>
-<span class="va">amplicon</span> <span class="op">&lt;-</span> <span class="fu">insect</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/insect/man/virtualPCR.html">virtualPCR</a></span><span class="op">(</span>
-  <span class="va">pruned</span>, up <span class="op">=</span> <span class="st">"ACWGGWTGRACWGTNTAYCC"</span>, down <span class="op">=</span> <span class="st">"ARYATDGTRATDGCHCCDGC"</span>,
-  cores <span class="op">=</span> <span class="fl">1</span>, rcdown <span class="op">=</span> <span class="cn">TRUE</span>, trimprimers <span class="op">=</span> <span class="cn">TRUE</span>
-  <span class="op">)</span>
-
-<span class="co">#Check the lengths of the trimmed sequences</span>
-<span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lengths.html">lengths</a></span><span class="op">(</span><span class="va">amplicon</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="reformat-to-taxonomic-hierarchy" class="section level2">
 <h2 class="hasAnchor">
@@ -320,7 +302,7 @@
 <span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_ncbi_taxonomy.html">get_ncbi_taxonomy</a></span><span class="op">(</span><span class="op">)</span>
 
 <span class="co">#Reformat to complete taxonomic heirarchy </span>
-<span class="va">hierarchy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reformat_hierarchy.html">reformat_hierarchy</a></span><span class="op">(</span><span class="va">amplicon</span>, db<span class="op">=</span><span class="va">db</span>, quiet<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span>
+<span class="va">hierarchy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reformat_hierarchy.html">reformat_hierarchy</a></span><span class="op">(</span><span class="va">pruned</span>, db<span class="op">=</span><span class="va">db</span>, quiet<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span>
 
 <span class="co">#See if this worked</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">hierarchy</span><span class="op">)</span><span class="op">)</span>
