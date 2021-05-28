@@ -84,9 +84,6 @@ genbank_seqs <- fetch_seqs(
   output = "gb-binom", multithread = FALSE, quiet=FALSE
   )
 
-# MAybe returned failed sequences as an attribute on the output?
-
-
 ## OR fetch sequences from a species list
 spp_list <- readLines("species_list.txt")
 
@@ -153,6 +150,7 @@ data("model", package="taxreturn")
 print(model)
 ```
 
+
 However if you are working with a different barcode locus, or if you wish to improve accuracy by training on a specific taxonomic group you can train a new PHMM model using the aphid R package as below:
 
 Note: if you are using a public dataset as a reference alignment to build the model, it may be worth curating it manually first, as a poor reference alignment will produce a poor model and greatly affect downstream analysis.
@@ -163,16 +161,19 @@ library(aphid)
 # Read in sequence dataset to be used in model training
 seqs <-  readDNAStringSet("MIDORI_LONGEST_20180221_COI.fasta")
 
-# Trim the sequences to the amplified region using a virtual PCR
-amplicon <- insect::virtualPCR(
-  seqs, up = "TITCIACIAAYCAYAARGAYATTGG",  #Forward primer
-  down= "TAIACYTCIGGRTGICCRAARAAYCA", #Reverse primer
-  cores=1, rcdown = TRUE, trimprimers = TRUE
-  )
+model <- aphid::derivePHMM(seqs)
+```
 
-#Only retain amplicons of the appropriate length (in this case 658bp)
-amplicon_filtered <- amplicon[lengths(amplicon) == 658]
-model <- aphid::derivePHMM(amplicon_filtered)
+## Optional: Trim model to desired amplicon
+
+Depending on the taxonomic classifier used, it can be beneficial to trim the reference sequences down to the actual region amplified by the primers. This can be achieved by subsetting the full PHMM model using primer sequences or binding positions. Below we will subset the model to the region amplified by the fwhF2-fwhR2n primers of Vamos et al 2017.
+
+However, if you wish to keep the full length sequences, skip this section.
+
+```{r trim to primer regions}
+
+model <- subset_model(model, primers = c("GGDACWGGWTGAACWGTWTAYCCHCC", "GTRATWGCHCCDGCTARWACWGG"), trimprimers = TRUE)
+
 ```
 
 Now that we have our trained PHMM, it can be used with the map_to_model function wto remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.
@@ -193,11 +194,10 @@ uniq_seqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" ))]
 
 #remove non-homologous sequences
 filtered <- map_to_model(
-  uniq_seqs, model, min_score = 100, min_length = 200, max_N=Inf, max_gap=Inf, 
+  uniq_seqs, model, min_score = 100, min_length = 100, max_N=Inf, max_gap=Inf, 
   shave=TRUE, check_frame=TRUE, kmer_threshold = 0.3, k=5,
   multithread = FALSE, quiet=FALSE
   )
-
 ```
 
 ## Resolve Contaminated sequences and misannotated taxonomy
@@ -263,22 +263,6 @@ pruned <- prune_groups(
   )
 ```
 
-## Optional: Trim to primer regions
-
-Depending on the taxonomic classifier used, it can be beneficial to trim the reference sequences down to the actual region amplified by the primers. Below we will trim the sequences to the primer regions we use for metabarcoding using the virtualPCR function from the insect R package.
-
-However, if you wish to keep the full length sequences, skip this section.
-
-```{r trim to primer regions}
-#Trim to primer region using virtualPCR from insect package
-amplicon <- insect::virtualPCR(
-  pruned, up = "ACWGGWTGRACWGTNTAYCC", down = "ARYATDGTRATDGCHCCDGC",
-  cores = 1, rcdown = TRUE, trimprimers = TRUE
-  )
-
-#Check the lengths of the trimmed sequences
-table(lengths(amplicon))
-```
 
 ## Reformat to taxonomic hierarchy
 
@@ -289,7 +273,7 @@ Finally, we will reformat to fasta annotations to contain the full taxonomic hie
 db <- get_ncbi_taxonomy()
 
 #Reformat to complete taxonomic heirarchy 
-hierarchy <- reformat_hierarchy(amplicon, db=db, quiet=FALSE)
+hierarchy <- reformat_hierarchy(pruned, db=db, quiet=FALSE)
 
 #See if this worked
 head(names(hierarchy))
