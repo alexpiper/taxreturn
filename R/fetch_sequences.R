@@ -209,7 +209,7 @@ parse_gb <- function(gb){
   stop <- which(grepl("^//", gb))
 
   # Check for malformed start and stops
-  good_records <- stringr::str_detect(gb[stop-1], "[0-9] [acgt]")
+  good_records <- stringr::str_detect(gb[stop-1], "[0-9] [a-z-]")
   stop <- stop[good_records]
 
   if (length(start) == length(stop)){
@@ -222,7 +222,6 @@ parse_gb <- function(gb){
   for (l in 1:n_seqs){
     seqs[[l]] <- toupper(paste(stringr::str_remove_all(gb[(start[l]+1):(stop[l]-1)], "[^A-Za-z]"), collapse=""))
   }
-
   # Handle seq names
   seq_names <- gsub("+ACCESSION +", "", grep("ACCESSION", gb, value = TRUE))
   names(seqs) <- seq_names[good_records]
