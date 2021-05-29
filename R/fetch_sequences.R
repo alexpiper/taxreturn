@@ -153,6 +153,7 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
 #' @return
 #' @importFrom insect char2dna
 #' @importFrom stringr str_remove_all
+#' @importFrom stringr str_detect
 #' @examples
 parse_gb <- function(gb){
   # Truncate record at last // to avoid broken records
@@ -163,20 +164,33 @@ parse_gb <- function(gb){
     print(max(which(grepl("^//", gb))))
     return(NULL)
   })
-  n_seqs <- sum(grepl("ACCESSION", gb))
-  if(n_seqs < 1){
+  if(sum(grepl("ACCESSION", gb)) < 1){
     return(NULL)
   }
   start <- which(grepl("^ORIGIN", gb))
   stop <- which(grepl("^//", gb))
+
+  # Check for malformed start and stops
+  good_records <- stringr::str_detect(gb[stop-1], "[0-9] [acgt]")
+  stop <- stop[good_records]
+
+  if (length(start) == length(stop)){
+    n_seqs <- length(start)
+  } else{
+    writeLines(gb, "failed.gb")
+    stop("Incorrect length of start and stop, dumped failing records to failed.gb")
+  }
   seqs <- vector("character", length = n_seqs)
   for (l in 1:n_seqs){
     seqs[[l]] <- toupper(paste(stringr::str_remove_all(gb[(start[l]+1):(stop[l]-1)], "[^A-Za-z]"), collapse=""))
   }
-  names(seqs) <- gsub("+ACCESSION +", "", grep("ACCESSION", gb, value = TRUE))
+
+  # Handle seq names
+  seq_names <- gsub("+ACCESSION +", "", grep("ACCESSION", gb, value = TRUE))
+  names(seqs) <- seq_names[good_records]
   seqs <- insect::char2dna(seqs)
-  sp <- gsub(" +ORGANISM +", "", grep(" +ORGANISM +", gb, value = TRUE))
-  attr(seqs, "species") <- gsub(" ", "_", sp)
+  sp <- gsub(" ", "_", gsub(" +ORGANISM +", "", grep(" +ORGANISM +", gb, value = TRUE)))
+  attr(seqs, "species") <- sp[good_records]
   return(seqs)
 }
 

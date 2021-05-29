@@ -239,3 +239,63 @@ hex2acc <- function(x, force=FALSE){
 }
 
 
+
+# Multithread -------------------------------------------------------------
+#' Setup multithreading
+#'
+#' @param multithread Number of cores
+#' @param quiet Whether progress should be printed to console
+#'
+#' @return
+#' @import future
+#'
+#' @examples
+setup_multithread <- function(multithread, quiet=FALSE){
+  ncores <- future::availableCores()
+  if(isTRUE(multithread)){
+    cores <- ncores-1
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+    future::plan(future::multiprocess, workers=cores)
+  } else if (is.numeric(multithread) & multithread > 1){
+    cores <- multithread
+    if(cores > ncores){
+      cores <- ncores
+      warning("The value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
+    }
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+    future::plan(future::multiprocess, workers=cores)
+  } else if(isFALSE(multithread) | multithread==1){
+    future::plan(future::sequential)
+  } else (
+    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
+  )
+}
+
+#' Setup parallel
+#'
+#' @param multithread Number of cores
+#' @param quiet Whether progress should be printed to console
+#'
+#' @return
+#' @importFrom future availableCores
+#'
+#' @examples
+setup_para <- function(multithread, quiet=FALSE){
+  ncores <- future::availableCores() -1
+  if(isTRUE(multithread)){
+    cores <- ncores
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+  } else if (is.numeric(multithread) & multithread > 1){
+    cores <- multithread
+    if(cores > ncores){
+      cores <- ncores
+      warning("The value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
+    }
+    if(!quiet){message("Multithreading with ", cores, " cores")}
+  } else if(isFALSE(multithread) | multithread==1){
+    cores <- 1
+  } else (
+    stop("Multithread must be a logical or numeric vector of the numbers of cores to use")
+  )
+  return(cores)
+}
