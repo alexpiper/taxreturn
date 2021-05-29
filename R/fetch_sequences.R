@@ -146,6 +146,44 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
   return(out)
 }
 
+#' Read genbank chunk
+#'
+#' @param gid a vector of GenBank ID's
+#' @param quiet Whether progress should be printed to console.
+#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection.
+#' @param retry_wait How long to wait between query attempts
+#'
+#' @return
+#'
+#' @examples
+read_genbank_chunk <- function(gid, quiet = FALSE, retry_attempt=3, retry_wait=5) {
+  n_seqs <- length(gid)
+  URL <- paste("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=", paste(gid, collapse = ","), "&rettype=gb&retmode=text", sep = "")
+  gb <- NULL
+  seqs <- NULL
+  attempt <- 1
+  # Download with error handling
+  while((is.null(gb) | (length(seqs) < length(gid))) && attempt <= (retry_attempt+1)) {
+    gb <- tryCatch({
+      scan(file = URL, what = "", sep = "\n", quiet = TRUE)
+    }, error = function(e){
+      if (!quiet) {cat(paste("Failed attempt ", attempt,"\n"))}
+      Sys.sleep(retry_wait)
+      NULL
+    })
+    if(!is.null(gb)){
+      seqs <- parse_gb(gb)
+    }
+    attempt <- attempt + 1
+  }
+  if(!length(seqs) == length(gid)){
+    if(!quiet)warning("length of returned sequences does not match length of query")
+  }
+  out <- seqs
+  attr(out, "query") <- gid
+  return(out)
+}
+
 #' Parse genbank flat files
 #'
 #' @param gb A genbank flat file
@@ -192,46 +230,6 @@ parse_gb <- function(gb){
   sp <- gsub(" ", "_", gsub(" +ORGANISM +", "", grep(" +ORGANISM +", gb, value = TRUE)))
   attr(seqs, "species") <- sp[good_records]
   return(seqs)
-}
-
-#' Read genbank chunk
-#'
-#' @param gid a vector of GenBank ID's
-#' @param quiet Whether progress should be printed to console.
-#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection.
-#' @param retry_wait How long to wait between query attempts
-#'
-#' @return
-#'
-#' @examples
-read_genbank_chunk <- function(gid, quiet = FALSE, retry_attempt=3, retry_wait=5) {
-  n_seqs <- length(gid)
-  URL <- paste("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=", paste(gid, collapse = ","), "&rettype=gb&retmode=text", sep = "")
-  gb <- NULL
-  seqs <- NULL
-  attempt <- 1
-  # Download with error handling
-  while((is.null(gb) | (length(seqs) < length(gid))) && attempt <= (retry_attempt+1)) {
-    gb <- tryCatch({
-      scan(file = URL, what = "", sep = "\n", quiet = TRUE)
-    }, error = function(e){
-      if (!quiet) {cat(paste("Failed attempt ", attempt,"\n"))}
-      Sys.sleep(retry_wait)
-      NULL
-    })
-    if(!is.null(gb)){
-      seqs <- parse_gb(gb)
-    }
-    attempt <- attempt + 1
-  }
-  if(length(seqs) == length(gid)){
-    out <- seqs
-  } else{
-    if(!quiet)warning("length of returned sequences does not match length of query")
-    out <- NULL
-  }
-  attr(out, "query") <- gid
-  return(out)
 }
 
 # BOLD functions --------------------------------------------------------
