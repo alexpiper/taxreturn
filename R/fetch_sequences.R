@@ -504,6 +504,9 @@ fetch_seqs <- function(x, database, marker = NULL, output = "gb-binom",
     db <- get_ncbi_taxonomy(include_synonyms = TRUE, force=FALSE)
   }
 
+  # Make sure x is unique
+  x <- unique(x)
+
   # Genbank
   if (database %in% c("genbank", "nuccore")) {
       if(!quiet) {message("Downloading from genbank")}

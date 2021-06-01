@@ -13,7 +13,7 @@ map_to_model(
   max_gap = Inf,
   max_N = Inf,
   check_frame = FALSE,
-  kmer_threshold = 0.3,
+  kmer_threshold = 0.5,
   k = 5,
   shave = TRUE,
   trim_ends = FALSE,
@@ -42,9 +42,9 @@ see \code{?aphid::Viterbi} for more information about the alignment process.}
 
 \item{check_frame}{Whether sequences with insertions or deletions which arent in multiples of 3 should be removed from output. Useful for coding loci such as COI but should not be used for non-coding loci. Default is FALSE.}
 
-\item{kmer_threshold}{the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment.}
+\item{kmer_threshold}{the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment. Default is 50\% (0.5)}
 
-\item{k}{integer giving the k-mer size used to generate the input matrix for k-means clustering.}
+\item{k}{integer giving the k-mer size used to generate the input matrix for k-means clustering. Default is k=5.}
 
 \item{shave}{Whether bases that are outside (to the left or right) of the PHMM object should be removed from sequences in the output. Default is TRUE.}
 

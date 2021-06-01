@@ -17,8 +17,8 @@
 #' @param max_gap The maximum number of gaps within the sequence to allow.
 #' @param max_N The max number of ambiguous N bases allowed before a sequence is removed.
 #' @param check_frame Whether sequences with insertions or deletions which arent in multiples of 3 should be removed from output. Useful for coding loci such as COI but should not be used for non-coding loci. Default is FALSE.
-#' @param kmer_threshold the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment.
-#' @param k integer giving the k-mer size used to generate the input matrix for k-means clustering.
+#' @param kmer_threshold the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment. Default is 50% (0.5)
+#' @param k integer giving the k-mer size used to generate the input matrix for k-means clustering. Default is k=5.
 #' @param shave Whether bases that are outside (to the left or right) of the PHMM object should be removed from sequences in the output. Default is TRUE.
 #' @param trim_ends Sometimes a trailing base can end up at the end of the alignment, separated by gaps. the trim_ends parameter checks up to n bases from each end of the alignment and if gaps are detected, any trailing bases will be removed.
 #' @param extra How to handle insertions which were not part of the PHMM model. 'drop' will truncate all sequences to the shortest alignment length, while 'fill' will use gaps to pad all sequences out to the longest alignment length.
@@ -38,7 +38,7 @@
 #' @export
 #'
 map_to_model <- function(x, model, min_score = 100, min_length = 1, max_indel = 9, max_gap = Inf, max_N = Inf,
-                          check_frame = FALSE, kmer_threshold=0.3, k=5, shave = TRUE, trim_ends=FALSE, extra=NA,
+                          check_frame = FALSE, kmer_threshold=0.5, k=5, shave = TRUE, trim_ends=FALSE, extra=NA,
                           multithread = FALSE, quiet = FALSE, progress = FALSE) {
   time <- Sys.time() # get time
 
