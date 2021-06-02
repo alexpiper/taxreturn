@@ -138,7 +138,7 @@ Similarly, all sequences that are more than twice the length of the reference PH
   max_gap <span class='op'>=</span> <span class='cn'>Inf</span>,
   max_N <span class='op'>=</span> <span class='cn'>Inf</span>,
   check_frame <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  kmer_threshold <span class='op'>=</span> <span class='fl'>0.3</span>,
+  kmer_threshold <span class='op'>=</span> <span class='fl'>0.5</span>,
   k <span class='op'>=</span> <span class='fl'>5</span>,
   shave <span class='op'>=</span> <span class='cn'>TRUE</span>,
   trim_ends <span class='op'>=</span> <span class='cn'>FALSE</span>,
@@ -187,11 +187,11 @@ see <code><a href='https://rdrr.io/pkg/aphid/man/Viterbi.html'>?aphid::Viterbi</
     </tr>
     <tr>
       <th>kmer_threshold</th>
-      <td><p>the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment.</p></td>
+      <td><p>the maximum kmer distance allowed from the reference model. If a sequence is further than this, it will be skipped from the slower Viterbi alignment. Default is 50% (0.5)</p></td>
     </tr>
     <tr>
       <th>k</th>
-      <td><p>integer giving the k-mer size used to generate the input matrix for k-means clustering.</p></td>
+      <td><p>integer giving the k-mer size used to generate the input matrix for k-means clustering. Default is k=5.</p></td>
     </tr>
     <tr>
       <th>shave</th>
