@@ -4,7 +4,15 @@
 \alias{fetch_bold}
 \title{Fetch sequences from BOLD}
 \usage{
-fetch_bold(x, marker = "COI-5P", output = "gb-binom", quiet = FALSE, db = NULL)
+fetch_bold(
+  x,
+  marker = "COI-5P",
+  output = "gb-binom",
+  quiet = FALSE,
+  db = NULL,
+  retry_attempt = 3,
+  retry_wait = 5
+)
 }
 \arguments{
 \item{x}{A taxon name or vector of taxa to download sequences for}
@@ -22,6 +30,10 @@ or "standard" which outputs the default format for each database. For bold this 
 \item{quiet}{Whether progress should be printed to the console.}
 
 \item{db}{(Optional) a database file generated using \code{taxreturn::get_ncbi_taxonomy()} or \code{taxreturn::get_ott_taxonomy()}}
+
+\item{retry_attempt}{The number of query attempts in case of query failure due to poor internet connection.}
+
+\item{retry_wait}{How long to wait between query attempts}
 }
 \value{
 

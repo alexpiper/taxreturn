@@ -246,6 +246,8 @@ parse_gb <- function(gb){
 #' "gb-binom" which outputs genbank taxonomic ID's and Genus species binomials, translating BOLD taxonomic ID's to genbank in the process (Accession|GBTaxID;Genus_species)
 #' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
 #' @param db (Optional) a database file generated using `taxreturn::get_ncbi_taxonomy()` or `taxreturn::get_ott_taxonomy()`
+#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection.
+#' @param retry_wait How long to wait between query attempts
 #'
 #' @import dplyr
 #' @import stringr
@@ -257,7 +259,7 @@ parse_gb <- function(gb){
 #' @return
 #'
 #' @examples
-fetch_bold <- function(x, marker = "COI-5P", output = "gb-binom", quiet = FALSE, db=NULL) {
+fetch_bold <- function(x, marker = "COI-5P", output = "gb-binom", quiet = FALSE, db=NULL, retry_attempt=3, retry_wait=5) {
   # function setup
   if (!output %in% c("h", "standard", "binom", "gb", "bold", "gb-binom")) {
     stop(paste0(output, " has to be one of: 'standard', 'h','binom','bold', 'gb' or 'gb-binom', see help page for more details"))
@@ -269,84 +271,103 @@ fetch_bold <- function(x, marker = "COI-5P", output = "gb-binom", quiet = FALSE,
   }
 
   # Bold search
-  data <- bold::bold_seqspec(taxon = x, sepfasta = FALSE)
+  data <- tryCatch({
+    read_bold_chunk(taxon = x, quiet = FALSE, retry_attempt = retry_attempt, retry_wait = retry_wait)
+  }, error = function(e){
+    writeLines(x, "failed.txt")
+    stop("An error during data download, wrote failed taxa to failed.txt")
+  })
+
+  bckup_seqs <- data
   if (length(data) >0 & methods::is(data, "data.frame")) {
-    data <- data %>%
-      dplyr::na_if("") %>%
-      dplyr::mutate(domain_name = "Eukaryota") %>%
-      dplyr::filter(markercode == marker) %>% # Remove all sequences for unwanted markers
-      dplyr::filter(!is.na(species_name), !is.na(markercode), !is.na(nucleotides))
+
+    data <- tryCatch({
+      data %>%
+        #dplyr::na_if("") %>%
+        dplyr::mutate(domain_name = "Eukaryota") %>%
+        dplyr::filter(markercode == marker) %>% # Remove all sequences for unwanted markers
+        dplyr::filter(!is.na(species_name), !is.na(markercode), !is.na(nucleotides))
+    }, error = function(e){
+      saveRDS(bckup_seqs, "bold_data.rds")
+      stop("An error during first stage of data parsing, dumped intermediate files to bold_data.rds")
+    })
 
     if (nrow(data) > 0) {
-      if (output == "standard") {
-        data <- data %>%
-          dplyr::select(sampleid, species_name, markercode, genbank_accession, nucleotides) %>%
-          dplyr::mutate(species_name = species_name %>%
-                        stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both")) %>%
-          tidyr::unite("name", c("sampleid", "species_name", "markercode", "genbank_accession"), sep = "|")
-      } else if (output == "h") {
-        # Hierarchial output
-        data <- data %>%
-          dplyr::select(sampleid, domain_name, phylum_name, class_name,
-                        order_name, family_name, genus_name, species_name,nucleotides
-          ) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c(
-            "sampleid", "domain_name",
-            "phylum_name", "class_name",
-            "order_name", "family_name",
-            "genus_name", "species_name"
-          ),
-          sep = ";"
-          ) %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
-      } else if (output == "binom") {
-        # Binomial output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c("sampleid", "species_name"), sep = ";") %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
-      } else if (output == "bold") {
-        # BOLD taxID output
-        data <- data %>%
-          dplyr::select(sampleid, species_taxID, nucleotides) %>%
-          tidyr::drop_na() %>%
-          tidyr::unite("name", c("sampleid", "species_taxID"), sep = "|") %>%
-          dplyr::mutate(name = name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both"))
 
-      } else if (output == "gb") {
-        # Genbank taxID output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
-          dplyr::left_join(db, by="tax_name")%>%
-          dplyr::mutate(tax_name = tax_name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both")) %>%
-          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|")
+      data <- tryCatch({
+        if (output == "standard") {
+          data %>%
+            dplyr::select(sampleid, species_name, markercode, genbank_accession, nucleotides) %>%
+            dplyr::mutate(species_name = species_name %>%
+                            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                            trimws(which = "both")) %>%
+            tidyr::unite("name", c("sampleid", "species_name", "markercode", "genbank_accession"), sep = "|")
+        } else if (output == "h") {
+          # Hierarchial output
+          data %>%
+            dplyr::select(sampleid, domain_name, phylum_name, class_name,
+                          order_name, family_name, genus_name, species_name,nucleotides
+            ) %>%
+            tidyr::drop_na() %>%
+            tidyr::unite("name", c(
+              "sampleid", "domain_name",
+              "phylum_name", "class_name",
+              "order_name", "family_name",
+              "genus_name", "species_name"
+            ),
+            sep = ";"
+            ) %>%
+            dplyr::mutate(name = name %>%
+                            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                            trimws(which = "both"))
+        } else if (output == "binom") {
+          # Binomial output
+          data %>%
+            dplyr::select(sampleid, species_name, nucleotides) %>%
+            tidyr::drop_na() %>%
+            tidyr::unite("name", c("sampleid", "species_name"), sep = ";") %>%
+            dplyr::mutate(name = name %>%
+                            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                            trimws(which = "both"))
+        } else if (output == "bold") {
+          # BOLD taxID output
+          data %>%
+            dplyr::select(sampleid, species_taxID, nucleotides) %>%
+            tidyr::drop_na() %>%
+            tidyr::unite("name", c("sampleid", "species_taxID"), sep = "|") %>%
+            dplyr::mutate(name = name %>%
+                            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                            trimws(which = "both"))
 
-      } else if (output == "gb-binom") {
-        # genbank binomial output
-        data <- data %>%
-          dplyr::select(sampleid, species_name, nucleotides) %>%
-          tidyr::drop_na() %>%
-          dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
-          dplyr::left_join(db, by="tax_name") %>%
-          dplyr::mutate(tax_name = tax_name %>%
-                          stringr::str_replace_all(pattern = " ", replacement = "_") %>%
-                          trimws(which = "both")) %>%
-          tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
-          tidyr::unite("name", c("name", "tax_name"), sep = ";")
-      }
+        } else if (output == "gb") {
+          # Genbank taxID output
+          data %>%
+            dplyr::select(sampleid, species_name, nucleotides) %>%
+            tidyr::drop_na() %>%
+            dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+            dplyr::left_join(db, by="tax_name")%>%
+            dplyr::mutate(tax_name = tax_name %>%
+                            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                            trimws(which = "both")) %>%
+            tidyr::unite("name", c("sampleid", "tax_id"), sep = "|")
+
+        } else if (output == "gb-binom") {
+          # genbank binomial output
+          data %>%
+            dplyr::select(sampleid, species_name, nucleotides) %>%
+            tidyr::drop_na() %>%
+            dplyr::mutate(tax_name = trimws(species_name, which = "both")) %>%
+            dplyr::left_join(db, by="tax_name") %>%
+            dplyr::mutate(tax_name = tax_name %>%
+                            stringr::str_replace_all(pattern = " ", replacement = "_") %>%
+                            trimws(which = "both")) %>%
+            tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
+            tidyr::unite("name", c("name", "tax_name"), sep = ";")
+        }
+      }, error = function(e){
+        saveRDS(bckup_seqs, "bold_data.rds")
+        stop("An error during second stage of data parsing, dumped intermediate files to bold_data.rds")
+      })
       seqs <- insect::char2dna(data$nucleotides)
       names(seqs) <- data$name
       out <- seqs
@@ -360,6 +381,56 @@ fetch_bold <- function(x, marker = "COI-5P", output = "gb-binom", quiet = FALSE,
   }
   return(out)
 }
+
+#' read bold chunk
+#'
+#' @param taxon A taxon name to download sequences for
+#' @param gid a vector of GenBank ID's
+#' @param quiet Whether progress should be printed to console.
+#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection.
+#' @param retry_wait How long to wait between query attempts
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_bold_chunk <- function(taxon, quiet = FALSE, retry_attempt=3, retry_wait=5) {
+  dl <- NULL
+  out <- NULL
+  attempt <- 1
+  # Download with error handling
+  while(is.null(dl) && attempt <= (retry_attempt+1)) {
+    dl <- tryCatch({
+      cli <- crul::HttpClient$new(url = 'https://v4.boldsystems.org/index.php/API_Public/combined')
+      out <- cli$get(query = list(taxon = taxon, format = "tsv"))
+      out$raise_for_status()
+      if (grepl("html", out$response_headers$`content-type`)) {
+        stop(out$parse("UTF-8"))
+      }
+      out
+    }, error = function(e){
+      if (!quiet) {cat(paste("Failed attempt ", attempt,"\n"))}
+      Sys.sleep(retry_wait)
+      NULL
+    })
+    if(!is.null(dl)){
+      tt <- paste0(rawToChar(dl$content, multiple = TRUE), collapse = "")
+      if (tt == "") {
+        return(NULL)
+      }
+      Encoding(tt) <- "UTF-8"
+      if (grepl("Fatal error", tt)) {
+        # set dl to null again to loop through again
+        dl <- NULL
+      } else{
+        out <- readr::read_tsv(tt)
+      }
+    }
+    attempt <- attempt + 1
+  }
+  return(out)
+}
+
 
 #' Split bold query
 #' This function recursively splits a bold taxonomic query until the amount of records returned is under chunk_size
@@ -385,7 +456,7 @@ split_bold_query <- function(x, chunk_size=100000, split_if_under = FALSE, quiet
   if(rcds["total_records"] > chunk_size){
     do_split <- TRUE
     if(!quiet) {message("Found over ", chunk_size, " (chunk_size value) BOLD records for ", x, ", searching for lower taxonomic ranks to reduce query size")}
-  } else if(split_if_under) {
+  } else if(split_if_under & (rcds["species.count"] > 1)) {
     do_split <- TRUE
   } else {
     do_split <- FALSE
@@ -481,9 +552,9 @@ split_bold_query <- function(x, chunk_size=100000, split_if_under = FALSE, quiet
 #'
 #' @examples
 fetch_seqs <- function(x, database, marker = NULL, output = "gb-binom",
-                       min_length = 1, max_length = 2000, subsample=FALSE,
-                       chunk_size=NULL, db=NULL, multithread = FALSE,
-                       quiet = FALSE, progress=FALSE, retry_attempt=3, retry_wait=5) {
+                        min_length = 1, max_length = 2000, subsample=FALSE,
+                        chunk_size=NULL, db=NULL, multithread = FALSE,
+                        quiet = FALSE, progress=FALSE, retry_attempt=3, retry_wait=5) {
   # function setup
   time <- Sys.time() # get time
 
@@ -509,17 +580,17 @@ fetch_seqs <- function(x, database, marker = NULL, output = "gb-binom",
 
   # Genbank
   if (database %in% c("genbank", "nuccore")) {
-      if(!quiet) {message("Downloading from genbank")}
-      if(is.null(chunk_size)){
-        chunk_size <- 100
-      }
-      res <- purrr::map(x, fetch_genbank, database = database, marker = marker,
-        output = output, min_length = min_length, max_length = max_length,
-        subsample=subsample, chunk_size=chunk_size, quiet = quiet, multithread=multithread,
-        db=db, retry_attempt = retry_attempt, retry_wait = retry_wait, progress = progress)
-      res <- res[!sapply(res, is.null)]
-      res <- concat_DNAbin(res)
-      res
+    if(!quiet) {message("Downloading from genbank")}
+    if(is.null(chunk_size)){
+      chunk_size <- 100
+    }
+    res <- purrr::map(x, fetch_genbank, database = database, marker = marker,
+                      output = output, min_length = min_length, max_length = max_length,
+                      subsample=subsample, chunk_size=chunk_size, quiet = quiet, multithread=multithread,
+                      db=db, retry_attempt = retry_attempt, retry_wait = retry_wait, progress = progress)
+    res <- res[!sapply(res, is.null)]
+    res <- concat_DNAbin(res)
+    res
   } else if (database == "bold") {
 
     setup_multithread(multithread = multithread, quiet=quiet)
@@ -551,6 +622,7 @@ fetch_seqs <- function(x, database, marker = NULL, output = "gb-binom",
   # Return results summary
   return(res)
 }
+
 
 
 # Update ------------------------------------------------------------------
