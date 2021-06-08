@@ -118,7 +118,7 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
   }
   d.dt <- data.table(remap, key="tax_id")
   db <- d.dt[, list(sourceinfo = unlist(strsplit(sourceinfo, ",")), tax_name, parent_taxid, rank, flags), by=tax_id
-             ][, c("source", "id") := tstrsplit(sourceinfo, ":", fixed=TRUE)
+             ][, c("source", "id") := strsplit(sourceinfo, ":", fixed=TRUE)
                ][,c('sourceinfo') :=  .(NULL)]
   attr(db,'type') <- 'OTT'
   return(db)
