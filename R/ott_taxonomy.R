@@ -91,6 +91,7 @@ download_ott_taxonomy <- function(url, dest_dir, force=FALSE) {
 #' @import dplyr
 #' @importFrom vroom vroom
 #' @importFrom data.table data.table
+#' @importFrom data.table tstrsplit
 #'
 get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
   if (is.null(dir)){
@@ -116,10 +117,10 @@ get_ott_taxonomy <- function(dir=NULL, quiet=FALSE, filter_unplaced=TRUE) {
       dplyr::select(uid, parent_uid, name, rank, sourceinfo, flags) %>%
       dplyr::rename(tax_id = uid, parent_taxid = parent_uid, tax_name = name)
   }
-  d.dt <- data.table(remap, key="tax_id")
+  d.dt <- data.table::data.table(remap, key="tax_id")
   db <- d.dt[, list(sourceinfo = unlist(strsplit(sourceinfo, ",")), tax_name, parent_taxid, rank, flags), by=tax_id
-             ][, c("source", "id") := strsplit(sourceinfo, ":", fixed=TRUE)
-               ][,c('sourceinfo') :=  .(NULL)]
+  ][, c("source", "id") := data.table::tstrsplit(sourceinfo, ":", fixed=TRUE)
+  ][,c('sourceinfo') :=  .(NULL)]
   attr(db,'type') <- 'OTT'
   return(db)
 }
