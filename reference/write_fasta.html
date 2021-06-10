@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert DNABin to DNAStringSet — DNAbin2DNAstringset • taxreturn</title>
+<title>write fasta — write_fasta • taxreturn</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Convert DNABin to DNAStringSet — DNAbin2DNAstringset" />
-<meta property="og:description" content="Convert DNABin to DNAStringSet" />
+<meta property="og:title" content="write fasta — write_fasta" />
+<meta property="og:description" content="write fasta" />
 
 
 
@@ -114,27 +114,35 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Convert DNABin to DNAStringSet</h1>
+    <h1>write fasta</h1>
     <small class="dont-index">Source: <a href='https://github.com/alexpiper/taxreturn/blob/master/R/DNAbin_utilities.R'><code>R/DNAbin_utilities.R</code></a></small>
-    <div class="hidden name"><code>DNAbin2DNAstringset.Rd</code></div>
+    <div class="hidden name"><code>write_fasta.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Convert DNABin to DNAStringSet</p>
+    <p>write fasta</p>
     </div>
 
-    <pre class="usage"><span class='fu'>DNAbin2DNAstringset</span><span class='op'>(</span><span class='va'>x</span>, remove_gaps <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>write_fasta</span><span class='op'>(</span><span class='va'>x</span>, file <span class='op'>=</span> <span class='st'>""</span>, compress <span class='op'>=</span> <span class='cn'>FALSE</span>, quiet <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>a DNABin object</p></td>
+      <td><p>a list of sequences in DNAbin or AAbin format, or a vector of sequences as concatenated upper-case character strings.</p></td>
     </tr>
     <tr>
-      <th>remove_gaps</th>
-      <td><p>Whether gaps should be removed</p></td>
+      <th>file</th>
+      <td><p>character string giving a valid file path to output the text to. If file = "" (default setting) the text file is written to the console.</p></td>
+    </tr>
+    <tr>
+      <th>compress</th>
+      <td><p>logical indicating whether the output file should be gzipped.</p></td>
+    </tr>
+    <tr>
+      <th>quiet</th>
+      <td><p>Whether progress should be printed to consoe</p></td>
     </tr>
     </table>
 
