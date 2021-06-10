@@ -173,8 +173,6 @@ blast_params <- function(type = "blastn") {
 #' @import stringr
 #' @import dplyr
 #' @import future
-#' @importFrom insect writeFASTA
-#' @importFrom insect char2dna
 #' @importFrom tibble enframe
 #' @importFrom Biostrings writeXStringSet
 #' @importFrom Biostrings DNA_ALPHABET
@@ -242,7 +240,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
     remote <- "-remote"
   } else if(inherits(db, "DNAbin")){
     if (!quiet) { message("Database input is DNAbin: Creating temporary blast database") }
-    insect::writeFASTA(db, tmpdb)
+    write_fasta(db, tmpdb)
     make_blast_db(tmpdb)
     db <- tmpdb
     remote <- ""
@@ -255,8 +253,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   } else if (inherits(db, "character") &&  all(stringr::str_to_upper(stringr::str_split(db,"")[[1]]) %in% Biostrings::DNA_ALPHABET)) { # Handle text input
     if (!quiet) { message("Database input is character string: Creating temporary blast database") }
     if (nchar(db[1]) == 1) {db <- paste0(db, collapse = "")}
-    db <- insect::char2dna(db)
-    insect::writeFASTA(db, tmpdb)
+    db <- char2DNAbin(db)
+    write_fasta(db, tmpdb)
     make_blast_db(tmpdb)
     db <- tmpdb
     remote <- ""
@@ -272,20 +270,20 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   if(inherits(query, "DNAbin")){
     if (!quiet) { message("Query is DNAbin: Creating temporary fasta file") }
     query <- ape::del.gaps(query)
-    insect::writeFASTA(query, tmpquery)
+    write_fasta(query, tmpquery)
     input <- tmpquery
   } else if (inherits(query, "DNAString") | inherits(query, "DNAStringSet")){
     if (!quiet) { message("Query is DNAString: Creating temporary fasta file") }
     query <- ape::as.DNAbin(query)
     query <- ape::del.gaps(query)
-    insect::writeFASTA(query, tmpquery)
+    write_fasta(query, tmpquery)
     input <- tmpquery
   }else if (inherits(query, "character") &&  all(stringr::str_to_upper(stringr::str_split(query,"")[[1]]) %in% Biostrings::DNA_ALPHABET)) { # Handle text query
     if (!quiet) { message("Query is character string: Creating temporary fasta file") }
     if (nchar(query[1]) == 1) {query <- paste0(query, collapse = "")}
-    query <- insect::char2dna(query)
+    query <- char2DNAbin(query)
     query <- ape::del.gaps(query)
-    insect::writeFASTA(query, tmpquery)
+    write_fasta(query, tmpquery)
     input <- tmpquery
   } else if (inherits(query, "character") &&  file.exists(file.path(query))){ # Handle filenames
     input <- query

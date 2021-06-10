@@ -415,7 +415,6 @@ codon_entropy <- function(x, genetic_code = NULL, tryrc = TRUE, codon_filter = T
 #' @return
 #' @export
 #' @importFrom kmer mbed
-#' @importFrom insect char2dna
 #' @importFrom aphid generate
 #'
 kmer_screen <- function(seqs, model, threshold = 0.3, k = 5, quiet=FALSE){
@@ -428,7 +427,7 @@ kmer_screen <- function(seqs, model, threshold = 0.3, k = 5, quiet=FALSE){
   }
 
   # Generate a reference sequence from the model to align against
-  seed_seq <- insect::char2dna(paste(aphid::generate(model, model$size, random=FALSE), collapse=""))
+  seed_seq <- char2DNAbin(paste(aphid::generate(model, model$size, random=FALSE), collapse=""))
   names(seed_seq) <- "SEED"
 
   # Align against seed sequence using mbed
@@ -464,7 +463,6 @@ kmer_screen <- function(seqs, model, threshold = 0.3, k = 5, quiet=FALSE){
 #' @export
 #'
 #' @importFrom kmer mbed
-#' @importFrom insect char2dna
 #' @importFrom aphid generate
 #'
 closest_seq <- function(seqs, model, threshold, k=5, quiet=FALSE){
@@ -477,7 +475,7 @@ closest_seq <- function(seqs, model, threshold, k=5, quiet=FALSE){
   }
 
   # Generate a reference sequence from the model to align against
-  seed_seq <- insect::char2dna(paste(aphid::generate(model, model$size), collapse=""))
+  seed_seq <- char2DNAbin(paste(aphid::generate(model, model$size), collapse=""))
   names(seed_seq) <- "SEED"
 
   # Align against seed sequence using mbed
@@ -542,7 +540,6 @@ subset_long_seq <- function(x, model, split_length, threshold=0.3, k=5, quiet=FA
 #'
 #' @import dplyr
 #' @import stringr
-#' @importFrom insect subset.DNAbin
 #' @importFrom tibble as_tibble
 #' @importFrom tidyr separate
 #' @importFrom openssl md5
@@ -706,7 +703,7 @@ prune_groups <- function(x, max_group_size = 5, dedup = TRUE, discardby = "lengt
 #' @importFrom methods as
 #' @examples
 #' \dontrun{
-#' seqs <- insect::readFASTA("test.fa.gz")
+#' seqs <- ape::read.FASTA("test.fa.gz")
 #'
 #' # NCBI taxonomy
 #' mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)

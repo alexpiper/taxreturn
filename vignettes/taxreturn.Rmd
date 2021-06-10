@@ -27,7 +27,6 @@ knitr::opts_chunk$set(
 library(taxreturn)
 library(Biostrings)
 library(ape)
-library(insect)
 library(tidyverse)
 ```
 
@@ -52,8 +51,6 @@ The following vignette will run through an example analysis of retrieving some i
 
 ## Install & load package
 
-First, make sure that the devtools, Biostrings, insect, and ape packages are installed and up to date. Then install and load the latest development version of the taxreturn package from GitHub as follows:
-
 ```{r eval=FALSE}
 devtools::install_github("alexpiper/taxreturn")
 library(taxreturn)
@@ -61,7 +58,6 @@ library(taxreturn)
 # Load other necessary packages for this workflow
 library(Biostrings)
 library(ape)
-library(insect)
 library(tidyverse)
 ```
 
@@ -80,7 +76,7 @@ Depending on the amount of sequences you are downloading, and the speed of your 
 ```{r Download all sequences, eval=FALSE, include=TRUE}
 ## Fetch sequences from GenBank by searching for a taxon name
 genbank_seqs <- fetch_seqs(
-  "Drosophila", database="genbank", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", 
+  "Scaptodrosophila", database="genbank", marker="COI[GENE] OR COX1[GENE] OR COXI[GENE]", 
   output = "gb-binom", multithread = FALSE, quiet=FALSE
   )
 
@@ -195,7 +191,7 @@ uniq_seqs <- seqs[!duplicated(str_extract(names(seqs), "^.*\\|" ))]
 #remove non-homologous sequences
 filtered <- map_to_model(
   uniq_seqs, model, min_score = 100, min_length = 100, max_N=Inf, max_gap=Inf, 
-  shave=TRUE, check_frame=TRUE, kmer_threshold = 0.3, k=5,
+  shave=TRUE, check_frame=TRUE, kmer_threshold = 0.5, k=5,
   multithread = FALSE, quiet=FALSE
   )
 ```
@@ -279,7 +275,7 @@ hierarchy <- reformat_hierarchy(pruned, db=db, quiet=FALSE)
 head(names(hierarchy))
 
 # Save a zipped fasta file of curated reference database
-insect::writeFASTA(
+write_fasta(
   hierarchy, file = "COI_reference_hierarchial.fa.gz", compress = TRUE
   )
 ```
@@ -322,14 +318,14 @@ db <- get_ncbi_taxonomy()
 
 #Reformat to Kingdom to genus heirarchy 
 # suitable for assigntaxonomy classifier in DADA2
-dada2_gen <- reformat_dada2_gen(amplicon, db = db, quiet = FALSE)
-insect::writeFASTA(
+dada2_gen <- reformat_dada2_gen(hierarchy, db = db, quiet = FALSE)
+write_fasta(
   dada2_gen, file = "COI_reference_dada2gen.fa.gz", compress = TRUE
   )
 
 #Reformat to genus species binomials as suitable for assignSpecies in DADA2
-dada2_spp <- reformat_dada2_spp(amplicon)
-insect::writeFASTA(
+dada2_spp <- reformat_dada2_spp(hierarchy)
+write_fasta(
   dada2_spp, file = "COI_reference_dada2spp.fa.gz", compress = TRUE
   )
 ```
@@ -344,7 +340,7 @@ db <- get_ncbi_taxonomy()
 
 # Train IDTAXA
 training_set <- train_idtaxa(
-  amplicon, max_group_size = 10, max_iterations = 3,  
+  hierarchy, max_group_size = 10, max_iterations = 3,  
   allow_group_removal = TRUE,  get_lineage = TRUE, db = db, quiet = FALSE
   )
 

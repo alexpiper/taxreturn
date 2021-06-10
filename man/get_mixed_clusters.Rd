@@ -56,7 +56,7 @@ Note, it is recommended to set a unique seed using set.seed()
 }
 \examples{
 \dontrun{
-seqs <- insect::readFASTA("test.fa.gz")
+seqs <- ape::read.FASTA("test.fa.gz")
 
 # NCBI taxonomy
 mixed <- get_mixed_clusters(seqs, db, rank="species", threshold=0.99, confidence=0.8, quiet=FALSE)

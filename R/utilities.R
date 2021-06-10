@@ -1,34 +1,3 @@
-# DNAbin2DNAStringSet -----------------------------------------------------
-
-#' Convert DNABin to DNAStringSet
-#'
-#' @param x a DNABin object
-#' @param remove_gaps Whether gaps should be removed
-#'
-#' @return
-#' @export
-#' @import purrr
-#' @importFrom Biostrings DNA_ALPHABET
-#' @importFrom Biostrings DNAStringSet
-#' @importFrom methods is
-#'
-DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
-  if(!methods::is(x, "DNAbin")){
-    stop("Input must be a DNAbin")
-  }
-  x %>%
-    as.list() %>%
-    as.character %>%
-    purrr::map(function(y){
-      y[!y %in% tolower(Biostrings::DNA_ALPHABET)] <- "N"
-      if(isTRUE(remove_gaps)){
-        y[y=="-"] <- ""
-      }
-      paste0(y, collapse="")
-    })%>%
-    unlist %>%
-    Biostrings::DNAStringSet()
-}
 
 # Function to generate random sequences
 #' Generate random sequences
@@ -39,14 +8,13 @@ DNAbin2DNAstringset <- function (x, remove_gaps = FALSE) {
 #'
 #' @return
 #' @export
-#' @importFrom insect char2dna
 #'
 random_seq <- function(n, length, alphabet = c("A","G","T","C")){
   out <- seq(1, n, 1) %>%
     purrr::map2(length, function(x,y ){
       paste(sample(alphabet, y, replace = T), collapse="")
     }) %>%
-    insect::char2dna()
+    char2DNAbin()
   names(out) <- make.unique(rep("Seq", n), sep="_")
   return(out)
 }
@@ -100,54 +68,6 @@ acc2hex <- function(x, force=FALSE){
   }else (stop("x must be DNA bin, DNAStringSet or vector of accesssions"))
   return(x)
 }
-
-#' Concatenate DNAbin objects while preserving attributes.
-#' This function joins two or more \code{DNAbin} objects, retaining any
-#'   attributes whose lengths match those of the input objects (e.g. "species",
-#'   "lineage" and/or "taxID" attributes).
-#' @param ... \code{DNAbin} objects, or list of DNAbins to be concatenated.
-#'
-#' @return
-#' @export
-#'
-#' @examples
-concat_DNAbin <- function(...){
-  dots <- list(...)
-  if(is.list(dots[[1]]) & length(dots) == 1){
-    dots <- dots[[1]]
-  }
-  to_remove <- sapply(dots, is.null)
-  dots <- dots[!to_remove]
-  nlsts <- length(dots)
-  DNA <- any(sapply(dots, class) == "DNAbin")
-  if(nlsts == 0) return(NULL)
-  if(nlsts == 1) return(dots[[1]])
-  islist <- sapply(dots, is.list)
-  for(i in which(!islist)){
-    print(i)
-    tmpattr <- attributes(dots[[i]])
-    attributes(dots[[i]]) <- NULL
-    dots[[i]] <- list(dots[[i]])
-
-    print(tmpattr)
-    attributes(dots[[i]]) <- tmpattr
-  }
-  dots <- lapply(dots, unclass)
-  findattr <- function(x){
-    names(attributes(x))[sapply(attributes(x), length) == length(x)]
-  }
-  attrlist <- lapply(dots, findattr)
-  ual <- unique(unlist(attrlist, use.names = FALSE))
-  validattrs <- ual[sapply(ual, function(e) all(sapply(attrlist, function(g) e %in% g)))]
-  validattrs <- validattrs[!validattrs %in% c("names", "class")]
-  res <- unlist(dots, recursive = FALSE, use.names = TRUE)
-  for(i in validattrs){
-    attr(res, i) <- unlist(lapply(dots, attr, i), use.names = FALSE)
-  }
-  class(res) <- "DNAbin"
-  return(res)
-}
-
 
 # Hexadecimal coding to accession -----------------------------------------
 #' Hexadecimal coding to accession numberD
@@ -239,7 +159,6 @@ hex2acc <- function(x, force=FALSE){
 }
 
 
-
 # Multithread -------------------------------------------------------------
 #' Setup multithreading
 #'
@@ -299,3 +218,15 @@ setup_para <- function(multithread, quiet=FALSE){
   )
   return(cores)
 }
+
+#' Pipe operator
+#'
+#' See \code{magrittr::\link[magrittr]{\%>\%}} for details.
+#'
+#' @name %>%
+#' @rdname pipe
+#' @keywords internal
+#' @export
+#' @importFrom magrittr %>%
+#' @usage lhs \%>\% rhs
+NULL

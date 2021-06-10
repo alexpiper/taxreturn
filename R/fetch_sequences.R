@@ -189,7 +189,6 @@ read_genbank_chunk <- function(gid, quiet = FALSE, retry_attempt=3, retry_wait=5
 #' @param gb A genbank flat file
 #'
 #' @return
-#' @importFrom insect char2dna
 #' @importFrom stringr str_remove_all
 #' @importFrom stringr str_detect
 #' @examples
@@ -225,7 +224,7 @@ parse_gb <- function(gb){
   # Handle seq names
   seq_names <- gsub("+ACCESSION +", "", grep("ACCESSION", gb, value = TRUE))
   names(seqs) <- seq_names[good_records]
-  seqs <- insect::char2dna(seqs)
+  seqs <- char2DNAbin(seqs)
   sp <- gsub(" ", "_", gsub(" +ORGANISM +", "", grep(" +ORGANISM +", gb, value = TRUE)))
   attr(seqs, "species") <- sp[good_records]
   return(seqs)
@@ -254,7 +253,6 @@ parse_gb <- function(gb){
 #' @importFrom bold bold_seqspec
 #' @importFrom tidyr unite
 #' @importFrom tidyr drop_na
-#' @importFrom insect char2dna
 #' @importFrom methods is
 #' @return
 #'
@@ -368,7 +366,7 @@ fetch_bold <- function(x, marker = "COI-5P", output = "gb-binom", quiet = FALSE,
         saveRDS(bckup_seqs, "bold_data.rds")
         stop("An error during second stage of data parsing, dumped intermediate files to bold_data.rds")
       })
-      seqs <- insect::char2dna(data$nucleotides)
+      seqs <- char2DNAbin(data$nucleotides)
       names(seqs) <- data$name
       out <- seqs
     } else {

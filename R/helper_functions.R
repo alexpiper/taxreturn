@@ -14,7 +14,6 @@
 #' @export
 #' @import stringr
 #' @importFrom ape complement
-#' @importFrom insect char2dna
 #' @importFrom aphid Viterbi
 #'
 get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, min_score = 10, ...) {
@@ -27,7 +26,7 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
       if (mode(primer) == "character") {
         if (nchar(primer[1]) == 1) {primer <- paste0(primer, collapse = "")}
         if(stringr::str_detect(primer, "I")) {message(paste0("Warning: Inosine (I) bases detected in primer ", input," these will be converted to N!"))}
-        primer <- insect::char2dna(primer)
+        primer <- char2DNAbin(primer)
       }
       else {
         if (!inherits(primer, "PHMM"))
@@ -164,7 +163,6 @@ get_subalignment <- function(x, model, tryrc=FALSE, quiet=FALSE, check_indels=TR
 #' @return
 #' @export
 #' @import stringr
-#' @importFrom insect char2dna
 #'
 #'
 pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRUE, min_score = 10, omit_endgaps	= FALSE, multithread = FALSE,  quiet = FALSE, ...){
@@ -215,7 +213,7 @@ pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRU
     return(x)
   }
   out <- sapply(x, insert_at, insert)
-  out <- insect::char2dna(out)
+  out <- char2DNAbin(out)
   return(out)
 }
 
@@ -422,7 +420,6 @@ alignment_entropy <- function (x, mask_gaps=0.2, count_gaps = FALSE, method="ML"
 
 
 # Summarise fasta ---------------------------------------------------------
-
 
 #' summarise_fasta
 #'
