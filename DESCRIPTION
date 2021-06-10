@@ -23,7 +23,6 @@ Language: en-US
 Imports: 
     rentrez,
     aphid,
-    insect,
     Biostrings,
     ape,
     stringr,
