@@ -33,8 +33,8 @@
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' @param quiet Whether progress should be printed to the console.
 #' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
-#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection. (Genbank only)
-#' @param retry_wait How long to wait between query attempts. (Genbank only)
+#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection.
+#' @param retry_wait How long to wait between query attempts.
 #'
 #' @return
 #'
@@ -534,8 +534,8 @@ split_bold_query <- function(x, chunk_size=100000, split_if_under = FALSE, quiet
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
 #' @param quiet Whether progress should be printed to the console.
 #' @param progress A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.
-#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection. (Genbank only)
-#' @param retry_wait How long to wait between query attempts. (Genbank only)
+#' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection.
+#' @param retry_wait How long to wait between query attempts.
 #'
 #' @import dplyr
 #' @import stringr
