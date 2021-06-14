@@ -162,6 +162,7 @@ concat_DNAbin <- function(...){
     print(tmpattr)
     attributes(dots[[i]]) <- tmpattr
   }
+  names(dots) <- NULL #Remove name of list object to prevent name concatenation by unclass
   dots <- lapply(dots, unclass)
   findattr <- function(x){
     names(attributes(x))[sapply(attributes(x), length) == length(x)]
