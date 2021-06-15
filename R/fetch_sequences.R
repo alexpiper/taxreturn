@@ -107,7 +107,7 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
     seq_acc <- attr(seqs, "acc") %>% stringr::str_remove(" .*$")
 
     if (output == "standard") { # Standard output
-      names <- names(seqs)
+      names <- paste0(seq_acc, ";", names(seqs))
     } else if (output == "binom") {
       names <- paste0(seq_acc, ";", seq_spp)
     } else if (output == "h") { # Hierarchical output
