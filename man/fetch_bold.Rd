@@ -25,7 +25,7 @@ Options include "h" for full heirarchial taxonomy (Accession;Domain;Phylum;Class
 "bold" for BOLD taxonomic ID only (Accession;BoldTaxID),
 "gb" for genbank taxonomic ID (Accession|GBTaxID),
 "gb-binom" which outputs genbank taxonomic ID's and Genus species binomials, translating BOLD taxonomic ID's to genbank in the process (Accession|GBTaxID;Genus_species)
-or "standard" which outputs the default format for each database. For bold this is \verb{sampleid|species name|markercode|genbankid}}
+or "standard" which outputs the default format for each database. For genbank this is the description field, and for bold this is \verb{sampleid|species name|markercode|genbankid}}
 
 \item{quiet}{Whether progress should be printed to the console.}
 

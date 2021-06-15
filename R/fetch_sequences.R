@@ -41,7 +41,7 @@
 #' @examples
 fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[GENE]", "COX1[GENE]"), output = "h",
                            min_length = 1, max_length = 2000, subsample=FALSE, chunk_size=100, db=NULL,
-                          multithread = FALSE, quiet = FALSE, progress=FALSE, retry_attempt=3, retry_wait=5) {
+                           multithread = FALSE, quiet = FALSE, progress=FALSE, retry_attempt=3, retry_wait=5) {
   if(!database %in% c("nuccore", "genbank")){
     stop("database is invalid: only nuccore and genbank is currently supported")
   }
@@ -96,39 +96,37 @@ fetch_genbank <- function(x, database = "nuccore", marker = c("COI[GENE]", "CO1[
 
     # Retrieve each chunk
     seqs <- furrr::future_map(
-    id_list, read_genbank_chunk, quiet = FALSE, retry_attempt = retry_attempt, retry_wait = retry_wait, .progress = progress)
-
-    #seqs <- purrr::map(
-    #  id_list, read_genbank_chunk, quiet = FALSE, retry_attempt = retry_attempt, retry_wait = retry_wait)
+      id_list, read_genbank_chunk, quiet = FALSE, retry_attempt = retry_attempt, retry_wait = retry_wait, .progress = progress)
 
     failed <- id_list[!sapply(seqs, class)=="DNAbin"]
     seqs <- seqs[sapply(seqs, class)=="DNAbin"]
     seqs <- concat_DNAbin(seqs)
-    spp <- attr(seqs, "species") %>% stringr::str_replace_all("_", " ")
-    # get accession numbers
-    acc <- names(seqs) %>% stringr::str_remove(" .*$")
+
+    # Parse attributes
+    seq_spp <- attr(seqs, "species") %>% stringr::str_replace_all("_", " ")
+    seq_acc <- attr(seqs, "acc") %>% stringr::str_remove(" .*$")
 
     if (output == "standard") { # Standard output
       names <- names(seqs)
     } else if (output == "binom") {
-      names <- paste0(acc, ";", spp)
+      names <- paste0(seq_acc, ";", seq_spp)
     } else if (output == "h") { # Hierarchical output
-      names <- tibble::enframe(spp, name=NULL, value="tax_name") %>%
-        dplyr::mutate(sampleid = acc) %>%
+      names <- tibble::enframe(seq_spp, name=NULL, value="tax_name") %>%
+        dplyr::mutate(sampleid = seq_acc) %>%
         dplyr::left_join(db, by="tax_name") %>%
         tidyr::unite("names", c("sampleid", "superkingdom", "phylum", "class", "order", "family", "genus", "tax_name"), sep = ";")%>%
         dplyr::mutate(names = names %>%
                         stringr::str_replace_all(pattern = ";;", replacement = ";")) %>%
         dplyr::pull(names)
     } else if (output == "gb") { # Genbank taxID output
-      names <- tibble::enframe(spp, name=NULL, value="tax_name") %>%
-        dplyr::mutate(sampleid = acc) %>%
+      names <- tibble::enframe(seq_spp, name=NULL, value="tax_name") %>%
+        dplyr::mutate(sampleid = seq_acc) %>%
         dplyr::left_join(db, by="tax_name") %>%
         tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
         dplyr::pull(name)
     } else if (output == "gb-binom") {
-      names <- tibble::enframe(spp, name=NULL, value="tax_name") %>%
-        dplyr::mutate(sampleid = acc) %>%
+      names <- tibble::enframe(seq_spp, name=NULL, value="tax_name") %>%
+        dplyr::mutate(sampleid = seq_acc) %>%
         dplyr::left_join(db, by="tax_name") %>%
         tidyr::unite("name", c("sampleid", "tax_id"), sep = "|") %>%
         tidyr::unite("name", c("name", "tax_name"), sep = ";") %>%
@@ -221,12 +219,15 @@ parse_gb <- function(gb){
   for (l in 1:n_seqs){
     seqs[[l]] <- toupper(paste(stringr::str_remove_all(gb[(start[l]+1):(stop[l]-1)], "[^A-Za-z]"), collapse=""))
   }
-  # Handle seq names
-  seq_names <- gsub("+ACCESSION +", "", grep("ACCESSION", gb, value = TRUE))
-  names(seqs) <- seq_names[good_records]
+  # Extract relevant metadata
+  seq_acc <- gsub("+ACCESSION +", "", grep("ACCESSION", gb, value = TRUE))
+  seq_defs <- gsub("+DEFINITION +", "", grep("DEFINITION", gb, value = TRUE))
+  seq_spp <- gsub(" ", "_", gsub(" +ORGANISM +", "", grep(" +ORGANISM +", gb, value = TRUE)))
+
+  names(seqs) <- seq_defs[good_records]
   seqs <- char2DNAbin(seqs)
-  sp <- gsub(" ", "_", gsub(" +ORGANISM +", "", grep(" +ORGANISM +", gb, value = TRUE)))
-  attr(seqs, "species") <- sp[good_records]
+  attr(seqs, "acc") <- seq_acc[good_records]
+  attr(seqs, "species") <- seq_spp[good_records]
   return(seqs)
 }
 
@@ -243,7 +244,7 @@ parse_gb <- function(gb){
 #' "bold" for BOLD taxonomic ID only (Accession;BoldTaxID),
 #' "gb" for genbank taxonomic ID (Accession|GBTaxID),
 #' "gb-binom" which outputs genbank taxonomic ID's and Genus species binomials, translating BOLD taxonomic ID's to genbank in the process (Accession|GBTaxID;Genus_species)
-#' or "standard" which outputs the default format for each database. For bold this is `sampleid|species name|markercode|genbankid`
+#' or "standard" which outputs the default format for each database. For genbank this is the description field, and for bold this is `sampleid|species name|markercode|genbankid`
 #' @param db (Optional) a database file generated using `taxreturn::get_ncbi_taxonomy()` or `taxreturn::get_ott_taxonomy()`
 #' @param retry_attempt The number of query attempts in case of query failure due to poor internet connection.
 #' @param retry_wait How long to wait between query attempts
