@@ -380,9 +380,12 @@ blast_top_hit <- function(query, db, type="blastn",
 
   #Subset to top hit
   top_hit <- result %>%
-    dplyr::filter(pident > identity, qcovs > coverage)%>%
+    dplyr::filter(pident > identity, qcovs > coverage) %>%
     dplyr::group_by(qseqid) %>%
-    dplyr::top_n(1, bitscore) %>%
+    dplyr::top_n(1,bitscore) %>%
+    dplyr::top_n(1,evalue) %>%
+    dplyr::top_n(1,qcovs) %>%
+    dplyr::top_n(1,pident) %>%
     tidyr::separate(stitle, c("acc", ranks), delim)
 
   if(tie == "first"){
