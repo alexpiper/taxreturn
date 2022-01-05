@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,18 +33,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">taxreturn</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../articles/taxreturn.html">Get started</a>
 </li>
@@ -55,7 +51,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/alexpiper/taxreturn/">
+  <a href="https://github.com/alexpiper/taxreturn/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -74,21 +70,21 @@
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>taxreturn</h1>
-            <h3 class="subtitle">An R package for download and curation of public DNA barcode reference data</h3>
-                        <h4 class="author">Author: Alexander M Piper</h4>
+            <h3 data-toc-skip class="subtitle">An R package for download and curation of public DNA barcode reference data</h3>
+                        <h4 data-toc-skip class="author">Author: Alexander M Piper</h4>
             
-            <h4 class="date">2021-06-15</h4>
+            <h4 data-toc-skip class="date">2022-01-05</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/alexpiper/taxreturn/blob/master/vignettes/taxreturn.Rmd"><code>vignettes/taxreturn.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/alexpiper/taxreturn/blob/HEAD/vignettes/taxreturn.Rmd" class="external-link"><code>vignettes/taxreturn.Rmd</code></a></small>
       <div class="hidden name"><code>taxreturn.Rmd</code></div>
 
     </div>
 
     
     
-<div id="introduction" class="section level1">
-<h1 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h1>
+<div class="section level1">
+<h1 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h1>
 <p>Accurate taxonomic assignment in metabarcoding studies relies on a well-curated reference database of DNA marker sequences to compare query sequences against. taxreturn is an R package for retrieving DNA barcode sequences and associated taxonomic annotations from public databases, curating these sequences, and formatting them into training sets compatible with popular taxonomic classifiers. The primary public nucleotide databases of relevance to Eukaryotic metabarcoding are the NCBI GenBank database and the Barcode of Life Data System (BOLD), both of which taxreturn supports.</p>
 <p>While GenBank hosts greater overall sequence data, BOLD represents a more curated DNA barcoding database that aims to maintain consistent links between sequences, validated morphological specimens, and associated specimen collection metadata.Despite the best efforts of submitters, both these databases have well documented issues with barcode sequences being insufficiently annotated, annotated with the incorrect species, or multiple morpho-species sharing the same barcode. Curating public reference data is therefore crucial for ensuring the robustness of a metabarcoding analysis, and this is the role that the taxreturn package aims to fulfill.</p>
 <p>The main steps of the taxreturn workflow are as follows:</p>
@@ -101,33 +97,33 @@
 <li>Reformat into a format appropriate for taxonomic classification software.</li>
 </ul>
 </div>
-<div id="a-worked-example" class="section level1">
-<h1 class="hasAnchor">
-<a href="#a-worked-example" class="anchor"></a>A Worked example</h1>
+<div class="section level1">
+<h1 id="a-worked-example">A Worked example<a class="anchor" aria-label="anchor" href="#a-worked-example"></a>
+</h1>
 <p>The following vignette will run through an example analysis of retrieving some insect COI barcode sequences and Mitochondrial genomes, curating these, and outputting a reference database.</p>
-<div id="install-load-package" class="section level2">
-<h2 class="hasAnchor">
-<a href="#install-load-package" class="anchor"></a>Install &amp; load package</h2>
+<div class="section level2">
+<h2 id="install-load-package">Install &amp; load package<a class="anchor" aria-label="anchor" href="#install-load-package"></a>
+</h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"alexpiper/taxreturn"</span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://alexpiper.github.io/taxreturn">taxreturn</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://alexpiper.github.io/taxreturn" class="external-link">taxreturn</a></span><span class="op">)</span>
 
 <span class="co"># Load other necessary packages for this workflow</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/Biostrings">Biostrings</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://ape-package.ird.fr/">ape</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">tidyverse</span><span class="op">)</span></code></pre></div>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/Biostrings" class="external-link">Biostrings</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://ape-package.ird.fr/" class="external-link">ape</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></code></pre></div>
 </div>
 </div>
-<div id="fetching-sequences-from-genbank-and-bold" class="section level1">
-<h1 class="hasAnchor">
-<a href="#fetching-sequences-from-genbank-and-bold" class="anchor"></a>Fetching sequences from GenBank and BOLD</h1>
+<div class="section level1">
+<h1 id="fetching-sequences-from-genbank-and-bold">Fetching sequences from GenBank and BOLD<a class="anchor" aria-label="anchor" href="#fetching-sequences-from-genbank-and-bold"></a>
+</h1>
 <p>The first step is to retrieve public reference data sequences from NCBI Genbank and BOLD. This can be done with the fetch_seqs function, which wraps an interface to entrez and BOLD API’s respectively. This function can either take a single higher level rank, i.e. the genus ‘Scaptodrosophila’, or it can take a vector of taxon names from a file.</p>
 <p>The marker option determines what will be in the search, note that the naming of loci differs between Genbank and bold so i suggest conducting a test search on their respective websites to confirm the desired marker. For COI,</p>
 <p>This function can be multithreaded by setting multithread to the desired number of cores, or TRUE (to autodetect number of cores). Note that querying the server is the main bottleneck here, and using too many threads may overload the server and produce errors.</p>
 <p>Depending on the amount of sequences you are downloading, and the speed of your internet connection this step can take from minutes to hours, i suggest running this overnight for large searches with over a million sequences.</p>
-<div id="download-sequences-from-ncbi-genbank" class="section level2">
-<h2 class="hasAnchor">
-<a href="#download-sequences-from-ncbi-genbank" class="anchor"></a>Download sequences from NCBI GenBank</h2>
+<div class="section level2">
+<h2 id="download-sequences-from-ncbi-genbank">Download sequences from NCBI GenBank<a class="anchor" aria-label="anchor" href="#download-sequences-from-ncbi-genbank"></a>
+</h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">## Fetch sequences from GenBank by searching for a taxon name</span>
 <span class="va">genbank_seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_seqs.html">fetch_seqs</a></span><span class="op">(</span>
@@ -136,16 +132,16 @@
   <span class="op">)</span>
 
 <span class="co">## OR fetch sequences from a species list</span>
-<span class="va">spp_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readLines.html">readLines</a></span><span class="op">(</span><span class="st">"species_list.txt"</span><span class="op">)</span>
+<span class="va">spp_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="st">"species_list.txt"</span><span class="op">)</span>
 
 <span class="va">genbank_seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_seqs.html">fetch_seqs</a></span><span class="op">(</span>
   <span class="va">spp_list</span>, database<span class="op">=</span><span class="st">"genbank"</span>, marker<span class="op">=</span><span class="st">"COI[GENE] OR COX1[GENE] OR COXI[GENE]"</span>,
   output <span class="op">=</span> <span class="st">"gb-binom"</span>, multithread <span class="op">=</span> <span class="cn">FALSE</span>, quiet<span class="op">=</span><span class="cn">FALSE</span>
   <span class="op">)</span></code></pre></div>
 </div>
-<div id="download-sequences-from-bold" class="section level2">
-<h2 class="hasAnchor">
-<a href="#download-sequences-from-bold" class="anchor"></a>Download sequences from BOLD</h2>
+<div class="section level2">
+<h2 id="download-sequences-from-bold">Download sequences from BOLD<a class="anchor" aria-label="anchor" href="#download-sequences-from-bold"></a>
+</h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">## Fetch sequences from BOLD by searching for a taxon name</span>
 <span class="va">bold_seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_seqs.html">fetch_seqs</a></span><span class="op">(</span>
@@ -154,16 +150,16 @@
   <span class="op">)</span>
 
 <span class="co">## OR fetch sequences from a species list</span>
-<span class="va">spp_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readLines.html">readLines</a></span><span class="op">(</span><span class="st">"species_list.txt"</span><span class="op">)</span>
+<span class="va">spp_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="st">"species_list.txt"</span><span class="op">)</span>
 
 <span class="va">bold_seqs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_seqs.html">fetch_seqs</a></span><span class="op">(</span>
   <span class="va">spp_list</span>, database<span class="op">=</span><span class="st">"bold"</span>, marker<span class="op">=</span><span class="st">"COI-5P"</span>, output <span class="op">=</span> <span class="st">"gb-binom"</span>,
   multithread <span class="op">=</span> <span class="cn">FALSE</span>, quiet<span class="op">=</span><span class="cn">FALSE</span>
   <span class="op">)</span></code></pre></div>
 </div>
-<div id="download-mitochondrial-genomes-from-genbank" class="section level2">
-<h2 class="hasAnchor">
-<a href="#download-mitochondrial-genomes-from-genbank" class="anchor"></a>Download mitochondrial genomes from GenBank</h2>
+<div class="section level2">
+<h2 id="download-mitochondrial-genomes-from-genbank">Download mitochondrial genomes from GenBank<a class="anchor" aria-label="anchor" href="#download-mitochondrial-genomes-from-genbank"></a>
+</h2>
 <p>The fetch_seqs function can also download mitochondrial genomes, and accepts a special input argument of marker=“mitochondria” to do this.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Fetch mitochondrial genomes from genbank by searching for a taxon name</span>
@@ -173,7 +169,7 @@
   <span class="op">)</span>
 
 <span class="co">## OR fetch sequences from a species list</span>
-<span class="va">spp_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readLines.html">readLines</a></span><span class="op">(</span><span class="st">"species_list.txt"</span><span class="op">)</span>
+<span class="va">spp_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="st">"species_list.txt"</span><span class="op">)</span>
 
 <span class="va">genbank_mito</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_seqs.html">fetch_seqs</a></span><span class="op">(</span>
   <span class="va">spp_list</span>, database<span class="op">=</span><span class="st">"genbank"</span>, marker<span class="op">=</span><span class="st">"mitochondria"</span>,
@@ -181,39 +177,39 @@
   <span class="op">)</span></code></pre></div>
 </div>
 </div>
-<div id="curating-public-reference-sequences" class="section level1">
-<h1 class="hasAnchor">
-<a href="#curating-public-reference-sequences" class="anchor"></a>Curating public reference sequences</h1>
+<div class="section level1">
+<h1 id="curating-public-reference-sequences">Curating public reference sequences<a class="anchor" aria-label="anchor" href="#curating-public-reference-sequences"></a>
+</h1>
 <p>Due to the aforementioned issues with misannotated or low quality sequences in public reference databases we will use a number of filtering steps.</p>
-<div id="removing-non-homologous-sequences" class="section level2">
-<h2 class="hasAnchor">
-<a href="#removing-non-homologous-sequences" class="anchor"></a>Removing non-homologous sequences</h2>
+<div class="section level2">
+<h2 id="removing-non-homologous-sequences">Removing non-homologous sequences<a class="anchor" aria-label="anchor" href="#removing-non-homologous-sequences"></a>
+</h2>
 <p>The first sequence curation step is to remove non-homologous loci by mapping to a reference Profile Hidden Markov Model (PHMM) of the target loci. PHMMs turn a multiple sequence alignment into a position-specific scoring system suitable for searching databases for remotely homologous sequences. This approach circumvents the bias that can be introduced when mapping sequences to a single reference sequence. To create the PHMM model we will use the aphid R package, and a curated alignment of insect COI sequences obtained from the Midori dataset (Machida et al, 2017) and trimmed to the folmer region.</p>
 <p>A pre-trained model of the conventional COI barcode or ‘folmer’ region can be loaded from the package data as below. This model was trained on the midori longest dataset of all COI sequences.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#This loads the model into the workspace</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"model"</span>, package<span class="op">=</span><span class="st">"taxreturn"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"model"</span>, package<span class="op">=</span><span class="st">"taxreturn"</span><span class="op">)</span>
 
 <span class="co">#See what it looks like</span>
-<span class="fu"><a href="https://rdrr.io/r/base/print.html">print</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></code></pre></div>
 <p>However if you are working with a different barcode locus, or if you wish to improve accuracy by training on a specific taxonomic group you can train a new PHMM model using the aphid R package as below:</p>
 <p>Note: if you are using a public dataset as a reference alignment to build the model, it may be worth curating it manually first, as a poor reference alignment will produce a poor model and greatly affect downstream analysis.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://github.com/shaunpwilkinson/aphid">aphid</a></span><span class="op">)</span>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://github.com/shaunpwilkinson/aphid" class="external-link">aphid</a></span><span class="op">)</span>
 
 <span class="co"># Read in sequence dataset to be used in model training</span>
-<span class="va">seqs</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/Biostrings/man/XStringSet-io.html">readDNAStringSet</a></span><span class="op">(</span><span class="st">"MIDORI_LONGEST_20180221_COI.fasta"</span><span class="op">)</span>
+<span class="va">seqs</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/Biostrings/man/XStringSet-io.html" class="external-link">readDNAStringSet</a></span><span class="op">(</span><span class="st">"MIDORI_LONGEST_20180221_COI.fasta"</span><span class="op">)</span>
 
-<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">aphid</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/aphid/man/derivePHMM.html">derivePHMM</a></span><span class="op">(</span><span class="va">seqs</span><span class="op">)</span></code></pre></div>
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">aphid</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/aphid/man/derivePHMM.html" class="external-link">derivePHMM</a></span><span class="op">(</span><span class="va">seqs</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="optional-trim-model-to-desired-amplicon" class="section level2">
-<h2 class="hasAnchor">
-<a href="#optional-trim-model-to-desired-amplicon" class="anchor"></a>Optional: Trim model to desired amplicon</h2>
+<div class="section level2">
+<h2 id="optional-trim-model-to-desired-amplicon">Optional: Trim model to desired amplicon<a class="anchor" aria-label="anchor" href="#optional-trim-model-to-desired-amplicon"></a>
+</h2>
 <p>Depending on the taxonomic classifier used, it can be beneficial to trim the reference sequences down to the actual region amplified by the primers. This can be achieved by subsetting the full PHMM model using primer sequences or binding positions. Below we will subset the model to the region amplified by the fwhF2-fwhR2n primers of Vamos et al 2017.</p>
 <p>However, if you wish to keep the full length sequences, skip this section.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
-<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_model.html">subset_model</a></span><span class="op">(</span><span class="va">model</span>, primers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"GGDACWGGWTGAACWGTWTAYCCHCC"</span>, <span class="st">"GTRATWGCHCCDGCTARWACWGG"</span><span class="op">)</span>, trimprimers <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/subset_model.html">subset_model</a></span><span class="op">(</span><span class="va">model</span>, primers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"GGDACWGGWTGAACWGTWTAYCCHCC"</span>, <span class="st">"GTRATWGCHCCDGCTARWACWGG"</span><span class="op">)</span>, trimprimers <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <p>Now that we have our trained PHMM, it can be used with the map_to_model function wto remove non-homolgous sequences and extract the target locus from mitochondrial genomes and longer sequences.</p>
 <p>Firstly we will merge the sequences from each database together. As BOLD and GenBank share some sequence, we will dereplicate the merged file to only the unique accession numbers to speed things up.</p>
 <p>As we only wish to look at the sequence data contained within the range of our alignment model (in this case the folmer region of COI), we use the option shave=TRUE to remove all bases outside the range defined by the model. As here we are looking at a coding gene, we will also set check_frame to TRUE to ensure that any insertions or deletions are in multiples of 3, which is a quick and dirty way of identifying and removing pseudogenic sequences.</p>
@@ -224,7 +220,7 @@
 
 <span class="co"># Remove those sequnce accessions that are identical across both databases</span>
 <span class="co"># Using a regex that splits to just the accessions</span>
-<span class="va">uniq_seqs</span> <span class="op">&lt;-</span> <span class="va">seqs</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html">duplicated</a></span><span class="op">(</span><span class="fu">str_extract</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">seqs</span><span class="op">)</span>, <span class="st">"^.*\\|"</span> <span class="op">)</span><span class="op">)</span><span class="op">]</span> 
+<span class="va">uniq_seqs</span> <span class="op">&lt;-</span> <span class="va">seqs</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="fu">str_extract</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">seqs</span><span class="op">)</span>, <span class="st">"^.*\\|"</span> <span class="op">)</span><span class="op">)</span><span class="op">]</span> 
 
 <span class="co">#remove non-homologous sequences</span>
 <span class="va">filtered</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/map_to_model.html">map_to_model</a></span><span class="op">(</span>
@@ -233,9 +229,9 @@
   multithread <span class="op">=</span> <span class="cn">FALSE</span>, quiet<span class="op">=</span><span class="cn">FALSE</span>
   <span class="op">)</span></code></pre></div>
 </div>
-<div id="resolve-contaminated-sequences-and-misannotated-taxonomy" class="section level2">
-<h2 class="hasAnchor">
-<a href="#resolve-contaminated-sequences-and-misannotated-taxonomy" class="anchor"></a>Resolve Contaminated sequences and misannotated taxonomy</h2>
+<div class="section level2">
+<h2 id="resolve-contaminated-sequences-and-misannotated-taxonomy">Resolve Contaminated sequences and misannotated taxonomy<a class="anchor" aria-label="anchor" href="#resolve-contaminated-sequences-and-misannotated-taxonomy"></a>
+</h2>
 <p>The other main form of misannotation that can effect metabarcoding datasets is misannotated taxonomy for the reference sequences. To detect putatively misannotated sequences we will cluster sequences at a specific similarity threshold (in this case 97% similarity), and compare the taxonomy at a certain rank (Genus in this case) within clusters. A sequence will be flagged if its taxonomy diverges from the other sequences within its respective cluster by more than a certain confidence (0.8 by default, meaning the putatively misannotated sequence must diverge from 4/5 other sequences in its cluster)</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Load the NCBI taxonomy </span>
@@ -254,34 +250,34 @@
 <span class="va">rem</span> <span class="op">&lt;-</span> <span class="va">mixed_clusters</span><span class="op">$</span><span class="va">Acc</span>
 
 <span class="co"># Get current accession numbers</span>
-<span class="va">acc</span> <span class="op">&lt;-</span> <span class="fu">str_replace</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">filtered</span><span class="op">)</span>, <span class="st">"(?:.(?!;))+$"</span>, <span class="st">""</span><span class="op">)</span>
+<span class="va">acc</span> <span class="op">&lt;-</span> <span class="fu">str_replace</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">filtered</span><span class="op">)</span>, <span class="st">"(?:.(?!;))+$"</span>, <span class="st">""</span><span class="op">)</span>
 
 <span class="co"># Remove any accessions that were found to be in mixed clusters</span>
-<span class="va">purged</span>  <span class="op">&lt;-</span> <span class="va">filtered</span><span class="op">[</span><span class="op">!</span><span class="va">acc</span> <span class="op">%in%</span> <span class="va">rem</span><span class="op">]</span></code></pre></div>
+<span class="va">purged</span>  <span class="op">&lt;-</span> <span class="va">filtered</span><span class="op">[</span><span class="op">!</span><span class="va">acc</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="va">rem</span><span class="op">]</span></code></pre></div>
 </div>
-<div id="optional-filter-for-stop-codons" class="section level2">
-<h2 class="hasAnchor">
-<a href="#optional-filter-for-stop-codons" class="anchor"></a>Optional: Filter for stop codons</h2>
-<p>As the COI barcode is a protein coding region, underlying evolutionary constraints mean that any sequences containing stop codons or indels of lengths which are not a multiple of 3 commonly indicate pseudogenes. The codon_filter function detects the reading frame of the sequence, and ensures it contains no frameshifts or stop codons. Note that you must select the appropriate genetic code here otherwise you risk losing all your sequences. Available codes can be found using <code><a href="https://rdrr.io/pkg/Biostrings/man/GENETIC_CODE.html">Biostrings::GENETIC_CODE_TABLE</a></code>. If you are not working with a protein coding gene, skip this section.</p>
+<div class="section level2">
+<h2 id="optional-filter-for-stop-codons">Optional: Filter for stop codons<a class="anchor" aria-label="anchor" href="#optional-filter-for-stop-codons"></a>
+</h2>
+<p>As the COI barcode is a protein coding region, underlying evolutionary constraints mean that any sequences containing stop codons or indels of lengths which are not a multiple of 3 commonly indicate pseudogenes. The codon_filter function detects the reading frame of the sequence, and ensures it contains no frameshifts or stop codons. Note that you must select the appropriate genetic code here otherwise you risk losing all your sequences. Available codes can be found using <code><a href="https://rdrr.io/pkg/Biostrings/man/GENETIC_CODE.html" class="external-link">Biostrings::GENETIC_CODE_TABLE</a></code>. If you are not working with a protein coding gene, skip this section.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#SGC4 is invertebrate mitochondrial genetic code</span>
 <span class="va">purged</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/codon_filter.html">codon_filter</a></span><span class="op">(</span>
   <span class="va">purged</span>, genetic_code <span class="op">=</span> <span class="st">"SGC4"</span>, tryrc <span class="op">=</span> <span class="cn">TRUE</span>, resolve_draws <span class="op">=</span> <span class="st">"majority"</span>
   <span class="op">)</span></code></pre></div>
 </div>
-<div id="resolve-synonyms" class="section level2">
-<h2 class="hasAnchor">
-<a href="#resolve-synonyms" class="anchor"></a>Resolve synonyms</h2>
+<div class="section level2">
+<h2 id="resolve-synonyms">Resolve synonyms<a class="anchor" aria-label="anchor" href="#resolve-synonyms"></a>
+</h2>
 <p>Classification of sequences into reference taxonomy can be complicated by the existence of taxonomic synonyms. To resolve this we use the NCBI synonyms list to ensure each name represents a currently valid taxa, and replace known synonyms with accepted taxon names.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">resolved</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolve_synonyms_ncbi.html">resolve_synonyms_ncbi</a></span><span class="op">(</span><span class="va">purged</span><span class="op">)</span>
 
 <span class="co">#Check for differences in names</span>
-<span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">resolved</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.html">which</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">resolved</span><span class="op">)</span> <span class="op">%in%</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">purged</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">resolved</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/which.html" class="external-link">which</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">resolved</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">purged</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></code></pre></div>
 </div>
-<div id="prune-large-groups" class="section level2">
-<h2 class="hasAnchor">
-<a href="#prune-large-groups" class="anchor"></a>Prune large groups</h2>
+<div class="section level2">
+<h2 id="prune-large-groups">Prune large groups<a class="anchor" aria-label="anchor" href="#prune-large-groups"></a>
+</h2>
 <p>In many cases groups of taxa are over-represented in databases, which can slow down and bias the taxonomic assignment process. Here we prune over-represented groups down to 5 sequences. This function has the option of discarding these sequences by length (removing smaller sequences first), or randomly.</p>
 <p>We can also choose to de-duplicate the sequences here, which will remove all completely identical sequences before pruning down the group sizes.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
@@ -291,9 +287,9 @@
   dedup<span class="op">=</span><span class="cn">TRUE</span>, quiet <span class="op">=</span> <span class="cn">FALSE</span>
   <span class="op">)</span></code></pre></div>
 </div>
-<div id="reformat-to-taxonomic-hierarchy" class="section level2">
-<h2 class="hasAnchor">
-<a href="#reformat-to-taxonomic-hierarchy" class="anchor"></a>Reformat to taxonomic hierarchy</h2>
+<div class="section level2">
+<h2 id="reformat-to-taxonomic-hierarchy">Reformat to taxonomic hierarchy<a class="anchor" aria-label="anchor" href="#reformat-to-taxonomic-hierarchy"></a>
+</h2>
 <p>Finally, we will reformat to fasta annotations to contain the full taxonomic hierarchy and write out the fasta</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Load NCBI taxonomy</span>
@@ -303,33 +299,33 @@
 <span class="va">hierarchy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reformat_hierarchy.html">reformat_hierarchy</a></span><span class="op">(</span><span class="va">pruned</span>, db<span class="op">=</span><span class="va">db</span>, quiet<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span>
 
 <span class="co">#See if this worked</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">hierarchy</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">hierarchy</span><span class="op">)</span><span class="op">)</span>
 
 <span class="co"># Save a zipped fasta file of curated reference database</span>
 <span class="fu"><a href="../reference/write_fasta.html">write_fasta</a></span><span class="op">(</span>
   <span class="va">hierarchy</span>, file <span class="op">=</span> <span class="st">"COI_reference_hierarchial.fa.gz"</span>, compress <span class="op">=</span> <span class="cn">TRUE</span>
   <span class="op">)</span></code></pre></div>
 </div>
-<div id="summarise-number-of-taxa-in-database" class="section level2">
-<h2 class="hasAnchor">
-<a href="#summarise-number-of-taxa-in-database" class="anchor"></a>Summarise number of taxa in database</h2>
+<div class="section level2">
+<h2 id="summarise-number-of-taxa-in-database">Summarise number of taxa in database<a class="anchor" aria-label="anchor" href="#summarise-number-of-taxa-in-database"></a>
+</h2>
 <p>Finally, we can output a few summary metrics for our final curated database, such as the number of unique sequences for each taxonomic rank:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">hierarchy</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">str_split_fixed</span><span class="op">(</span><span class="st">";"</span>, n<span class="op">=</span><span class="fl">8</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">as_tibble</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/separate.html">separate</a></span><span class="op">(</span><span class="va">V1</span>, into<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Sequences"</span>, <span class="st">"tax_ids"</span><span class="op">)</span>, sep <span class="op">=</span> <span class="st">"\\|"</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">magrittr</span><span class="fu">::</span><span class="fu"><a href="https://magrittr.tidyverse.org/reference/aliases.html">set_colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Sequences"</span>, <span class="st">"tax_ids"</span>, <span class="st">"kingdom"</span>, <span class="st">"phylum"</span>,
-                           <span class="st">"class"</span>, <span class="st">"order"</span>, <span class="st">"family"</span>, <span class="st">"genus"</span>, <span class="st">"species"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">hierarchy</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">str_split_fixed</span><span class="op">(</span><span class="st">";"</span>, n<span class="op">=</span><span class="fl">8</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">as_tibble</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/separate.html" class="external-link">separate</a></span><span class="op">(</span><span class="va">V1</span>, into<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sequences"</span>, <span class="st">"tax_ids"</span><span class="op">)</span>, sep <span class="op">=</span> <span class="st">"\\|"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">magrittr</span><span class="fu">::</span><span class="fu"><a href="https://magrittr.tidyverse.org/reference/aliases.html" class="external-link">set_colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sequences"</span>, <span class="st">"tax_ids"</span>, <span class="st">"kingdom"</span>, <span class="st">"phylum"</span>,
+                           <span class="st">"class"</span>, <span class="st">"order"</span>, <span class="st">"family"</span>, <span class="st">"genus"</span>, <span class="st">"species"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span>
   <span class="fu">summarise_all</span><span class="op">(</span><span class="va">n_distinct</span><span class="op">)</span></code></pre></div>
 <p>We can also generate a tree like representation of the taxonomy which we can output as a newick file for analysis in other software</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tax2tree.html">tax2tree</a></span><span class="op">(</span><span class="va">hierarchy</span>, output<span class="op">=</span><span class="st">"phylo"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/pkg/ape/man/write.tree.html">write.tree</a></span><span class="op">(</span><span class="va">tree</span>, <span class="st">"tree.nwk"</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/pkg/ape/man/write.tree.html" class="external-link">write.tree</a></span><span class="op">(</span><span class="va">tree</span>, <span class="st">"tree.nwk"</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="bonus-output-trained-classifiers" class="section level2">
-<h2 class="hasAnchor">
-<a href="#bonus-output-trained-classifiers" class="anchor"></a>Bonus: output trained classifiers</h2>
+<div class="section level2">
+<h2 id="bonus-output-trained-classifiers">Bonus: output trained classifiers<a class="anchor" aria-label="anchor" href="#bonus-output-trained-classifiers"></a>
+</h2>
 <p>The taxreturn package supports reformatting of the reference database to work with</p>
 <p>The classifiers currently supported are:</p>
 <ul>
@@ -337,9 +333,9 @@
 <li>Exact matchign as implemented in DADA2 assignSpecies function</li>
 <li>IDTAXA Classifier as implemented in the DECIPHER R package</li>
 </ul>
-<div id="rdp" class="section level3">
-<h3 class="hasAnchor">
-<a href="#rdp" class="anchor"></a>RDP</h3>
+<div class="section level3">
+<h3 id="rdp">RDP<a class="anchor" aria-label="anchor" href="#rdp"></a>
+</h3>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Load NCBI taxonomy</span>
 <span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_ncbi_taxonomy.html">get_ncbi_taxonomy</a></span><span class="op">(</span><span class="op">)</span>
@@ -357,9 +353,9 @@
   <span class="va">dada2_spp</span>, file <span class="op">=</span> <span class="st">"COI_reference_dada2spp.fa.gz"</span>, compress <span class="op">=</span> <span class="cn">TRUE</span>
   <span class="op">)</span></code></pre></div>
 </div>
-<div id="idtaxa" class="section level3">
-<h3 class="hasAnchor">
-<a href="#idtaxa" class="anchor"></a>IDTAXA</h3>
+<div class="section level3">
+<h3 id="idtaxa">IDTAXA<a class="anchor" aria-label="anchor" href="#idtaxa"></a>
+</h3>
 <p>taxreturn implements a wrapper function for training the IDTAXA classifier, as below:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Load NCBI taxonomy</span>
@@ -372,7 +368,7 @@
   <span class="op">)</span>
 
 <span class="co">#Write out training set</span>
-<span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span><span class="op">(</span><span class="va">training_set</span>, file<span class="op">=</span><span class="st">"trained_idtaxa.rds"</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">training_set</span>, file<span class="op">=</span><span class="st">"trained_idtaxa.rds"</span><span class="op">)</span></code></pre></div>
 </div>
 </div>
 </div>
@@ -389,11 +385,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Alexander Piper.</p>
+  <p></p>
+<p>Developed by Alexander Piper.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
 </div>
 
       </footer>
@@ -401,6 +399,8 @@
 
   
 
+
+  
 
   </body>
 </html>
