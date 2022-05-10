@@ -66,6 +66,7 @@ Modified from Cameron Nugent's COIL package https://github.com/CNuge/coil/blob/m
   primers <span class="op">=</span> <span class="cn">NULL</span>,
   positions <span class="op">=</span> <span class="cn">NULL</span>,
   trimprimers <span class="op">=</span> <span class="cn">FALSE</span>,
+  min_score <span class="op">=</span> <span class="fl">10</span>,
   quiet <span class="op">=</span> <span class="cn">FALSE</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -80,6 +81,8 @@ Modified from Cameron Nugent's COIL package https://github.com/CNuge/coil/blob/m
 <dd><p>A numeric vector of length 2 containing the start and end position for model trimming. Used only if primers = NULL.</p></dd>
 <dt>trimprimers</dt>
 <dd><p>logical indicating whether the primer-binding sites should be removed from the sequences in the returned model. Used only if positions = NULL.</p></dd>
+<dt>min_score</dt>
+<dd><p>Minimum score for the viterbi alignment.</p></dd>
 <dt>quiet</dt>
 <dd><p>Whether to print progress to console.</p></dd>
 </dl></div>
@@ -100,7 +103,7 @@ Modified from Cameron Nugent's COIL package https://github.com/CNuge/coil/blob/m
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
 </div>
 
       </footer></div>
