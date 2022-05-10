@@ -74,18 +74,19 @@ get_ncbi_taxonomy <- function(dest_dir, include_synonyms = TRUE, force=FALSE) {
 #'
 get_ncbi_lineage <- function(x, db){
   if(missing(x)){stop("x must be a DNAbin or DNAStringSet object")}
+  if(!length(x) > 0) {stop("x is empty or not a DNAbin or DNAStringSet object")}
   if(missing(db)){ db <- taxreturn::get_ncbi_taxonomy()}
   cat("Getting taxonomic lineage from taxids\n")
   na_taxids <- names(x)[stringr::str_extract(names(x), "(?<=\\|).+?(?=;)") == "NA"]
   if(length(na_taxids)> 0){
-    message(length(na_taxids), " sequence/s have no matching tax_id in db")
+    warning(length(na_taxids), " sequence/s have no matching tax_id in db")
   }
   lineage <- names(x) %>%
-    tibble::as_tibble() %>%
+    tibble::as_tibble(column_name = "value") %>%
     tidyr::separate(col=value, into=c("acc", "tax_id", "genus", "species"), sep="\\||;| |_", extra="merge")%>%
     dplyr::mutate(tax_id = suppressWarnings(as.numeric(tax_id))) %>%
     dplyr::left_join (db %>% dplyr::select(-species, -genus), by = "tax_id")  %>%
-    tidyr::unite(col = Acc, c(acc, tax_id), sep = "|")
+    tidyr::unite(col = Acc, c("acc", "tax_id"), sep = "|")
   return(lineage)
 }
 

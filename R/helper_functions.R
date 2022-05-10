@@ -42,41 +42,48 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
     down <- ape::complement(primer)
     down <- down[!down %in% as.raw(c(2, 4))]
     vitR <- aphid::Viterbi(model, down, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
-    if (vitF$score > vitR$score && vitF$score > min_score) {
-      if (!quiet) {
-        message("Forward complement matched alignment")
-      }
+    match_type <- NA_character_
+    if (vitF$score > vitR$score & vitF$score > min_score) {
+      match_type <- "forward"
       path <- vitF$path
       score <- vitF$score
-    } else if (vitF$score < vitR$score && vitR$score > min_score) {
-      if (!quiet) {
-        message("Reverse complement matched alignment")
-      }
+    } else if (vitF$score < vitR$score & vitR$score > min_score) {
+      match_type <- "reverse"
       path <- vitR$path
       score <- vitR$score
-    } else if (vitF$score && vitR$score < min_score) {
+    } else if (vitF$score < min_score & vitR$score < min_score) {
       score <- max(vitF$score, vitR$score)
       out <- data.frame(primer = input, start = NA, end = NA, score=score)
+      warning("Both complements of primer were below min_score")
       return(out)
-      stop("Error: Both complements of primer were below min_score")
     }
-  } else if(tryrc == FALSE && vitF$score > min_score) {
+  } else if(tryrc == FALSE & vitF$score > min_score) {
     path <- vitF$path
     score <- vitF$score
   } else {
     out <- data.frame(primer = input, start = NA, end = NA, score=vitF$score)
+    warning("Forward complement of primer was below min_score")
     return(out)
-    Stop("Error: Forward complement of primer was below min_score")
   }
 
   matchF <- match(1, path)
   matchR <- (length(path) - (match(1, rev(path)) - 1))
+  if (!quiet) {
+    if(match_type == "forward"){
+      message(paste0("Forward complement matched alignment at positions ", matchF, ":",matchR))
+    } else if(match_type == "reverse"){
+      message(paste0("Reverse complement matched alignment at positions ", matchF, ":",matchR))
+    } else {
+      message("Both complements did not match alignment")
+    }
+  }
+
   if ((matchR - (matchF - 1)) == length(primer[[1]])) {
     out <- data.frame(primer = input, start = matchF, end = matchR, score=score)
   }  else if ((matchR - (matchF - 1)) > length(primer[[1]])) {
-    message("Warning: binding positions are larger than the primer length")
+    warning("Binding positions are larger than the primer length")
   }  else if ((matchR - (matchF - 1)) < length(primer[[1]])) {
-    message("Warning: binding positions are less than the primer length")
+    warning("Binding positions are less than the primer length")
   }
   return(out)
 }
@@ -225,32 +232,32 @@ pad_alignment <- function(x, model, pad = "-", tryrc = FALSE, check_indels = TRU
 #' @param primers A character vector of length 2 contaning the forward and reverse primer sequences.
 #' @param positions A numeric vector of length 2 containing the start and end position for model trimming. Used only if primers = NULL.
 #' @param trimprimers logical indicating whether the primer-binding sites should be removed from the sequences in the returned model. Used only if positions = NULL.
+#' @param min_score Minimum score for the viterbi alignment.
 #' @param quiet Whether to print progress to console.
 #'
 #' @return
 #' @export
 #'
 #' @examples
-subset_model <- function(x, primers=NULL, positions=NULL, trimprimers=FALSE, quiet=FALSE){
-
+subset_model <- function(x, primers=NULL, positions=NULL, trimprimers=FALSE, min_score=10, quiet=FALSE){
 
   # Check inputs
   if (is.numeric(positions) & length(positions) == 2){
-    start <- sort(positions)[1]
-    end <- sort(positions)[2]
+    start_bind <- sort(positions)[1]
+    end_bind <- sort(positions)[2]
   } else if (is.null(positions) & (is.character(primers) & length(primers)== 2)){
     Fprimer <- primers[1]
     Rprimer <- primers[2]
 
-    Fbind <-  get_binding_position(Fprimer, model=x, tryRC=TRUE, quiet=quiet, min_score = 10)
-    Rbind <-  get_binding_position(Rprimer, model=x, tryRC=TRUE, quiet=quiet, min_score = 10)
-
+    Fbind <-  get_binding_position(Fprimer, model=x, tryRC=TRUE, quiet=quiet, min_score = min_score)
+    Rbind <-  get_binding_position(Rprimer, model=x, tryRC=TRUE, quiet=quiet, min_score = min_score)
     if(isTRUE(trimprimers)){
-      start <- Fbind$end + 1
-      end <- Rbind$start - 1
+      start_bind <- Fbind$end + 1
+      end_bind <- Rbind$start - 1
+      if(!quiet){message("Primer binding positions will be trimmed from model")}
     } else if(isFALSE(trimprimers)){
-      start <- Fbind$start
-      end <- Rbind$end
+      start_bind <- Fbind$start
+      end_bind <- Rbind$end
     } else{
       stop("trimprimers must be either TRUE or FALSE")
     }
@@ -266,18 +273,24 @@ subset_model <- function(x, primers=NULL, positions=NULL, trimprimers=FALSE, qui
   } else {
     stop("A value must be provided to either positions or primers")
   }
-
+  if(is.na(start_bind) & is.numeric(end_bind)){
+    stop(paste0("Could not find binding position for Forward primer: ", Fprimer))
+  } else if(is.na(end_bind) & is.numeric(start_bind)){
+    stop(paste0("Could not find binding position for Reverse primer: ", Rprimer))
+  } else if(is.na(start_bind) & is.na(end_bind)){
+    stop(paste0("Could not find binding position for Forward primer: ", Fprimer, " and Reverse primer: ", Rprimer))
+  }
   # Check that positions are right
-  if(end < start){
+  if(end_bind < start_bind){
     stop("Index error, end position must match or exceed the start position.")
   }
-  if(end > x$size){
+  if(end_bind > x$size){
     stop(paste0("Index error, end position out of bounds. Input PHMM only has a length of: ", x$size))
   }
 
   #get the map positions for subsetting the alignment-based fields
-  map_start <- x$map[[start]]
-  map_end <- x$map[[end]]
+  map_start <- x$map[[start_bind]]
+  map_end <- x$map[[end_bind]]
 
   #subset to get the new inserts
   new_inserts <- x$inserts[map_start:map_end]
@@ -291,7 +304,7 @@ subset_model <- function(x, primers=NULL, positions=NULL, trimprimers=FALSE, qui
   #subset the mask
   new_mask <- x$mask[map_start:map_end]
   #subset the map
-  new_map <- x$map[start:end]
+  new_map <- x$map[start_bind:end_bind]
 
   #set the first remaining map entry equal to one,
   #make the necessary relative adjustment to all other positions
@@ -303,15 +316,15 @@ subset_model <- function(x, primers=NULL, positions=NULL, trimprimers=FALSE, qui
 
   #Subset the A and E matrixies, reindex the positions
   #A is 0 indexed, E is 1 indexed
-  new_A <- x$A[,start:end]
+  new_A <- x$A[,start_bind:end_bind]
   colnames(new_A) <- 0:(length(colnames(new_A))-1)
-  new_E <- x$E[,start:end]
+  new_E <- x$E[,start_bind:end_bind]
   colnames(new_E) <- 1:length(colnames(new_A))
 
   #Create the new PHMM object
   newPHMM = structure(list(name = x$name,
                            description = x$description,
-                           size = (end - start)+1,
+                           size = (end_bind - start_bind)+1,
                            alphabet = x$alphabet,
                            A = new_A,
                            E = new_E,
@@ -326,6 +339,7 @@ subset_model <- function(x, primers=NULL, positions=NULL, trimprimers=FALSE, qui
                            reference = x$reference,
                            mask = new_mask
   ), class =  "PHMM")
+  message(paste0("PHMM model subset to ", newPHMM$size, " base pairs"))
   return(newPHMM)
 }
 

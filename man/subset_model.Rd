@@ -10,6 +10,7 @@ subset_model(
   primers = NULL,
   positions = NULL,
   trimprimers = FALSE,
+  min_score = 10,
   quiet = FALSE
 )
 }
@@ -21,6 +22,8 @@ subset_model(
 \item{positions}{A numeric vector of length 2 containing the start and end position for model trimming. Used only if primers = NULL.}
 
 \item{trimprimers}{logical indicating whether the primer-binding sites should be removed from the sequences in the returned model. Used only if positions = NULL.}
+
+\item{min_score}{Minimum score for the viterbi alignment.}
 
 \item{quiet}{Whether to print progress to console.}
 }
