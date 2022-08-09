@@ -56,30 +56,40 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">map_to_ott</span><span class="op">(</span>
-  <span class="va">x</span>,
-  <span class="va">db</span>,
-  from <span class="op">=</span> <span class="st">"ncbi"</span>,
-  resolve_synonyms <span class="op">=</span> <span class="cn">TRUE</span>,
-  dir <span class="op">=</span> <span class="cn">NULL</span>,
-  filter_unplaced <span class="op">=</span> <span class="cn">TRUE</span>,
-  remove_na <span class="op">=</span> <span class="cn">FALSE</span>,
-  quiet <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">map_to_ott</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">db</span>,</span>
+<span>  from <span class="op">=</span> <span class="st">"ncbi"</span>,</span>
+<span>  resolve_synonyms <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  filter_unplaced <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  remove_na <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>a DNAbin</p></dd>
+
+
 <dt>db</dt>
 <dd><p>an OTT taxonomic database</p></dd>
+
+
 <dt>from</dt>
 <dd><p>the existing taxonomic ID format</p></dd>
+
+
 <dt>resolve_synonyms</dt>
 <dd><p>Whether to resolve synonyms</p></dd>
+
+
 <dt>dir</dt>
 <dd><p>A directory containing the OTT taxonomy, required if resolve synonyms is true</p></dd>
+
+
 <dt>filter_unplaced</dt>
 <dd><p>Whether to filter 'bad' entries. These include
 incertae_sedis
@@ -94,15 +104,16 @@ not_otu
 viral
 barren
 See: https://github.com/OpenTreeOfLife/reference-taxonomy/blob/master/doc/taxon-flags.md for more info</p></dd>
+
+
 <dt>remove_na</dt>
 <dd><p>Whether taxa that could not be mapped to the open tree of life should be removed</p></dd>
+
+
 <dt>quiet</dt>
 <dd><p>Whether progress should be printed to console</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -116,7 +127,7 @@ See: https://github.com/OpenTreeOfLife/reference-taxonomy/blob/master/doc/taxon-
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

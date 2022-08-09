@@ -56,25 +56,28 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">codon_filter</span><span class="op">(</span><span class="va">x</span>, genetic_code <span class="op">=</span> <span class="cn">NULL</span>, tryrc <span class="op">=</span> <span class="cn">TRUE</span>, resolve_draws <span class="op">=</span> <span class="st">"majority"</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">codon_filter</span><span class="op">(</span><span class="va">x</span>, genetic_code <span class="op">=</span> <span class="cn">NULL</span>, tryrc <span class="op">=</span> <span class="cn">TRUE</span>, resolve_draws <span class="op">=</span> <span class="st">"majority"</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>Sequences in DNAStringset or DNAbin format</p></dd>
+
+
 <dt>genetic_code</dt>
 <dd><p>A genetic code for the Amino acid translation. set to 'SGC4' for Invertebrate mitochondrial or see all known codes at Biostrings::GENETIC_CODE_TABLE</p></dd>
+
+
 <dt>tryrc</dt>
 <dd><p>Whether the reverse complemement should be evaluated if no frame without stop codons was found in the forward orientation.</p></dd>
+
+
 <dt>resolve_draws</dt>
 <dd><p>How draws should be resolved when multiple possible frames produce sequences with no stop codons.
 Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -88,7 +91,7 @@ Options are "remove" to completely remove the sequence, or "majority" to pick th
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

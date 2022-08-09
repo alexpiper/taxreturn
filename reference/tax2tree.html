@@ -56,42 +56,57 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">tax2tree</span><span class="op">(</span>
-  <span class="va">x</span>,
-  ranks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kingdom"</span>, <span class="st">"phylum"</span>, <span class="st">"class"</span>, <span class="st">"order"</span>, <span class="st">"family"</span>, <span class="st">"genus"</span>, <span class="st">"species"</span><span class="op">)</span>,
-  depth <span class="op">=</span> <span class="cn">NULL</span>,
-  summarise <span class="op">=</span> <span class="cn">FALSE</span>,
-  output <span class="op">=</span> <span class="st">"phylo"</span>,
-  replace_bads <span class="op">=</span> <span class="cn">FALSE</span>,
-  append_sum <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">tax2tree</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  ranks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kingdom"</span>, <span class="st">"phylum"</span>, <span class="st">"class"</span>, <span class="st">"order"</span>, <span class="st">"family"</span>, <span class="st">"genus"</span>, <span class="st">"species"</span><span class="op">)</span>,</span>
+<span>  depth <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  summarise <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  output <span class="op">=</span> <span class="st">"phylo"</span>,</span>
+<span>  replace_bads <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  append_sum <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>a DNAbin object or an object coercible to DNAbin</p></dd>
+
+
 <dt>ranks</dt>
 <dd><p>The taxonomic ranks currently assigned to the names</p></dd>
+
+
 <dt>depth</dt>
 <dd><p>The depth within the tree to return. Default NULL to return lowest input rank</p></dd>
+
+
 <dt>summarise</dt>
 <dd><p>Select a taxonomic rank to summarise below. Default is FALSE to return a tree of the same size as input</p></dd>
+
+
 <dt>output</dt>
 <dd><p>The output to return, options are:
 "phylo" to return an ape phylo object. If summarise is set to a rank, the number of distinct taxa at that rank numbers are appended to the tip labels if append_sum is TRUE, or returned as an attribute and can be accessed with attr(tree, "sum")
 "data.tree" to return a data.tree node object
 "treedf" to return a simplified tree with taxon summaries in a data frame
 "newick" to return a newick file for visualisation in other software. If summarise is set to a rank, the number of distinct taxa at that rank numbers are returned as an attribute and can be accessed with attr(tree, "sum")</p></dd>
+
+
 <dt>replace_bads</dt>
 <dd><p>An option to automatically replace invalid newick characters with '-'</p></dd>
+
+
 <dt>append_sum</dt>
 <dd><p>An option to append the summary number to the output trees tip labels when summarise is a rank and output is 'phylo'.
 If FALSE, summary numbers are returned as an attribute and can be accessed with attr(tree, "sum")</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a phylo, data.tree, newick, or treedf object</p>
+    
+
+<p>a phylo, data.tree, newick, or treedf object</p>
     </div>
 
   </div>
@@ -106,7 +121,7 @@ If FALSE, summary numbers are returned as an attribute and can be accessed with 
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

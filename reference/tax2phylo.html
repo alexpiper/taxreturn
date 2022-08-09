@@ -56,38 +56,47 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">tax2phylo</span><span class="op">(</span>
-  <span class="va">x</span>,
-  ranks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kingdom"</span>, <span class="st">"phylum"</span>, <span class="st">"class"</span>, <span class="st">"order"</span>, <span class="st">"family"</span>, <span class="st">"genus"</span>, <span class="st">"species"</span><span class="op">)</span>,
-  depth <span class="op">=</span> <span class="st">"all"</span>,
-  summarise <span class="op">=</span> <span class="cn">FALSE</span>,
-  append_sum <span class="op">=</span> <span class="cn">TRUE</span>,
-  hex <span class="op">=</span> <span class="cn">FALSE</span>,
-  resolve_poly <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">tax2phylo</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  ranks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kingdom"</span>, <span class="st">"phylum"</span>, <span class="st">"class"</span>, <span class="st">"order"</span>, <span class="st">"family"</span>, <span class="st">"genus"</span>, <span class="st">"species"</span><span class="op">)</span>,</span>
+<span>  depth <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  summarise <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  append_sum <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  hex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  resolve_poly <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>a DNAbin object or an object coercible to DNAbin</p></dd>
+
+
 <dt>ranks</dt>
 <dd><p>The taxonomic ranks currently assigned to the names</p></dd>
+
+
 <dt>depth</dt>
 <dd><p>The depth within the ranks to return. Default all to return lowest input rank</p></dd>
+
+
 <dt>summarise</dt>
 <dd><p>Summarise the number of sequences at depth.</p></dd>
+
+
 <dt>append_sum</dt>
 <dd><p>Append the summary number to the output trees tip labels when summarise is TRUE</p></dd>
+
+
 <dt>hex</dt>
 <dd><p>Convert the accessions to hexadecimal format to avoid newick incompatible characters. Can be reversed with hex2acc</p></dd>
+
+
 <dt>resolve_poly</dt>
 <dd><p>Randomly resolve polytomies in tree using <code><a href="https://rdrr.io/pkg/ape/man/multi2di.html" class="external-link">ape::multi2di</a></code>. use 'all' to resolve all polytomies, or 'upper' to only resolve upper branches, useful for making constraints trees</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -101,7 +110,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

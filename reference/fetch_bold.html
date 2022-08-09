@@ -56,23 +56,27 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">fetch_bold</span><span class="op">(</span>
-  <span class="va">x</span>,
-  marker <span class="op">=</span> <span class="st">"COI-5P"</span>,
-  output <span class="op">=</span> <span class="st">"gb-binom"</span>,
-  quiet <span class="op">=</span> <span class="cn">FALSE</span>,
-  db <span class="op">=</span> <span class="cn">NULL</span>,
-  retry_attempt <span class="op">=</span> <span class="fl">3</span>,
-  retry_wait <span class="op">=</span> <span class="fl">5</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">fetch_bold</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  marker <span class="op">=</span> <span class="st">"COI-5P"</span>,</span>
+<span>  output <span class="op">=</span> <span class="st">"gb-binom"</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  db <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  retry_attempt <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  retry_wait <span class="op">=</span> <span class="fl">5</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>A taxon name or vector of taxa to download sequences for</p></dd>
+
+
 <dt>marker</dt>
 <dd><p>the barcode marker used as a search term for the database</p></dd>
+
+
 <dt>output</dt>
 <dd><p>the output format for the taxonomy in fasta headers.
 Options include "h" for full heirarchial taxonomy (Accession;Domain;Phylum;Class;Order;Family;Genus;Species),
@@ -81,19 +85,24 @@ Options include "h" for full heirarchial taxonomy (Accession;Domain;Phylum;Class
 "gb" for genbank taxonomic ID (Accession|GBTaxID),
 "gb-binom" which outputs genbank taxonomic ID's and Genus species binomials, translating BOLD taxonomic ID's to genbank in the process (Accession|GBTaxID;Genus_species)
 or "standard" which outputs the default format for each database. For genbank this is the description field, and for bold this is <code>sampleid|species name|markercode|genbankid</code></p></dd>
+
+
 <dt>quiet</dt>
 <dd><p>Whether progress should be printed to the console.</p></dd>
+
+
 <dt>db</dt>
 <dd><p>(Optional) a database file generated using <code><a href="get_ncbi_taxonomy.html">taxreturn::get_ncbi_taxonomy()</a></code> or <code><a href="get_ott_taxonomy.html">taxreturn::get_ott_taxonomy()</a></code></p></dd>
+
+
 <dt>retry_attempt</dt>
 <dd><p>The number of query attempts in case of query failure due to poor internet connection.</p></dd>
+
+
 <dt>retry_wait</dt>
 <dd><p>How long to wait between query attempts</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -107,7 +116,7 @@ or "standard" which outputs the default format for each database. For genbank th
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

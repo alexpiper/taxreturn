@@ -56,48 +56,61 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">blast</span><span class="op">(</span>
-  <span class="va">query</span>,
-  <span class="va">db</span>,
-  type <span class="op">=</span> <span class="st">"blastn"</span>,
-  evalue <span class="op">=</span> <span class="fl">1e-06</span>,
-  output_format <span class="op">=</span> <span class="st">"tabular"</span>,
-  args <span class="op">=</span> <span class="cn">NULL</span>,
-  ungapped <span class="op">=</span> <span class="cn">FALSE</span>,
-  quiet <span class="op">=</span> <span class="cn">FALSE</span>,
-  multithread <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">blast</span><span class="op">(</span></span>
+<span>  <span class="va">query</span>,</span>
+<span>  <span class="va">db</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"blastn"</span>,</span>
+<span>  evalue <span class="op">=</span> <span class="fl">1e-06</span>,</span>
+<span>  output_format <span class="op">=</span> <span class="st">"tabular"</span>,</span>
+<span>  args <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ungapped <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  multithread <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>query</dt>
 <dd><p>(Required) Query sequence. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.</p></dd>
+
+
 <dt>db</dt>
 <dd><p>(Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
 If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database.
 If db is set to "remote", this will conduct a search against NCBI nucleotide database.</p></dd>
+
+
 <dt>type</dt>
 <dd><p>(Required) type of search to conduct, default 'blastn'</p></dd>
+
+
 <dt>evalue</dt>
 <dd><p>(Required) Minimum evalue from search</p></dd>
+
+
 <dt>output_format</dt>
 <dd><p>The output format to be returned.
 Default is tabular, which returns 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcov
 See https://www.ncbi.nlm.nih.gov/books/NBK279684/ for custom formatting information</p></dd>
+
+
 <dt>args</dt>
 <dd><p>(Optional) Extra arguments passed to BLAST</p></dd>
+
+
 <dt>ungapped</dt>
 <dd><p>Whether ungapped alignment should be conducted. Default is FALSE.</p></dd>
+
+
 <dt>quiet</dt>
 <dd><p>(Optional) Whether progress should be printed to console, default is FALSE</p></dd>
+
+
 <dt>multithread</dt>
 <dd><p>Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -111,7 +124,7 @@ See https://www.ncbi.nlm.nih.gov/books/NBK279684/ for custom formatting informat
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

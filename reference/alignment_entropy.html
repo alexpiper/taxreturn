@@ -56,24 +56,30 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">alignment_entropy</span><span class="op">(</span>
-  <span class="va">x</span>,
-  mask_gaps <span class="op">=</span> <span class="fl">0.2</span>,
-  count_gaps <span class="op">=</span> <span class="cn">FALSE</span>,
-  method <span class="op">=</span> <span class="st">"ML"</span>,
-  unit <span class="op">=</span> <span class="st">"log"</span>,
-  return_extra <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">alignment_entropy</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  mask_gaps <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  count_gaps <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"ML"</span>,</span>
+<span>  unit <span class="op">=</span> <span class="st">"log"</span>,</span>
+<span>  return_extra <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>A DNAbin or AAbin object</p></dd>
+
+
 <dt>mask_gaps</dt>
 <dd><p>The threshold of gaps allowed before a position in the alignment is masked</p></dd>
+
+
 <dt>count_gaps</dt>
 <dd><p>Whether gaps should be counted within entropy calculations. Default is FALSE.</p></dd>
+
+
 <dt>method</dt>
 <dd><p>the method employed by <code><a href="https://rdrr.io/pkg/entropy/man/entropy.html" class="external-link">entropy::entropy</a></code> to estimate alignment entropy. Accepts:
 "ML" : maximum likelihood
@@ -86,15 +92,16 @@
 "NSB": Nemenman, Shafee and Biale (2002)
 "shrink" : Shrinkage estimator
 See the help page of <code><a href="https://rdrr.io/pkg/entropy/man/entropy.html" class="external-link">entropy::entropy</a></code> for more information</p></dd>
+
+
 <dt>unit</dt>
 <dd><p>the unit in which entropy is measured. The default is "nats" (natural units). For computing entropy in "bits" set unit="log2".</p></dd>
+
+
 <dt>return_extra</dt>
 <dd><p>Whether to return a dataframe including extra columns including individual base counts, gap proportions and number of bases at each position</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -108,7 +115,7 @@ See the help page of <code><a href="https://rdrr.io/pkg/entropy/man/entropy.html
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

@@ -61,24 +61,27 @@ This function recursively splits a bold taxonomic query until the amount of reco
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">split_bold_query</span><span class="op">(</span><span class="va">x</span>, chunk_size <span class="op">=</span> <span class="fl">1e+05</span>, split_if_under <span class="op">=</span> <span class="cn">FALSE</span>, quiet <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">split_bold_query</span><span class="op">(</span><span class="va">x</span>, chunk_size <span class="op">=</span> <span class="fl">1e+05</span>, split_if_under <span class="op">=</span> <span class="cn">FALSE</span>, quiet <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>The input taxonomic query</p></dd>
+
+
 <dt>chunk_size</dt>
 <dd><p>The maximum amount of records to return per query</p></dd>
+
+
 <dt>split_if_under</dt>
 <dd><p>whether to split the query down 1 level even if already below chunksize. This can be useful for making suitable queries for multithread searching.</p></dd>
+
+
 <dt>quiet</dt>
 <dd><p>Whether progress should be printed to the console.</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -92,7 +95,7 @@ This function recursively splits a bold taxonomic query until the amount of reco
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

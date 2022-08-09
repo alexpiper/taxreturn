@@ -56,36 +56,43 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">gid_to_acc</span><span class="op">(</span>
-  <span class="va">ids</span>,
-  database <span class="op">=</span> <span class="st">"nuccore"</span>,
-  chunk_size <span class="op">=</span> <span class="fl">300</span>,
-  multithread <span class="op">=</span> <span class="cn">TRUE</span>,
-  progress <span class="op">=</span> <span class="cn">FALSE</span>,
-  quiet <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gid_to_acc</span><span class="op">(</span></span>
+<span>  <span class="va">ids</span>,</span>
+<span>  database <span class="op">=</span> <span class="st">"nuccore"</span>,</span>
+<span>  chunk_size <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>  multithread <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  progress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>ids</dt>
 <dd><p>A character or numeric vector of NCBI gids</p></dd>
+
+
 <dt>database</dt>
 <dd><p>The origin database of the gids, default 'nuccore'</p></dd>
+
+
 <dt>chunk_size</dt>
 <dd><p>The size of the chunked searches to conduct.
 Warning, chunk sizes over 300 can be too big for the NCBI servers.</p></dd>
+
+
 <dt>multithread</dt>
 <dd><p>Whether multithreading should be used</p></dd>
+
+
 <dt>progress</dt>
 <dd><p>Whether a progress bar is displayed.</p></dd>
+
+
 <dt>quiet</dt>
 <dd><p>Whether progress should be printed to the console.</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -99,7 +106,7 @@ Warning, chunk sizes over 300 can be too big for the NCBI servers.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

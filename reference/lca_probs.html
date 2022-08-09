@@ -56,37 +56,44 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">lca_probs</span><span class="op">(</span>
-  <span class="va">x</span>,
-  method <span class="op">=</span> <span class="st">"mbed"</span>,
-  k <span class="op">=</span> <span class="fl">5</span>,
-  nstart <span class="op">=</span> <span class="fl">20</span>,
-  ranks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kingdom"</span>, <span class="st">"phylum"</span>, <span class="st">"class"</span>, <span class="st">"order"</span>, <span class="st">"family"</span>, <span class="st">"genus"</span>, <span class="st">"species"</span><span class="op">)</span>,
-  delim <span class="op">=</span> <span class="st">";"</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">lca_probs</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"mbed"</span>,</span>
+<span>  k <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  nstart <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  ranks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kingdom"</span>, <span class="st">"phylum"</span>, <span class="st">"class"</span>, <span class="st">"order"</span>, <span class="st">"family"</span>, <span class="st">"genus"</span>, <span class="st">"species"</span><span class="op">)</span>,</span>
+<span>  delim <span class="op">=</span> <span class="st">";"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>a DNAbin object or an object coercible to DNAbin</p></dd>
+
+
 <dt>method</dt>
 <dd><p>The distance matrix computation method to use,
 accepts "mbed" which computes a distance matrix from each sequence to a subset of 'seed' sequences using the method outlined in Blacksheilds et al (2010).
 This scales well to big datasets, alternatively "kdist" computes the full n * n distance matrix.</p></dd>
+
+
 <dt>k</dt>
 <dd><p>integer giving the k-mer size used to generate the input matrix for k-means clustering.</p></dd>
+
+
 <dt>nstart</dt>
 <dd><p>value passed to  nstart passed to kmeans. Higher increases computation time but can improve clustering accuracy considerably.</p></dd>
+
+
 <dt>ranks</dt>
 <dd><p>The taxonomic ranks currently assigned to the names</p></dd>
+
+
 <dt>delim</dt>
 <dd><p>The delimiter used between ranks</p></dd>
+
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -100,7 +107,7 @@ This scales well to big datasets, alternatively "kdist" computes the full n * n 
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
