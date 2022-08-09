@@ -798,9 +798,9 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
       res <- data.frame(tax_name = names(tab),
                         count =as.numeric(tab), stringsAsFactors = FALSE)
     } else if (return=="all"){
-      res <- data.frame(acc =  gsub("\\|.*$", "\\1", names(y)),
+      res <- data.frame(Acc =  gsub("\\|.*$", "\\1", names(y)),
                         tax_id = gsub("^.*\\|", "\\1", names(y)),
-                        tax_name = as.character(y), stringsAsFactors = FALSE)
+                        listed = as.character(y), stringsAsFactors = FALSE)
     }
 
     return(res)
@@ -829,12 +829,21 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
 
       mixedtab <- dplyr::bind_rows(mixedtab, .id="cluster")
       if(rank[i] == "species"){
-        #Return binomials if species rank is selected
-        mixedtab <- mixedtab %>%
-          dplyr::left_join(lineage %>% dplyr::select(Acc, genus)) %>%
-          dplyr::mutate(listed = paste0(genus, " ", listed),
-                        consensus  = paste0(genus," ", consensus)) %>%
-          dplyr::select(-genus)
+        if(return == "consensus"){
+          #Return binomials if species rank is selected
+          mixedtab <- mixedtab %>%
+            dplyr::left_join(lineage %>% dplyr::select(Acc, genus)) %>%
+            dplyr::mutate(listed = paste0(genus, " ", listed),
+                          consensus  = paste0(genus," ", consensus)) %>%
+            dplyr::select(-genus)
+        } else if(return == "all"){
+          mixedtab <- mixedtab %>%
+            dplyr::left_join(lineage %>%
+                               dplyr::select(Acc, genus) %>%
+                               tidyr::separate(Acc, into=c("Acc", "tax_id"), sep="\\|"), by=c("Acc", "tax_id")) %>%
+            dplyr::mutate(listed = paste0(genus, " ", listed)) %>%
+            dplyr::select(-genus)
+        }
       }
       if(return == "consensus"){
         mixedtab <- mixedtab[mixedtab$confidence >= confidence, ]
@@ -853,7 +862,6 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
           dplyr::mutate_if(is.factor, as.character)
 
       }
-
     }
   }
 
@@ -862,4 +870,3 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
     return(NULL)
   } else (return(out))
 }
-
