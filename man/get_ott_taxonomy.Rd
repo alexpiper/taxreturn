@@ -25,9 +25,6 @@ viral
 barren
 See: https://github.com/OpenTreeOfLife/reference-taxonomy/blob/master/doc/taxon-flags.md for more info}
 }
-\value{
-
-}
 \description{
 get_ott_taxonomy
 }

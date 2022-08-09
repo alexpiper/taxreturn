@@ -27,9 +27,6 @@ Warning, chunk sizes over 300 can be too big for the NCBI servers.}
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Convert NCBI gene ids to accession numbers
 }

@@ -32,9 +32,6 @@ clean_seqs(
 
 \item{progress}{Whether a progress bar should be printed.}
 }
-\value{
-
-}
 \description{
 Clean Sequences with PHMM (DEPRECATED)
 }

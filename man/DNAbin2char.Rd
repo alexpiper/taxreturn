@@ -9,9 +9,6 @@ DNAbin2char(x)
 \arguments{
 \item{x}{A DNAbin object}
 }
-\value{
-
-}
 \description{
 DNAbin to char
 }

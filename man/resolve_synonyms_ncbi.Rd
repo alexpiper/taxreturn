@@ -13,9 +13,6 @@ resolve_synonyms_ncbi(x, dir = NULL, quiet = FALSE)
 
 \item{quiet}{Whether progress should be printed to console}
 }
-\value{
-
-}
 \description{
 resolve_synonyms_ncbi
 }

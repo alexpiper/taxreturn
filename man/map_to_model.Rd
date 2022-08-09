@@ -58,9 +58,6 @@ see \code{?aphid::Viterbi} for more information about the alignment process.}
 
 \item{progress}{Whether a progress bar is displayed.}
 }
-\value{
-
-}
 \description{
 This function alignes sequences to a Profile Hidden Markov Model (PHMM) using the Viterbi algorithm in order to retain only the target loci.
 This function can also be used to extract smaller subregions out of longer sequences, for instance extracting the COI barcode region from mitochondrial genomes.

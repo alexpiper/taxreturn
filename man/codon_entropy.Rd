@@ -27,9 +27,6 @@ Options are "remove" to completely remove the sequence, or "majority" to pick th
 
 \item{method}{the method employed to estimate entropy. see \code{?entropy::entropy} for more details}
 }
-\value{
-
-}
 \description{
 Codon entropy
 }

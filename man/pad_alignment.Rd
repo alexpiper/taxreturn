@@ -38,9 +38,6 @@ pad_alignment(
 
 \item{...}{aditional arguments to be passed to "Viterbi"}
 }
-\value{
-
-}
 \description{
 Aligns a DNABin to a reference PHMM model, and pads any gaps between the query and reference
 }

@@ -15,9 +15,6 @@ write_fasta(x, file = "", compress = FALSE, quiet = FALSE)
 
 \item{quiet}{Whether progress should be printed to consoe}
 }
-\value{
-
-}
 \description{
 write fasta
 }

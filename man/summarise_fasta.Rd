@@ -13,9 +13,6 @@ summarise_fasta(x, label = NULL, origin = NULL)
 
 \item{origin}{optional, a table with sequence id numbers and their database origins}
 }
-\value{
-
-}
 \description{
 summarise_fasta
 }

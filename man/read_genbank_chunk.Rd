@@ -15,9 +15,6 @@ read_genbank_chunk(gid, quiet = FALSE, retry_attempt = 3, retry_wait = 5)
 
 \item{retry_wait}{How long to wait between query attempts}
 }
-\value{
-
-}
 \description{
 Read genbank chunk
 }

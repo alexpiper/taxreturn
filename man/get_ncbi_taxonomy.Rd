@@ -13,9 +13,6 @@ get_ncbi_taxonomy(dest_dir, include_synonyms = TRUE, force = FALSE)
 
 \item{force}{Whether already downloaded files should be overwrittenget}
 }
-\value{
-
-}
 \description{
 Download NCBI taxdump
 }

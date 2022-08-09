@@ -11,9 +11,6 @@ ncbi_taxid(x, db = NULL)
 
 \item{db}{a database file generated using \code{taxreturn::get_ncbi_taxonomy()}}
 }
-\value{
-
-}
 \description{
 Get ncbi taxid's for a taxon name
 }

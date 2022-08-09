@@ -9,9 +9,6 @@ parse_gb(gb)
 \arguments{
 \item{gb}{A genbank flat file}
 }
-\value{
-
-}
 \description{
 Parse genbank flat files
 }

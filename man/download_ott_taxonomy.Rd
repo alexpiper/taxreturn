@@ -13,9 +13,6 @@ download_ott_taxonomy(url, dest_dir, force = FALSE)
 
 \item{force}{Whether existing files should be overwritten}
 }
-\value{
-
-}
 \description{
 Download open tree of life taxonomy
 }

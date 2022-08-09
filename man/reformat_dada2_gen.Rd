@@ -20,9 +20,6 @@ reformat_dada2_gen(
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Reformat DADA2 Genus
 }

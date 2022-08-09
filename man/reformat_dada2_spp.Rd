@@ -11,9 +11,6 @@ reformat_dada2_spp(x, quiet = FALSE)
 
 \item{quiet}{Whether progress should be printed to console}
 }
-\value{
-
-}
 \description{
 Reformat DADA2 Species
 }

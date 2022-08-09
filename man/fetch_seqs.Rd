@@ -63,9 +63,6 @@ For BOLD queries the default is 100,000 returned records}
 
 \item{retry_wait}{How long to wait between query attempts.}
 }
-\value{
-
-}
 \description{
 fetch_seqs function
 }

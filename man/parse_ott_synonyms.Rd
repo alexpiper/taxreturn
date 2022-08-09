@@ -11,9 +11,6 @@ parse_ott_synonyms(dir = NULL, quiet = FALSE)
 
 \item{quiet}{Whether progress should be printed to console}
 }
-\value{
-
-}
 \description{
 parse the open tree of life synonyms file
 }

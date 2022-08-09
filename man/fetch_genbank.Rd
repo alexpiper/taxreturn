@@ -66,9 +66,6 @@ or "standard" which outputs the default format for each database. For bold this 
 
 \item{retry_wait}{How long to wait between query attempts.}
 }
-\value{
-
-}
 \description{
 Fetch sequences from genbank
 }

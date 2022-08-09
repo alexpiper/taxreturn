@@ -11,9 +11,6 @@ propagate_tax(tax, from = "Family")
 
 \item{from}{The taxonomic rank to propagate below}
 }
-\value{
-
-}
 \description{
 Propagate taxonomy (DEPRECATED)
 }

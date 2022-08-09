@@ -44,9 +44,6 @@ See: https://github.com/OpenTreeOfLife/reference-taxonomy/blob/master/doc/taxon-
 
 \item{quiet}{Whether progress should be printed to console}
 }
-\value{
-
-}
 \description{
 Map taxa to open tree of life
 }

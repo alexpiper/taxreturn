@@ -26,9 +26,6 @@ get_binding_position(
 
 \item{...}{aditional arguments to be passed to "Viterbi"}
 }
-\value{
-
-}
 \description{
 Get primer binding position
 }

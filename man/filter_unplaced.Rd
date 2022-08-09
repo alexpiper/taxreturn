@@ -13,9 +13,6 @@ filter_unplaced(x, db, quiet = FALSE)
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Filter flags indicating unplaced taxa in the taxonomic tree. These include:
 incertae_sedis

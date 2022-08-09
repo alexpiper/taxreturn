@@ -28,9 +28,6 @@ This scales well to big datasets, alternatively "kdist" computes the full n * n 
 
 \item{delim}{The delimiter used between ranks}
 }
-\value{
-
-}
 \description{
 Probabilitys of sharing a rank as a function of sequence identity
 }

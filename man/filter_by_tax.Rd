@@ -20,9 +20,6 @@ filter_by_tax(
 
 \item{ranks}{The taxonomic ranks currently assigned to the sequences}
 }
-\value{
-
-}
 \description{
 Filter sequences by taxonomy
 }

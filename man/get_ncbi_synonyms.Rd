@@ -14,9 +14,6 @@ If TRUE recurse fully, if a positive number the number of levels to recurse.}
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Get NCBI synonyms
 }

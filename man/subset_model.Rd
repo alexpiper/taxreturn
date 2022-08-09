@@ -27,9 +27,6 @@ subset_model(
 
 \item{quiet}{Whether to print progress to console.}
 }
-\value{
-
-}
 \description{
 Subset PHMM
 Modified from Cameron Nugent's COIL package https://github.com/CNuge/coil/blob/master/R/subset_PHMM.r

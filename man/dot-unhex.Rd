@@ -10,9 +10,6 @@ internal taxreturn function}
 \arguments{
 \item{y}{a character string}
 }
-\value{
-
-}
 \description{
 convert hexadecimal strings to alphanumeric
 internal taxreturn function

@@ -9,9 +9,6 @@ acc_from_fasta(x)
 \arguments{
 \item{x}{A filepath or vector of filepaths to fasta files}
 }
-\value{
-
-}
 \description{
 Genbank accessions from fasta
 }

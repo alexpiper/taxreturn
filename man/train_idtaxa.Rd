@@ -33,9 +33,6 @@ This can occur if the entire group appears to be misplaced in the taxonomic tree
 
 \item{quiet}{Whether progress should be printed to console.}
 }
-\value{
-
-}
 \description{
 Train IDTAXA
 }

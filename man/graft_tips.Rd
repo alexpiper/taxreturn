@@ -14,9 +14,6 @@ The left column must be identical to the tip labels of the phylogeny, the right 
 
 \item{branch_length}{A numeric giving the branch lengths for the new polytomic tips that are added.}
 }
-\value{
-
-}
 \description{
 Graft new tips onto an existing tree
 }

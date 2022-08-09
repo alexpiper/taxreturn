@@ -18,9 +18,6 @@ An already derived model of COI can be loaded using \code{data("model", package=
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Kmer screening function
 }

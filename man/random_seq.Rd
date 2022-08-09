@@ -13,9 +13,6 @@ random_seq(n, length, alphabet = c("A", "G", "T", "C"))
 
 \item{alphabet}{The DNA alphabet to draw from, default is A,G,C,T}
 }
-\value{
-
-}
 \description{
 Generate random sequences
 }

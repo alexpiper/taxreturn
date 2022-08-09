@@ -15,9 +15,6 @@ make_blast_db(file, dbtype = "nucl", args = NULL, quiet = FALSE)
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 }
-\value{
-
-}
 \description{
 Make blast Database
 }

@@ -10,9 +10,6 @@ internal taxreturn function}
 \arguments{
 \item{y}{a character string}
 }
-\value{
-
-}
 \description{
 Check whether a string is hexadecimal
 internal taxreturn function

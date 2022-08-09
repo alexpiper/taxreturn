@@ -49,9 +49,6 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 }
-\value{
-
-}
 \description{
 Conduct BLAST search and return top hit
 }

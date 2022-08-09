@@ -11,9 +11,6 @@ DNAbin2DNAstringset(x, remove_gaps = FALSE)
 
 \item{remove_gaps}{Whether gaps should be removed}
 }
-\value{
-
-}
 \description{
 Convert DNABin to DNAStringSet
 }

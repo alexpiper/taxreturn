@@ -29,9 +29,6 @@ tax2phylo(
 
 \item{resolve_poly}{Randomly resolve polytomies in tree using \code{ape::multi2di}. use 'all' to resolve all polytomies, or 'upper' to only resolve upper branches, useful for making constraints trees}
 }
-\value{
-
-}
 \description{
 A newer, faster tax2tree that grafts tips. Only returns a phylo objec
 }

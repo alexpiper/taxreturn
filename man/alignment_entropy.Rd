@@ -36,9 +36,6 @@ See the help page of \code{entropy::entropy} for more information}
 
 \item{return_extra}{Whether to return a dataframe including extra columns including individual base counts, gap proportions and number of bases at each position}
 }
-\value{
-
-}
 \description{
 Alignment entropy
 }

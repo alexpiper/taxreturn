@@ -35,9 +35,6 @@ get_subalignment(
 
 \item{...}{aditional arguments to be passed to "Viterbi"}
 }
-\value{
-
-}
 \description{
 Aligns a DNABin to a reference PHMM model, and returns the optimal path
 }

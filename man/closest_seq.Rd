@@ -19,9 +19,6 @@ An already derived model of COI can be loaded using \code{data("model", package=
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Closest kmer distance
 This function checks the kmer distance between all the sequences in a DNAbin and a reference PHMM model

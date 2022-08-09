@@ -12,9 +12,6 @@ concat_DNAbin(...)
 \arguments{
 \item{...}{\code{DNAbin} objects, or list of DNAbins to be concatenated.}
 }
-\value{
-
-}
 \description{
 Concatenate DNAbin objects while preserving attributes.
 This function joins two or more \code{DNAbin} objects, retaining any

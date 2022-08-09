@@ -11,9 +11,6 @@
 
 \item{quiet}{Whether errors should be printed to console}
 }
-\value{
-
-}
 \description{
 Find executable
 }

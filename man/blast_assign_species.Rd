@@ -45,9 +45,6 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 }
-\value{
-
-}
 \description{
 This is to be used alongside a hierarchial classifier such as IDTAXA or RDP to assign additional species level matches.
 This is designed to be a more flexible version of dada2's assignSpecies function

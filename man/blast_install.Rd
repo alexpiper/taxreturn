@@ -15,9 +15,6 @@ Directory to install BLAST within.}
 
 \item{force}{Whether existing installs should be forcefully overwritten}
 }
-\value{
-
-}
 \description{
 Install BLAST
 }

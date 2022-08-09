@@ -16,9 +16,6 @@ split_bold_query(x, chunk_size = 1e+05, split_if_under = FALSE, quiet = FALSE)
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Split bold query
 This function recursively splits a bold taxonomic query until the amount of records returned is under chunk_size

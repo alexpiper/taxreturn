@@ -27,9 +27,6 @@ To get strain level ranks, add "terminal" to ranks}
 This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation,
 for example by running parallel::stopCluster(cores).}
 }
-\value{
-
-}
 \description{
 Recursively get lineage from OTT taxid
 This function derives the full lineage of a taxon ID number from a given taxonomy database

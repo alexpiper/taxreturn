@@ -29,9 +29,6 @@ or prefered when breaking ties in sequences of the same length when discardby=le
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Prune group sizes
 }

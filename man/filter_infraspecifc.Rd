@@ -13,9 +13,6 @@ filter_infraspecifc(x, db, quiet = FALSE)
 
 \item{quiet}{Whether progress should be printed to the console.}
 }
-\value{
-
-}
 \description{
 Filter infraspecific taxonomic labels
 }

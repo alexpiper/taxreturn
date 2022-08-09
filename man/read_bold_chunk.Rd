@@ -17,9 +17,6 @@ read_bold_chunk(taxon, quiet = FALSE, retry_attempt = 3, retry_wait = 5)
 
 \item{gid}{a vector of GenBank ID's}
 }
-\value{
-
-}
 \description{
 read bold chunk
 }

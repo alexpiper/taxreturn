@@ -46,9 +46,6 @@ Count - Return counts of all taxa within each cluster}
 
 \item{...}{further arguments to pass to kmer::otu.}
 }
-\value{
-
-}
 \description{
 Cluster sequences at a certain taxonomic similarity, and find clusters that contain mixed taxonomic names,
 

@@ -21,9 +21,6 @@ get_reading_frame(
 \item{resolve_draws}{How draws should be resolved when multiple possible frames produce sequences with no stop codons.
 Options are "remove" to completely remove the sequence, or "majority" to pick the most common frame from the entire alignment.}
 }
-\value{
-
-}
 \description{
 Get Reading frame of sequences
 }

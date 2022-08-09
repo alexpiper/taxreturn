@@ -13,9 +13,6 @@ Or a character vector of accessions}
 
 \item{force}{override checks if string is already hexadecimal}
 }
-\value{
-
-}
 \description{
 Hexadecimal coding is useful for ensuring that accession numbers dont contain characters that are considered illegal for newick strings
 }

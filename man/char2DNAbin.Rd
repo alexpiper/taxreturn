@@ -9,9 +9,6 @@ char2DNAbin(x)
 \arguments{
 \item{x}{a character vector}
 }
-\value{
-
-}
 \description{
 char2DNAbin
 }

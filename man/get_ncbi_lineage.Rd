@@ -11,9 +11,6 @@ get_ncbi_lineage(x, db)
 
 \item{db}{a database file generated using \code{taxreturn::get_ncbi_taxonomy()}}
 }
-\value{
-
-}
 \description{
 Get lineage
 }

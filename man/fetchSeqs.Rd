@@ -69,9 +69,6 @@ if x is a vector, or of downstream is being used.}
 
 \item{progress}{A logical, for whether or not to print a progress bar when multithread is true. Note, this will slow down processing.}
 }
-\value{
-
-}
 \description{
 Fetchseqs function (DEPRECATED)
 }

@@ -25,9 +25,6 @@ reformat_hierarchy(
 This argument may alternatively be a 'cluster' object, in which case it is the user's responsibility to close the socket connection at the conclusion of the operation,
 for example by running parallel::stopCluster(cores).}
 }
-\value{
-
-}
 \description{
 Reformat hierarchy
 }

@@ -39,9 +39,6 @@ See https://www.ncbi.nlm.nih.gov/books/NBK279684/ for custom formatting informat
 
 \item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
 }
-\value{
-
-}
 \description{
 Run BLAST search
 }
