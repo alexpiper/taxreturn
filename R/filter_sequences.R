@@ -832,10 +832,12 @@ get_mixed_clusters <- function (x, db, rank = "order", threshold = 0.97, rngseed
         if(return == "consensus"){
           #Return binomials if species rank is selected
           mixedtab <- mixedtab %>%
-            dplyr::left_join(lineage %>% dplyr::select(Acc, genus)) %>%
+            dplyr::left_join(lineage %>% dplyr::select(Acc, genus), by="Acc") %>%
+            dplyr::mutate(consensus_taxid = as.numeric(na_if(consensus_taxid, "NA"))) %>%
+            dplyr::left_join(db %>% dplyr::select(consensus_taxid = tax_id, consensus_genus = genus), by="consensus_taxid") %>%
             dplyr::mutate(listed = paste0(genus, " ", listed),
-                          consensus  = paste0(genus," ", consensus)) %>%
-            dplyr::select(-genus)
+                          consensus  = paste0(consensus_genus," ", consensus)) %>%
+            dplyr::select(-genus, -consensus_genus)
         } else if(return == "all"){
           mixedtab <- mixedtab %>%
             dplyr::left_join(lineage %>%
