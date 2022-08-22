@@ -60,6 +60,7 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
   } else if(tryrc == FALSE & vitF$score > min_score) {
     path <- vitF$path
     score <- vitF$score
+    match_type <- "forward"
   } else {
     out <- data.frame(primer = input, start = NA, end = NA, score=vitF$score)
     warning("Forward complement of primer was below min_score")
