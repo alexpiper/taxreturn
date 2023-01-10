@@ -16,7 +16,8 @@ blast_assign_species(
   ranks = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
   delim = ";",
   args = NULL,
-  quiet = FALSE
+  quiet = FALSE,
+  remove_db = TRUE
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 \item{args}{(Optional) Extra arguments passed to BLAST}
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
+
+\item{remove_db}{Remove the blast database files that make_blast_db creates following the blast run, default is FALSE}
 }
 \description{
 This is to be used alongside a hierarchial classifier such as IDTAXA or RDP to assign additional species level matches.

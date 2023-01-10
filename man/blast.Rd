@@ -13,7 +13,8 @@ blast(
   args = NULL,
   ungapped = FALSE,
   quiet = FALSE,
-  multithread = FALSE
+  multithread = FALSE,
+  remove_db = FALSE
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ See https://www.ncbi.nlm.nih.gov/books/NBK279684/ for custom formatting informat
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 
 \item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
+
+\item{remove_db}{Remove the blast database files that make_blast_db creates following the blast run, default is FALSE}
 }
 \description{
 Run BLAST search

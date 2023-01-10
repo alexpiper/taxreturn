@@ -167,6 +167,7 @@ blast_params <- function(type = "blastn") {
 #' @param ungapped Whether ungapped alignment should be conducted. Default is FALSE.
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
+#' @param remove_db Remove the blast database files that make_blast_db creates following the blast run, default is FALSE
 #'
 #' @return
 #' @export
@@ -184,10 +185,9 @@ blast_params <- function(type = "blastn") {
 #' @importFrom stringr str_to_upper
 #' @importFrom stringr str_split
 #' @importFrom future availableCores
-#'
 blast <- function (query, db, type="blastn", evalue = 1e-6,
                    output_format = "tabular", args=NULL, ungapped=FALSE,
-                   quiet=FALSE, multithread=FALSE){
+                   quiet=FALSE, multithread=FALSE, remove_db=FALSE){
   time <- Sys.time() # get time
   # Create temp files
   tmp <- tempdir()
@@ -331,8 +331,18 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   time <- Sys.time() - time
   if (!quiet) (message(paste0("finished BLAST in ", format(time, digits = 2))))
 
+  # Clean up files
   if(file.exists(tmpdb)){file.remove(tmpdb)}
   if(file.exists(tmpquery)){file.remove(tmpquery)}
+  if(remove_db){
+    if(file.exists(paste0(db, ".ndb"))){file.remove(paste0(db, ".ndb"))}
+    if(file.exists(paste0(db, ".nin"))){file.remove(paste0(db, ".nin"))}
+    if(file.exists(paste0(db, ".not"))){file.remove(paste0(db, ".not"))}
+    if(file.exists(paste0(db, ".nsq"))){file.remove(paste0(db, ".nsq"))}
+    if(file.exists(paste0(db, ".ntf"))){file.remove(paste0(db, ".ntf"))}
+    if(file.exists(paste0(db, ".nto"))){file.remove(paste0(db, ".nto"))}
+    if(file.exists(paste0(db, ".nhr"))){file.remove(paste0(db, ".nhr"))}
+    }
   return(out)
 }
 
@@ -356,6 +366,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @param tie How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.
 #' @param args (Optional) Extra arguments passed to BLAST
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
+#' @param remove_db Remove the blast database files that make_blast_db creates following the blast run, default is FALSE
 #'
 #' @return
 #' @export
@@ -365,7 +376,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 blast_top_hit <- function(query, db, type="blastn",
                           identity=95, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                           ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
-                          tie="first", args=NULL, quiet=FALSE,...){
+                          tie="first", args=NULL, remove_db = TRUE, quiet=FALSE,...){
 
   # set input filters in advance to speed up blast
   args <- paste("-perc_identity", identity, "-max_target_seqs", max_target_seqs, "-max_hsps", max_hsp, args)
@@ -375,7 +386,8 @@ blast_top_hit <- function(query, db, type="blastn",
   result <- blast(query=query, type=type, db=db,
                   evalue = evalue,
                   args=args,
-                  output_format = '6 qseqid sseqid stitle pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs') %>%
+                  output_format = '6 qseqid sseqid stitle pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs',
+                  remove_db = remove_db) %>%
     dplyr::filter(!is.na(sseqid))
 
   #Subset to top hit
@@ -420,6 +432,7 @@ blast_top_hit <- function(query, db, type="blastn",
 #' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
 #' @param args (Optional) Extra arguments passed to BLAST
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
+#' @param remove_db Remove the blast database files that make_blast_db creates following the blast run, default is FALSE
 #'
 #' @return
 #' @export
@@ -430,7 +443,7 @@ blast_top_hit <- function(query, db, type="blastn",
 blast_assign_species <- function(query, db, type="blastn",
                                  identity=97, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                                  ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
-                                 args=NULL, quiet=FALSE ){
+                                 args=NULL, quiet=FALSE, remove_db=TRUE){
 
   #Check input contains species and genus
   if(!any(tolower(ranks) %in% c("species", "genus"))){
@@ -440,7 +453,7 @@ blast_assign_species <- function(query, db, type="blastn",
   #Conduct BLAST
   result <- blast_top_hit(query = query, db = db, type=type,
                           identity=identity, coverage=coverage, evalue=evalue, max_target_seqs=max_target_seqs, max_hsp=max_hsp,
-                          ranks=ranks, delim=delim, tie="all", args=args, quiet=quiet ) %>%
+                          ranks=ranks, delim=delim, tie="all", args=args, quiet=quiet, remove_db=remove_db ) %>%
     dplyr::filter(!is.na(Species))
 
   top_hit <- result %>%

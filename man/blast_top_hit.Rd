@@ -17,6 +17,7 @@ blast_top_hit(
   delim = ";",
   tie = "first",
   args = NULL,
+  remove_db = TRUE,
   quiet = FALSE,
   ...
 )
@@ -46,6 +47,8 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 \item{tie}{How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.}
 
 \item{args}{(Optional) Extra arguments passed to BLAST}
+
+\item{remove_db}{Remove the blast database files that make_blast_db creates following the blast run, default is FALSE}
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 }
