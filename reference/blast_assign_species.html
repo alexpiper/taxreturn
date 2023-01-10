@@ -70,7 +70,8 @@ This is designed to be a more flexible version of dada2's assignSpecies function
 <span>  ranks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Kingdom"</span>, <span class="st">"Phylum"</span>, <span class="st">"Class"</span>, <span class="st">"Order"</span>, <span class="st">"Family"</span>, <span class="st">"Genus"</span>, <span class="st">"Species"</span><span class="op">)</span>,</span>
 <span>  delim <span class="op">=</span> <span class="st">";"</span>,</span>
 <span>  args <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  remove_db <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -124,6 +125,10 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 <dt>quiet</dt>
 <dd><p>(Optional) Whether progress should be printed to console, default is FALSE</p></dd>
 
+
+<dt>remove_db</dt>
+<dd><p>Remove the blast database files that make_blast_db creates following the blast run, default is FALSE</p></dd>
+
 </dl></div>
 
   </div>
@@ -138,7 +143,7 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer></div>
