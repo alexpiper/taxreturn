@@ -108,33 +108,41 @@ blast_install <- function(url, dest_dir = "bin", force = FALSE) {
 #' @param dbtype (Optional) Molecule type of database, accepts "nucl" for nucleotide or "prot" for protein.
 #' @param args (Optional) Extra arguments passed to BLAST
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
+#' @param remove_gaps (Optional) Whether gaps should be removed from the fasta file. Note that makeblastdb can fail if there are too many gaps in the sequence.
 #'
 #' @return
 #' @export
 #' @import stringr
 #' @importFrom R.utils gunzip
 #'
-make_blast_db <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE) {
+make_blast_db <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE, remove_gaps=TRUE) {
   time <- Sys.time() # get time
   .findExecutable("makeblastdb") # Check blast is installed
   if (is.null(args)){args <- ""}
-  if (stringr::str_detect(file, ".gz")) {
-    message("Unzipping file")
-    compressed <- TRUE
-    if (file.exists(file %>% stringr::str_replace(".gz", ".tmp"))){
-      #remove existing temp file
-      invisible(file.remove(file %>% stringr::str_replace(".gz", ".tmp")))
+
+  # Create a temp file for new blast DB
+  tmpfile <- tempfile()
+
+  if(remove_gaps) {
+    seqs <- ape::del.gaps(insect::readFASTA(file))
+    insect::writeFASTA(seqs, tmpfile, compress = FALSE)
+  } else {
+    if (stringr::str_detect(file, ".gz")) {
+      message("Unzipping file")
+      R.utils::gunzip(filename=file, destname=tmpfile, remove=FALSE, overwrite=TRUE)
+    } else {
+      file.copy(file, tmpfile)
     }
-    R.utils::gunzip(file, remove=FALSE, overwrite=TRUE)
-    file <- stringr::str_replace(file, ".gz", "")
-  }else (compressed <- FALSE)
+  }
+
+  # Run makeblastdb executable
   results <- system2(command = .findExecutable("makeblastdb"),
-                     args = c("-in", file, "-dbtype", dbtype, args),
+                     args = c("-in", tmpfile, "-dbtype", dbtype, args),
                      wait = TRUE,
                      stdout = TRUE)
   time <- Sys.time() - time
-  if (compressed) {file.remove(file)}
   if (!quiet) (message(paste0("made BLAST DB in ", format(time, digits = 2))))
+  return(tmpfile)
 }
 
 
@@ -167,7 +175,7 @@ blast_params <- function(type = "blastn") {
 #' @param ungapped Whether ungapped alignment should be conducted. Default is FALSE.
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
-#' @param remove_db Remove the blast database files that make_blast_db creates following the blast run, default is FALSE
+#' @param remove_gaps Whether gaps should be removed from the fasta file. Note that makeblastdb can fail if there are too many gaps in the sequence.
 #'
 #' @return
 #' @export
@@ -187,7 +195,7 @@ blast_params <- function(type = "blastn") {
 #' @importFrom future availableCores
 blast <- function (query, db, type="blastn", evalue = 1e-6,
                    output_format = "tabular", args=NULL, ungapped=FALSE,
-                   quiet=FALSE, multithread=FALSE, remove_db=FALSE){
+                   quiet=FALSE, multithread=FALSE, remove_db_gaps = TRUE){
   time <- Sys.time() # get time
   # Create temp files
   tmp <- tempdir()
@@ -241,26 +249,22 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   } else if(inherits(db, "DNAbin")){
     if (!quiet) { message("Database input is DNAbin: Creating temporary blast database") }
     write_fasta(db, tmpdb)
-    make_blast_db(tmpdb)
-    db <- tmpdb
+    db <- make_blast_db(tmpdb, remove_gaps = remove_db_gaps)
     remote <- ""
   } else if (inherits(db, "DNAString") | inherits(db, "DNAStringSet")){
     if (!quiet) { message("Database input is DNAStringSet: Creating temporary blast database") }
     Biostrings::writeXStringSet(db, tmpdb)
-    make_blast_db(tmpdb)
-    db <- tmpdb
+    db <- make_blast_db(tmpdb, remove_gaps = remove_db_gaps)
     remote <- ""
   } else if (inherits(db, "character") &&  all(stringr::str_to_upper(stringr::str_split(db,"")[[1]]) %in% Biostrings::DNA_ALPHABET)) { # Handle text input
     if (!quiet) { message("Database input is character string: Creating temporary blast database") }
     if (nchar(db[1]) == 1) {db <- paste0(db, collapse = "")}
     db <- char2DNAbin(db)
     write_fasta(db, tmpdb)
-    make_blast_db(tmpdb)
-    db <- tmpdb
+    db <- make_blast_db(tmpdb, remove_gaps = remove_db_gaps)
     remote <- ""
   } else if (inherits(db, "character") &&  file.exists(file.path(db))){ # Handle filename
-    make_blast_db(db)
-    db <- stringr::str_replace(db, ".gz", "")
+    db <- make_blast_db(tmpdb, remove_gaps = remove_db_gaps)
     remote <- ""
   } else {
     stop("Invalid BLAST database")
@@ -334,15 +338,6 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
   # Clean up files
   if(file.exists(tmpdb)){file.remove(tmpdb)}
   if(file.exists(tmpquery)){file.remove(tmpquery)}
-  if(remove_db){
-    if(file.exists(paste0(db, ".ndb"))){file.remove(paste0(db, ".ndb"))}
-    if(file.exists(paste0(db, ".nin"))){file.remove(paste0(db, ".nin"))}
-    if(file.exists(paste0(db, ".not"))){file.remove(paste0(db, ".not"))}
-    if(file.exists(paste0(db, ".nsq"))){file.remove(paste0(db, ".nsq"))}
-    if(file.exists(paste0(db, ".ntf"))){file.remove(paste0(db, ".ntf"))}
-    if(file.exists(paste0(db, ".nto"))){file.remove(paste0(db, ".nto"))}
-    if(file.exists(paste0(db, ".nhr"))){file.remove(paste0(db, ".nhr"))}
-    }
   return(out)
 }
 

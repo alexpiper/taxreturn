@@ -4,7 +4,13 @@
 \alias{make_blast_db}
 \title{Make blast Database}
 \usage{
-make_blast_db(file, dbtype = "nucl", args = NULL, quiet = FALSE)
+make_blast_db(
+  file,
+  dbtype = "nucl",
+  args = NULL,
+  quiet = FALSE,
+  remove_gaps = TRUE
+)
 }
 \arguments{
 \item{file}{(Required) A fasta file to create a database from.}
@@ -14,6 +20,8 @@ make_blast_db(file, dbtype = "nucl", args = NULL, quiet = FALSE)
 \item{args}{(Optional) Extra arguments passed to BLAST}
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
+
+\item{remove_gaps}{(Optional) Whether gaps should be removed from the fasta file. Note that makeblastdb can fail if there are too many gaps in the sequence.}
 }
 \description{
 Make blast Database
