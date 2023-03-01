@@ -66,7 +66,7 @@
 <span>  ungapped <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  multithread <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  remove_db <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  remove_db_gaps <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -112,8 +112,8 @@ See https://www.ncbi.nlm.nih.gov/books/NBK279684/ for custom formatting informat
 <dd><p>Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use</p></dd>
 
 
-<dt>remove_db</dt>
-<dd><p>Remove the blast database files that make_blast_db creates following the blast run, default is FALSE</p></dd>
+<dt>remove_gaps</dt>
+<dd><p>Whether gaps should be removed from the fasta file. Note that makeblastdb can fail if there are too many gaps in the sequence.</p></dd>
 
 </dl></div>
 
