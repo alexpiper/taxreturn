@@ -113,6 +113,7 @@ blast_install <- function(url, dest_dir = "bin", force = FALSE) {
 #' @return
 #' @export
 #' @import stringr
+#' @import ape
 #' @importFrom R.utils gunzip
 #'
 make_blast_db <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE, remove_gaps=TRUE) {
@@ -124,8 +125,8 @@ make_blast_db <- function (file, dbtype = "nucl", args = NULL, quiet = FALSE, re
   tmpfile <- tempfile()
 
   if(remove_gaps) {
-    seqs <- ape::del.gaps(insect::readFASTA(file))
-    insect::writeFASTA(seqs, tmpfile, compress = FALSE)
+    seqs <- ape::del.gaps(ape::read.FASTA(file))
+    write_fasta(seqs, tmpfile, compress = FALSE)
   } else {
     if (stringr::str_detect(file, ".gz")) {
       message("Unzipping file")
