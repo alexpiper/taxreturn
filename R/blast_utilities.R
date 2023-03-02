@@ -265,7 +265,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
     db <- make_blast_db(tmpdb, remove_gaps = remove_db_gaps)
     remote <- ""
   } else if (inherits(db, "character") &&  file.exists(file.path(db))){ # Handle filename
-    db <- make_blast_db(tmpdb, remove_gaps = remove_db_gaps)
+    db <- make_blast_db(db, remove_gaps = remove_db_gaps)
     remote <- ""
   } else {
     stop("Invalid BLAST database")
