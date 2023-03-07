@@ -17,7 +17,7 @@ blast_assign_species(
   delim = ";",
   args = NULL,
   quiet = FALSE,
-  remove_db = TRUE
+  remove_db_gaps = TRUE
 )
 }
 \arguments{
@@ -28,9 +28,9 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 \item{type}{(Required) type of search to conduct, default 'blastn'}
 
-\item{identity}{(Required) Minimum percent identity cutoff.}
+\item{identity}{(Required) Minimum percent identity cutoff. Note that this is calculated using all alignments for each query-subject match.}
 
-\item{coverage}{(Required) Minimum percent query coverage cutoff.}
+\item{coverage}{(Required) Minimum percent query coverage cutoff. Note that this is calculated using all alignments for each query-subject match.}
 
 \item{evalue}{(Required) Minimum expect value (E) for saving hits}
 
@@ -46,7 +46,7 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
 
-\item{remove_db}{Remove the blast database files that make_blast_db creates following the blast run, default is FALSE}
+\item{remove_db_gaps}{Whether gaps should be removed from the fasta file used for the database. Note that makeblastdb can fail if there are too many gaps in the sequence.}
 }
 \description{
 This is to be used alongside a hierarchial classifier such as IDTAXA or RDP to assign additional species level matches.

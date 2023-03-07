@@ -15,9 +15,9 @@ blast_top_hit(
   max_hsp = 5,
   ranks = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
   delim = ";",
-  tie = "first",
+  resolve_ties = "first",
   args = NULL,
-  remove_db = TRUE,
+  remove_db_gaps = TRUE,
   quiet = FALSE,
   ...
 )
@@ -30,9 +30,9 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 \item{type}{(Required) type of search to conduct, default 'blastn'}
 
-\item{identity}{(Required) Minimum percent identity cutoff.}
+\item{identity}{(Required) Minimum percent identity cutoff. Note that this is calculated using all alignments for each query-subject match.}
 
-\item{coverage}{(Required) Minimum percent query coverage cutoff.}
+\item{coverage}{(Required) Minimum percent query coverage cutoff. Note that this is calculated using all alignments for each query-subject match.}
 
 \item{evalue}{(Required) Minimum expect value (E) for saving hits}
 
@@ -44,13 +44,13 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 \item{delim}{(Required) The delimiter between taxonomic ranks in fasta headers}
 
-\item{tie}{How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.}
-
 \item{args}{(Optional) Extra arguments passed to BLAST}
 
-\item{remove_db}{Remove the blast database files that make_blast_db creates following the blast run, default is FALSE}
+\item{remove_db_gaps}{Whether gaps should be removed from the fasta file used for the database. Note that makeblastdb can fail if there are too many gaps in the sequence.}
 
 \item{quiet}{(Optional) Whether progress should be printed to console, default is FALSE}
+
+\item{tie}{How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.}
 }
 \description{
 Conduct BLAST search and return top hit

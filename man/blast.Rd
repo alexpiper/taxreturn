@@ -40,7 +40,7 @@ See https://www.ncbi.nlm.nih.gov/books/NBK279684/ for custom formatting informat
 
 \item{multithread}{Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use}
 
-\item{remove_gaps}{Whether gaps should be removed from the fasta file. Note that makeblastdb can fail if there are too many gaps in the sequence.}
+\item{remove_db_gaps}{Whether gaps should be removed from the fasta file used for the database. Note that makeblastdb can fail if there are too many gaps in the sequence.}
 }
 \description{
 Run BLAST search

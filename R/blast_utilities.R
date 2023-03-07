@@ -176,7 +176,7 @@ blast_params <- function(type = "blastn") {
 #' @param ungapped Whether ungapped alignment should be conducted. Default is FALSE.
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
 #' @param multithread Whether multithreading should be used, if TRUE the number of cores will be automatically detected, or provided a numeric vector to manually set the number of cores to use
-#' @param remove_gaps Whether gaps should be removed from the fasta file. Note that makeblastdb can fail if there are too many gaps in the sequence.
+#' @param remove_db_gaps Whether gaps should be removed from the fasta file used for the database. Note that makeblastdb can fail if there are too many gaps in the sequence.
 #'
 #' @return
 #' @export
@@ -320,7 +320,13 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
                      wait = TRUE,
                      stdout = TRUE)
 
-  # Remove the error messages
+  # Check for errors and stop if detected
+  if(any(stringr::str_detect(results, "Error:"))){
+    err_to_print <- results[stringr::str_detect(results, "Error:")]
+    stop(err_to_print[1])
+  }
+
+  # Remove the error message about nucleotides in title
   results <- results[!stringr::str_detect(results, "Title ends with at least 20 valid nucleotide characters")]
 
   # Parse BLAST results
@@ -352,8 +358,8 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @param db (Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
 #' If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database
 #' @param type (Required) type of search to conduct, default 'blastn'
-#' @param identity (Required) Minimum percent identity cutoff.
-#' @param coverage (Required) Minimum percent query coverage cutoff.
+#' @param identity (Required) Minimum percent identity cutoff. Note that this is calculated using all alignments for each query-subject match.
+#' @param coverage (Required) Minimum percent query coverage cutoff. Note that this is calculated using all alignments for each query-subject match.
 #' @param evalue (Required) Minimum expect value (E) for saving hits
 #' @param max_target_seqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
 #' @param max_hsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
@@ -362,7 +368,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @param tie How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.
 #' @param args (Optional) Extra arguments passed to BLAST
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
-#' @param remove_db Remove the blast database files that make_blast_db creates following the blast run, default is FALSE
+#' @param remove_db_gaps Whether gaps should be removed from the fasta file used for the database. Note that makeblastdb can fail if there are too many gaps in the sequence.
 #'
 #' @return
 #' @export
@@ -372,7 +378,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 blast_top_hit <- function(query, db, type="blastn",
                           identity=95, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                           ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
-                          tie="first", args=NULL, remove_db = TRUE, quiet=FALSE,...){
+                          resolve_ties="first", args=NULL, remove_db_gaps = TRUE, quiet=FALSE,...){
 
   # set input filters in advance to speed up blast
   args <- paste("-perc_identity", identity, "-max_target_seqs", max_target_seqs, "-max_hsps", max_hsp, args)
@@ -382,25 +388,41 @@ blast_top_hit <- function(query, db, type="blastn",
   result <- blast(query=query, type=type, db=db,
                   evalue = evalue,
                   args=args,
-                  output_format = '6 qseqid sseqid stitle pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs',
-                  remove_db = remove_db) %>%
+                  output_format = '6 qseqid sseqid stitle pident length mismatch gapopen qstart qend qlen sstart send evalue bitscore qcovs',
+                  remove_db_gaps = remove_db_gaps) %>%
     dplyr::filter(!is.na(sseqid))
 
+  # Check if ranks set up correctly
+  if(!length(unlist(str_split(result$stitle[1], ";"))) == length(c("acc", ranks))){
+    stop("number of ranks does not match database!")
+  }
+
   #Subset to top hit
+  # Full-length pid from: https://github.com/McMahonLab/TaxAss/blob/master/tax-scripts/calc_full_length_pident.R
   top_hit <- result %>%
+    mutate( q_align = qend - qstart + 1) %>% # Calculate number of aligned bases per hsp -  add 1 b/c start is 1 instead of 0.
+    mutate(full_pident = (pident * length) / (length - q_align + qlen) ) %>% # Calculate full pid for each hsp
+    dplyr::group_by(qseqid, sseqid, stitle) %>%
+    summarise(pident = sum(full_pident),# Summarise to per subject-query hits
+              qcovs = unique(qcovs), #qcovs are calculated per subjec talready
+              max_score = max(bitscore), # Calculated as per NCBI web blast
+              total_score = sum(bitscore), # Calculated as per NCBI web blast
+              evalue = min(evalue) # Calculated as per NCBI web blast
+    )  %>%
     dplyr::filter(pident > identity, qcovs > coverage) %>%
-    dplyr::group_by(qseqid) %>%
-    dplyr::top_n(1,bitscore) %>%
-    dplyr::top_n(1,evalue) %>%
+    ungroup() %>%
+    group_by(qseqid) %>%
+    dplyr::top_n(1,total_score) %>%
+    dplyr::top_n(1,max_score) %>%
     dplyr::top_n(1,qcovs) %>%
     dplyr::top_n(1,pident) %>%
-    tidyr::separate(stitle, c("acc", ranks), delim)
+    tidyr::separate(stitle, c("acc", ranks), delim, remove = TRUE)
 
-  if(tie == "first"){
+  if(resolve_ties == "first"){
     top_hit <- top_hit %>%
-      dplyr::top_n(1, row_number(name)) %>% # Break ties by position
+      dplyr::top_n(1, row_number(.)) %>% # Break ties by position
       dplyr::ungroup()
-  } else if(tie == "all"){
+  } else if(resolve_ties == "all"){
     top_hit <- top_hit %>%
       dplyr::ungroup()
   }
@@ -419,8 +441,8 @@ blast_top_hit <- function(query, db, type="blastn",
 #' @param db (Required) Reference sequences to conduct search against. Accepts a DNABin object, DNAStringSet object, Character string, or filepath.
 #' If DNAbin, DNAStringSet or character string is provided, a temporary fasta file is used to construct BLAST database
 #' @param type (Required) type of search to conduct, default 'blastn'
-#' @param identity (Required) Minimum percent identity cutoff.
-#' @param coverage (Required) Minimum percent query coverage cutoff.
+#' @param identity (Required) Minimum percent identity cutoff. Note that this is calculated using all alignments for each query-subject match.
+#' @param coverage (Required) Minimum percent query coverage cutoff. Note that this is calculated using all alignments for each query-subject match.
 #' @param evalue (Required) Minimum expect value (E) for saving hits
 #' @param max_target_seqs (Required) Number of aligned sequences to keep. Even if you are only looking for 1 top hit keep this higher for calculations to perform properly.
 #' @param max_hsp (Required) Maximum number of HSPs (alignments) to keep for any single query-subject pair.
@@ -428,7 +450,7 @@ blast_top_hit <- function(query, db, type="blastn",
 #' @param delim (Required) The delimiter between taxonomic ranks in fasta headers
 #' @param args (Optional) Extra arguments passed to BLAST
 #' @param quiet (Optional) Whether progress should be printed to console, default is FALSE
-#' @param remove_db Remove the blast database files that make_blast_db creates following the blast run, default is FALSE
+#' @param remove_db_gaps Whether gaps should be removed from the fasta file used for the database. Note that makeblastdb can fail if there are too many gaps in the sequence.
 #'
 #' @return
 #' @export
@@ -439,7 +461,7 @@ blast_top_hit <- function(query, db, type="blastn",
 blast_assign_species <- function(query, db, type="blastn",
                                  identity=97, coverage=95, evalue=1e06, max_target_seqs=5, max_hsp=5,
                                  ranks=c("Kingdom", "Phylum","Class", "Order", "Family", "Genus", "Species"), delim=";",
-                                 args=NULL, quiet=FALSE, remove_db=TRUE){
+                                 args=NULL, quiet=FALSE, remove_db_gaps=TRUE){
 
   #Check input contains species and genus
   if(!any(tolower(ranks) %in% c("species", "genus"))){
@@ -447,15 +469,15 @@ blast_assign_species <- function(query, db, type="blastn",
   }
 
   #Conduct BLAST
-  result <- blast_top_hit(query = query, db = db, type=type,
-                          identity=identity, coverage=coverage, evalue=evalue, max_target_seqs=max_target_seqs, max_hsp=max_hsp,
-                          ranks=ranks, delim=delim, tie="all", args=args, quiet=quiet, remove_db=remove_db ) %>%
+  top_hit <- blast_top_hit(query = query, db = db, type=type,
+                           identity=identity, coverage=coverage, evalue=evalue, max_target_seqs=max_target_seqs, max_hsp=max_hsp,
+                           ranks=ranks, delim=delim, resolve_ties="all", args=args, quiet=quiet, remove_db_gaps=remove_db_gaps) %>%
     dplyr::filter(!is.na(Species))
 
-  top_hit <- result %>%
+  out <- top_hit %>%
     dplyr::group_by(qseqid) %>%
     dplyr::mutate(spp = Species %>% stringr::str_remove("^.* ")) %>%
-    dplyr::summarise(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs,evalue, bitscore, .groups="keep") %>%
+    dplyr::reframe(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs, max_score, total_score, evalue) %>%
     dplyr::mutate(binomial = paste(Genus, spp)) %>%
     dplyr::distinct() %>%
     dplyr::add_tally() %>%
@@ -463,7 +485,7 @@ blast_assign_species <- function(query, db, type="blastn",
       n > 1 ~ as.character(NA),
       n == 1 ~ binomial
     )) %>%
-    dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, evalue, bitscore)
+    dplyr::select(OTU = qseqid, Genus, Species = binomial, pident, qcovs, max_score, total_score, evalue)
 
-  return(top_hit)
+  return(out)
 }
