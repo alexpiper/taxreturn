@@ -67,9 +67,9 @@
 <span>  max_hsp <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  ranks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Kingdom"</span>, <span class="st">"Phylum"</span>, <span class="st">"Class"</span>, <span class="st">"Order"</span>, <span class="st">"Family"</span>, <span class="st">"Genus"</span>, <span class="st">"Species"</span><span class="op">)</span>,</span>
 <span>  delim <span class="op">=</span> <span class="st">";"</span>,</span>
-<span>  tie <span class="op">=</span> <span class="st">"first"</span>,</span>
+<span>  resolve_ties <span class="op">=</span> <span class="st">"first"</span>,</span>
 <span>  args <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  remove_db <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  remove_db_gaps <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -91,11 +91,11 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 
 
 <dt>identity</dt>
-<dd><p>(Required) Minimum percent identity cutoff.</p></dd>
+<dd><p>(Required) Minimum percent identity cutoff. Note that this is calculated using all alignments for each query-subject match.</p></dd>
 
 
 <dt>coverage</dt>
-<dd><p>(Required) Minimum percent query coverage cutoff.</p></dd>
+<dd><p>(Required) Minimum percent query coverage cutoff. Note that this is calculated using all alignments for each query-subject match.</p></dd>
 
 
 <dt>evalue</dt>
@@ -118,20 +118,20 @@ If DNAbin, DNAStringSet or character string is provided, a temporary fasta file 
 <dd><p>(Required) The delimiter between taxonomic ranks in fasta headers</p></dd>
 
 
-<dt>tie</dt>
-<dd><p>How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.</p></dd>
-
-
 <dt>args</dt>
 <dd><p>(Optional) Extra arguments passed to BLAST</p></dd>
 
 
-<dt>remove_db</dt>
-<dd><p>Remove the blast database files that make_blast_db creates following the blast run, default is FALSE</p></dd>
+<dt>remove_db_gaps</dt>
+<dd><p>Whether gaps should be removed from the fasta file used for the database. Note that makeblastdb can fail if there are too many gaps in the sequence.</p></dd>
 
 
 <dt>quiet</dt>
 <dd><p>(Optional) Whether progress should be printed to console, default is FALSE</p></dd>
+
+
+<dt>tie</dt>
+<dd><p>How to handle ties in top hit results. Options are to break ties by selecting the first hit (Default), or return all tied hits.</p></dd>
 
 </dl></div>
 
