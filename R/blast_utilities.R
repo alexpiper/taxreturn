@@ -400,18 +400,18 @@ blast_top_hit <- function(query, db, type="blastn",
   #Subset to top hit
   # Full-length pid from: https://github.com/McMahonLab/TaxAss/blob/master/tax-scripts/calc_full_length_pident.R
   top_hit <- result %>%
-    mutate( q_align = qend - qstart + 1) %>% # Calculate number of aligned bases per hsp -  add 1 b/c start is 1 instead of 0.
-    mutate(full_pident = (pident * length) / (length - q_align + qlen) ) %>% # Calculate full pid for each hsp
+    dplyr::mutate( q_align = qend - qstart + 1) %>% # Calculate number of aligned bases per hsp -  add 1 b/c start is 1 instead of 0.
+    dplyr::mutate(full_pident = (pident * length) / (length - q_align + qlen) ) %>% # Calculate full pid for each hsp
     dplyr::group_by(qseqid, sseqid, stitle) %>%
-    summarise(pident = sum(full_pident),# Summarise to per subject-query hits
+    dplyr::summarise(pident = sum(full_pident),# Summarise to per subject-query hits
               qcovs = unique(qcovs), #qcovs are calculated per subjec talready
               max_score = max(bitscore), # Calculated as per NCBI web blast
               total_score = sum(bitscore), # Calculated as per NCBI web blast
               evalue = min(evalue) # Calculated as per NCBI web blast
     )  %>%
     dplyr::filter(pident > identity, qcovs > coverage) %>%
-    ungroup() %>%
-    group_by(qseqid) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(qseqid) %>%
     dplyr::top_n(1,total_score) %>%
     dplyr::top_n(1,max_score) %>%
     dplyr::top_n(1,qcovs) %>%
@@ -420,7 +420,9 @@ blast_top_hit <- function(query, db, type="blastn",
 
   if(resolve_ties == "first"){
     top_hit <- top_hit %>%
-      dplyr::top_n(1, row_number(.)) %>% # Break ties by position
+      dplyr::mutate(row_n = dplyr::row_number()) %>%
+      dplyr::top_n(1, row_n) %>% # Break ties by position
+      dplyr::select(-row_n) %>%
       dplyr::ungroup()
   } else if(resolve_ties == "all"){
     top_hit <- top_hit %>%
