@@ -38,11 +38,49 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
   up <- primer[!primer %in% as.raw(c(2, 4))]
   vitF <- aphid::Viterbi(model, up, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
 
+  # Calculate longest match length
+  rle_path <- rle(vitF$path)
+  rle_matches <- rle_path$lengths
+  names(rle_matches) <- rle_path$values
+  all_matches <- rle_matches[names(rle_matches) == "1"]
+
+  # Check for primers split into multiple matches
+  if(length(all_matches) > 1){
+    longest_match <- max(all_matches)
+
+    if(which.max(all_matches) == 1){
+      up[[1]] <- up[[1]][1:max(all_matches)]
+    } else {
+      up[[1]] <- up[[1]][all_matches[which.max(all_matches)-1]:all_matches[which.max(all_matches)]]
+    }
+    # Redo the viterbi alignment with just the subset primer
+    vitF <- aphid::Viterbi(model, up, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
+  }
+
   if (tryrc == TRUE) {
     down <- ape::complement(primer)
     down <- down[!down %in% as.raw(c(2, 4))]
     vitR <- aphid::Viterbi(model, down, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
     match_type <- NA_character_
+
+    # Calculate longest match length
+    rle_path <- rle(vitR$path)
+    rle_matches <- rle_path$lengths
+    names(rle_matches) <- rle_path$values
+    all_matches <- rle_matches[names(rle_matches) == "1"]
+
+    # Check for primers split into multiple matches
+    if(length(all_matches) > 1){
+      longest_match <- max(all_matches)
+
+      if(which.max(all_matches) == 1){
+        down[[1]] <- down[[1]][1:max(all_matches)]
+      } else {
+        down[[1]] <- down[[1]][all_matches[which.max(all_matches)-1]:all_matches[which.max(all_matches)]]
+      }
+      # Redo the viterbi alignment with just the subset primer
+      vitR <- aphid::Viterbi(model, down, odds = TRUE, type = "semiglobal", cpp = TRUE, residues = "DNA", ...=...)
+    }
     if (vitF$score > vitR$score & vitF$score > min_score) {
       match_type <- "forward"
       path <- vitF$path
@@ -83,8 +121,10 @@ get_binding_position <- function (primer, model, tryrc = TRUE, quiet = FALSE, mi
     out <- data.frame(primer = input, start = matchF, end = matchR, score=score)
   }  else if ((matchR - (matchF - 1)) > length(primer[[1]])) {
     warning("Binding positions are larger than the primer length")
+    out <- data.frame(primer = input, start = matchF, end = matchR, score=score)
   }  else if ((matchR - (matchF - 1)) < length(primer[[1]])) {
     warning("Binding positions are less than the primer length")
+    out <- data.frame(primer = input, start = matchF, end = matchR, score=score)
   }
   return(out)
 }
