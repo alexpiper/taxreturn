@@ -400,22 +400,24 @@ blast_top_hit <- function(query, db, type="blastn",
   #Subset to top hit
   # Full-length pid from: https://github.com/McMahonLab/TaxAss/blob/master/tax-scripts/calc_full_length_pident.R
   top_hit <- result %>%
-    dplyr::mutate( q_align = qend - qstart + 1) %>% # Calculate number of aligned bases per hsp -  add 1 b/c start is 1 instead of 0.
-    dplyr::mutate(full_pident = (pident * length) / (length - q_align + qlen) ) %>% # Calculate full pid for each hsp
-    dplyr::group_by(qseqid, sseqid, stitle) %>%
-    dplyr::summarise(pident = sum(full_pident),# Summarise to per subject-query hits
-              qcovs = unique(qcovs), #qcovs are calculated per subjec talready
-              max_score = max(bitscore), # Calculated as per NCBI web blast
-              total_score = sum(bitscore), # Calculated as per NCBI web blast
-              evalue = min(evalue) # Calculated as per NCBI web blast
-    )  %>%
+    dplyr::mutate(q_align = qend - qstart + 1) %>%
+    dplyr::mutate(full_pident = (pident * length)/(length - q_align + qlen)) %>%
+    dplyr::group_by(qseqid, sseqid, stitle, qstart, qend, qlen, full_pident)  %>%
+    slice(1)%>% # Handle rare cases where there are multiple identical matches within the reference (I.e multiple 16s copies)
+    ungroup() %>%
+    dplyr::group_by(qseqid, sseqid, stitle)  %>%
+    dplyr::summarise(pident = sum(full_pident),
+                     qcovs = unique(qcovs),
+                     max_score = max(bitscore),
+                     total_score = sum(bitscore),
+                     evalue = min(evalue)) %>%
     dplyr::filter(pident > identity, qcovs > coverage) %>%
     dplyr::ungroup() %>%
     dplyr::group_by(qseqid) %>%
-    dplyr::top_n(1,total_score) %>%
-    dplyr::top_n(1,max_score) %>%
-    dplyr::top_n(1,qcovs) %>%
-    dplyr::top_n(1,pident) %>%
+    dplyr::top_n(1, total_score) %>%
+    dplyr::top_n(1, max_score) %>%
+    dplyr::top_n(1, qcovs) %>%
+    dplyr::top_n(1, pident) %>%
     tidyr::separate(stitle, c("acc", ranks), delim, remove = TRUE)
 
   if(resolve_ties == "first"){
