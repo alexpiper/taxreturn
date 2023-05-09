@@ -373,6 +373,7 @@ blast <- function (query, db, type="blastn", evalue = 1e-6,
 #' @return
 #' @export
 #' @import dplyr
+#' @import IRanges
 #' @importFrom tidyr separate
 #'
 blast_top_hit <- function(query, db, type="blastn",
@@ -402,11 +403,51 @@ blast_top_hit <- function(query, db, type="blastn",
   top_hit <- result %>%
     dplyr::mutate(q_align = qend - qstart + 1) %>%
     dplyr::mutate(full_pident = (pident * length)/(length - q_align + qlen)) %>%
-    dplyr::group_by(qseqid, sseqid, stitle, qstart, qend, qlen, full_pident)  %>%
-    slice(1)%>% # Handle rare cases where there are multiple identical matches within the reference (I.e multiple 16s copies)
+    dplyr::group_by(qseqid, sseqid, stitle, qstart, qend, length, full_pident)  %>%
+    slice(1)%>% # Handle rare cases where there are multiple identical matches within a single reference (I.e multiple 16s copies)
     ungroup() %>%
-    dplyr::group_by(qseqid, sseqid, stitle)  %>%
-    dplyr::summarise(pident = sum(full_pident),
+    dplyr::group_by(qseqid, sseqid, stitle) %>%
+    group_modify(~{# Handle cases where there are multiple matches overlapping the one segment of a reference by picking the best one
+      # Dont check ones with single unique hits
+      if(nrow(.x) > 1){
+        # Check if regions overlap
+        # setup the IRanges object from the input qstart and qend
+        ir <- IRanges::IRanges(as.numeric(.x$qstart), as.numeric(.x$qend), names = .x$name)
+
+        # find which ids overlap with each other
+        ovrlp <- IRanges::findOverlaps(ir, drop.self = TRUE, drop.redundant = TRUE)
+
+        # store id indices for further use
+        hit1 <- queryHits(ovrlp)
+        hit2 <- subjectHits(ovrlp)
+
+        # width of overlaps between ids
+        widths <- width(pintersect(ir[hit1], ir[hit2])) - 1
+
+        # result
+        overlaps <- data.frame(id1 = names(ir)[hit1], id2 = names(ir)[hit2], widths)
+
+        # if they are overlapping, get the best hit - otherwise leave them as they will be combined by the full_pid calculation
+        if(nrow(overlaps) > 0){
+          newdf <- list()
+          for (i in 1:nrow(overlaps)){
+            newdf[[i]] <- .x %>%
+              filter(as.character(name) %in% c(overlaps$id1[i], overlaps$id2[i]))%>%
+              dplyr::top_n(1, bitscore) %>%
+              dplyr::top_n(1, pident) %>%
+              dplyr::top_n(1, qcovs)
+          }
+          return(newdf %>%
+                   bind_rows() %>%
+                   distinct())
+        } else {
+          return(.x)
+        }
+      } else {
+        return(.x)
+      }
+    })%>%
+    dplyr::summarise(pident = sum(full_pident), # Combine hit stats for multiple discontiguous matches
                      qcovs = unique(qcovs),
                      max_score = max(bitscore),
                      total_score = sum(bitscore),

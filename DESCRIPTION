@@ -54,6 +54,7 @@ Imports:
     openssl,
     methods,
     BiocManager,
+    IRanges,
     stats
 BiocViews:
 Roxygen: list(markdown = TRUE)
