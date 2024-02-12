@@ -157,7 +157,7 @@ library(aphid)
 # Read in sequence dataset to be used in model training
 seqs <-  readDNAStringSet("MIDORI_LONGEST_20180221_COI.fasta")
 
-  model <- aphid::derivePHMM(seqs)
+model <- aphid::derivePHMM(seqs)
 ```
 
 ## Optional: Trim model to desired amplicon

@@ -174,7 +174,7 @@ setup_multithread <- function(multithread, quiet=FALSE){
   if(isTRUE(multithread)){
     cores <- ncores-1
     if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess, workers=cores)
+    future::plan(future::multisession, workers=cores)
   } else if (is.numeric(multithread) & multithread > 1){
     cores <- multithread
     if(cores > ncores){
@@ -182,7 +182,7 @@ setup_multithread <- function(multithread, quiet=FALSE){
       warning("The value provided to multithread is higher than the number of cores, using ", cores, " cores instead")
     }
     if(!quiet){message("Multithreading with ", cores, " cores")}
-    future::plan(future::multiprocess, workers=cores)
+    future::plan(future::multisession, workers=cores)
   } else if(isFALSE(multithread) | multithread==1){
     future::plan(future::sequential)
   } else (
