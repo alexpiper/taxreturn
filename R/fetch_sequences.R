@@ -178,7 +178,9 @@ read_genbank_chunk <- function(gid, quiet = FALSE, retry_attempt=3, retry_wait=5
     if(!quiet)warning("length of returned sequences does not match length of query")
   }
   out <- seqs
-  attr(out, "query") <- gid
+  if(!null(out)){
+    attr(out, "query") <- gid
+  }
   return(out)
 }
 
