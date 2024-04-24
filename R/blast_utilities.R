@@ -525,6 +525,7 @@ blast_assign_species <- function(query, db, type="blastn",
     dplyr::reframe(spp = paste(sort(unique(spp)), collapse = "/"), Genus, pident, qcovs, max_score, total_score, evalue) %>%
     dplyr::mutate(binomial = paste(Genus, spp)) %>%
     dplyr::distinct() %>%
+    dplyr::group_by(qseqid) %>%
     dplyr::add_tally() %>%
     dplyr::mutate(binomial =  dplyr::case_when( #Leave unassigned if conflicted at genus level
       n > 1 ~ as.character(NA),
