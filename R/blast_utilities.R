@@ -389,7 +389,7 @@ blast_top_hit <- function(query, db, type="blastn",
   result <- blast(query=query, type=type, db=db,
                   evalue = evalue,
                   args=args,
-                  output_format = '6 qseqid sseqid stitle pident length mismatch gapopen qstart qend qlen sstart send evalue bitscore qcovs',
+                  output_format = '6 qseqid sseqid stitle pident length mismatch gapopen qstart qend qlen sstart send slen evalue bitscore qcovs',
                   remove_db_gaps = remove_db_gaps) %>%
     dplyr::filter(!is.na(sseqid))
 
@@ -399,22 +399,28 @@ blast_top_hit <- function(query, db, type="blastn",
   }
 
   #Subset to top hit
-  # Full-length pid from: https://github.com/McMahonLab/TaxAss/blob/master/tax-scripts/calc_full_length_pident.R
+  # Blast may only align a portion of the sequence leaving gaps at the end
+  # The full_pident calculation aims to correct this, calculating the percentage identity across full length of query sequence
+  # Full-length pid modified from: https://github.com/McMahonLab/TaxAss/blob/master/tax-scripts/calc_full_length_pident.R
   top_hit <- result %>%
-    dplyr::mutate(q_align = qend - qstart + 1) %>%
-    dplyr::mutate(full_pident = (pident * length)/(length - q_align + qlen)) %>%
+    dplyr::mutate(q_align = qend - qstart + 1, # Length of alignment between query and reference
+                  q_len_adj = ifelse(qlen > slen, qlen <- slen, qlen) # Handle case when query is longer than subject
+    ) %>%
+    dplyr::mutate(full_pident = (pident * length)/(length - q_align + q_len_adj)) %>%
     dplyr::group_by(qseqid, sseqid, stitle, qstart, qend, length, full_pident)  %>%
-    slice(1)%>% # Handle rare cases where there are multiple identical matches within a single reference (I.e multiple 16s copies)
-    ungroup() %>%
+    dplyr::slice(1)%>% # Handle rare cases where there are multiple identical scoring matches within a single subject sequence (I.e multiple 16s copies)
+    dplyr::ungroup() %>%
     dplyr::group_by(qseqid, sseqid, stitle) %>%
-    group_modify(~{# Handle cases where there are multiple matches overlapping the one segment of a reference by picking the best one
-      # Dont check ones with single unique hits
-      if(nrow(.x) > 1){
-        # Check if regions overlap
+    dplyr::group_modify(~{
+      # Handle cases where there are multiple matches overlapping the same segment of a subject by picking the highest scoring hit
+      # This is common when paired end reads that do not overlap are joined together (i.e. with concat_unmerged in freyr)
+      if(nrow(.x) > 1){ # Dont check cases with single unique hits
+
+        # Check if hits overlap the same region
         # setup the IRanges object from the input qstart and qend
         ir <- IRanges::IRanges(as.numeric(.x$qstart), as.numeric(.x$qend), names = .x$name)
 
-        # find which ids overlap with each other
+        # find which hit ids overlap with each other
         ovrlp <- IRanges::findOverlaps(ir, drop.self = TRUE, drop.redundant = TRUE)
 
         # store id indices for further use
@@ -427,7 +433,7 @@ blast_top_hit <- function(query, db, type="blastn",
         # result
         overlaps <- data.frame(id1 = names(ir)[hit1], id2 = names(ir)[hit2], widths)
 
-        # if they are overlapping, get the best hit - otherwise leave them as they will be combined by the full_pid calculation
+        # if the multiple hits are overlapping, get the best hit - otherwise leave them as they will have been handled correctly when summing full_pident
         if(nrow(overlaps) > 0){
           newdf <- list()
           for (i in 1:nrow(overlaps)){
@@ -467,7 +473,7 @@ blast_top_hit <- function(query, db, type="blastn",
       dplyr::top_n(1, row_n) %>% # Break ties by position
       dplyr::select(-row_n) %>%
       dplyr::ungroup()
-  } else if(resolve_ties == "all"){
+  } else if(resolve_ties == "all"){ # Return all ties
     top_hit <- top_hit %>%
       dplyr::ungroup()
   }
