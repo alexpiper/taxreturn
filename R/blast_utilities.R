@@ -404,7 +404,7 @@ blast_top_hit <- function(query, db, type="blastn",
   # Full-length pid modified from: https://github.com/McMahonLab/TaxAss/blob/master/tax-scripts/calc_full_length_pident.R
   top_hit <- result %>%
     dplyr::mutate(q_align = qend - qstart + 1, # Length of alignment between query and reference
-                  q_len_adj = ifelse(qlen > slen, qlen <- slen, qlen) # Handle case when query is longer than subject
+                  q_len_adj = ifelse(qlen > slen, slen, qlen) # Handle case when query is longer than subject
     ) %>%
     dplyr::mutate(full_pident = (pident * length)/(length - q_align + q_len_adj)) %>%
     dplyr::group_by(qseqid, sseqid, stitle, qstart, qend, length, full_pident)  %>%
